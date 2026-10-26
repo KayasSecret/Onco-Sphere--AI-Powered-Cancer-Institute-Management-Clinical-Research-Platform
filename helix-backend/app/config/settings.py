@@ -1,6 +1,12 @@
+import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 from functools import lru_cache
+
+# Dynamically locate the backend base directory and .env path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_PATH = BASE_DIR / ".env"
 
 
 class Settings(BaseSettings):
@@ -43,7 +49,11 @@ class Settings(BaseSettings):
     EMAIL_MAX_RETRIES: int = 3
     EMAIL_RETRY_BASE_DELAY: float = 1.0  # seconds, doubles each attempt
 
-    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = ConfigDict(
+        env_file=str(ENV_PATH) if ENV_PATH.exists() else ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 
 @lru_cache()

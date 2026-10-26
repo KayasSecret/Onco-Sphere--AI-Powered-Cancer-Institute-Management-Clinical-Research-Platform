@@ -29,7 +29,8 @@ def _generate_otp(length: int = 6) -> str:
 
 def login_user(payload: LoginRequest, db: Session) -> TokenResponse:
     """Authenticate a user and return JWT tokens."""
-    user = db.query(User).filter(User.email == payload.email).first()
+    clean_email = payload.email.strip().lower()
+    user = db.query(User).filter(User.email.ilike(clean_email)).first()
 
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
@@ -73,21 +74,23 @@ def register_user(payload: RegisterRequest, db: Session) -> RegisterResponse:
     If any researcher fields are provided, also creates a ResearcherProfile record.
     Marks the associated draft as 'submitted' if one exists for this email.
     """
-    existing = db.query(User).filter(User.email == payload.email).first()
+    clean_email = payload.email.strip().lower()
+    existing = db.query(User).filter(User.email.ilike(clean_email)).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account with this email already exists.",
         )
 
-    is_approved = "APPROVED" if payload.role == UserRole.SUPER_ADMIN else "PENDING"
+    assigned_role = UserRole.STUDENT
+    is_approved = "PENDING"
 
     # ── 1. Create User (auth fields only) ────────────────────────────────────
     new_user = User(
         full_name=payload.full_name,
-        email=payload.email,
+        email=clean_email,
         password_hash=hash_password(payload.password),
-        role=payload.role,
+        role=assigned_role,
         is_active=(is_approved == "APPROVED"),
         is_approved=is_approved,
         registration_reason=payload.registration_reason,

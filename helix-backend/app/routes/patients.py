@@ -524,7 +524,7 @@ def _resolve_asset_fetch_url(file_url: str, default_ext: str = "") -> str:
 def download_patient_report(
     patient_id: int,
     report_id: int,
-    disposition: str = Query("attachment", regex="^(attachment|inline)$"),
+    disposition: str = Query("attachment", pattern="^(attachment|inline)$"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
@@ -590,7 +590,7 @@ def download_patient_report(
 def download_patient_cancer_image(
     patient_id: int,
     image_id: int,
-    disposition: str = Query("attachment", regex="^(attachment|inline)$"),
+    disposition: str = Query("attachment", pattern="^(attachment|inline)$"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
