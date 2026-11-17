@@ -201,14 +201,96 @@ export default function LandingPage() {
 
         /* Navbar glass */
         .lp-nav {
-          backdrop-filter: blur(16px) saturate(160%);
-          -webkit-backdrop-filter: blur(16px) saturate(160%);
-          background: rgba(3,8,23,0.72);
-          border-bottom: 1px solid rgba(56,189,248,0.1);
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
+          background: rgba(3, 8, 23, 0.78);
+          border-bottom: 1px solid rgba(56, 189, 248, 0.12);
           transition: background 0.3s ease, border-color 0.3s ease;
         }
 
-        /* Sign-in ghost button */
+        /* Logo badge & icon container */
+        .lp-logo-badge {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(8, 21, 47, 0.65) 100%);
+          border: 1px solid rgba(56, 189, 248, 0.28);
+          box-shadow: 0 0 16px rgba(37, 99, 235, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .lp-logo-group:hover .lp-logo-badge {
+          border-color: rgba(56, 189, 248, 0.6);
+          box-shadow: 0 0 24px rgba(56, 189, 248, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          transform: translateY(-1px);
+        }
+
+        /* Sign-in button: transparent navy glass surface, refined border, cyan-blue hover illumination */
+        .lp-nav-signin {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: #E2E8F0;
+          font-size: 0.84rem;
+          font-weight: 600;
+          letter-spacing: 0.015em;
+          padding: 0.52rem 1.25rem;
+          border-radius: 0.625rem;
+          background: rgba(8, 21, 47, 0.7);
+          border: 1px solid rgba(56, 189, 248, 0.22);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          user-select: none;
+        }
+        .lp-nav-signin:hover {
+          color: #FFFFFF;
+          background: linear-gradient(180deg, rgba(20, 52, 115, 0.72) 0%, rgba(10, 27, 65, 0.85) 100%);
+          border-color: rgba(56, 189, 248, 0.55);
+          box-shadow: 0 0 22px rgba(56, 189, 248, 0.3), 0 4px 14px rgba(3, 8, 23, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+          transform: translateY(-1.5px);
+        }
+        .lp-nav-signin:active {
+          transform: translateY(0) scale(0.98);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Sign-up button: premium electric-blue gradient, subtle depth, sophisticated shadow, refined border, hover glow */
+        .lp-nav-signup {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.45rem;
+          color: #FFFFFF;
+          font-size: 0.84rem;
+          font-weight: 600;
+          letter-spacing: 0.015em;
+          padding: 0.52rem 1.4rem;
+          border-radius: 0.625rem;
+          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #173FB5 100%);
+          border: 1px solid rgba(147, 197, 253, 0.4);
+          box-shadow: 0 0 20px rgba(37, 99, 235, 0.4), 0 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          user-select: none;
+        }
+        .lp-nav-signup:hover {
+          background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
+          border-color: rgba(191, 219, 254, 0.7);
+          box-shadow: 0 0 32px rgba(56, 189, 248, 0.55), 0 6px 18px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+          transform: translateY(-1.5px);
+        }
+        .lp-nav-signup:active {
+          transform: translateY(0) scale(0.98);
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Backward-compatible aliases */
         .lp-btn-ghost {
           position: relative;
           color: #A7B7CE;
@@ -343,6 +425,8 @@ export default function LandingPage() {
         }
 
         /* Focus rings on nav links */
+        .lp-nav-signin:focus-visible,
+        .lp-nav-signup:focus-visible,
         .lp-btn-ghost:focus-visible,
         .lp-btn-primary:focus-visible,
         .lp-cta-primary:focus-visible,
@@ -382,43 +466,40 @@ export default function LandingPage() {
 
         {/* ── Navigation Bar ─────────────────────────────────────────── */}
         <header className="lp-nav lp-animate-nav sticky top-0 z-50 w-full">
-          <div className="max-w-7xl mx-auto flex items-center justify-between h-[68px] px-6 lg:px-12">
+          <div className="max-w-7xl mx-auto flex items-center justify-between h-[72px] px-6 lg:px-12">
 
-            {/* Logo */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div
-                className="flex items-center justify-center rounded-xl overflow-hidden"
-                style={{
-                  width: '42px',
-                  height: '42px',
-                  background: 'rgba(37,99,235,0.1)',
-                  border: '1px solid rgba(56,189,248,0.2)',
-                }}
-              >
+            {/* Logo & Brand Name */}
+            <div className="lp-logo-group flex items-center gap-3.5 shrink-0 cursor-default select-none">
+              <div className="lp-logo-badge">
                 <img
                   src={ICSRLogo}
-                  alt="Onco Sphere"
-                  style={{ width: '34px', height: '34px', objectFit: 'contain' }}
+                  alt="Onco Sphere Logo"
+                  style={{ width: '36px', height: '36px', objectFit: 'contain' }}
                 />
               </div>
-              <div className="flex flex-col leading-none">
+              <div className="flex flex-col justify-center leading-none">
                 <span
                   style={{
-                    fontSize: '0.9375rem',
-                    fontWeight: 700,
-                    color: '#F8FAFC',
-                    letterSpacing: '-0.01em',
+                    fontSize: '1.45rem',
+                    fontWeight: 800,
+                    color: '#FFFFFF',
+                    letterSpacing: '-0.025em',
+                    lineHeight: '1.1',
+                    whiteSpace: 'nowrap',
+                    textShadow: '0 2px 10px rgba(0,0,0,0.5), 0 0 18px rgba(56,189,248,0.2)',
                   }}
                 >
                   Onco Sphere
                 </span>
                 <span
                   style={{
-                    fontSize: '0.625rem',
-                    fontWeight: 500,
+                    fontSize: '0.58rem',
+                    fontWeight: 600,
                     color: '#38BDF8',
-                    letterSpacing: '0.12em',
+                    letterSpacing: '0.22em',
                     textTransform: 'uppercase',
+                    marginTop: '3px',
+                    opacity: 0.9,
                   }}
                 >
                   Clinical Intelligence
@@ -427,18 +508,18 @@ export default function LandingPage() {
             </div>
 
             {/* Nav actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {isAuthenticated ? (
-                <Link to="/dashboard" className="lp-btn-primary">
-                  Open Dashboard
+                <Link to="/dashboard" className="lp-nav-signup">
+                  <span>Open Dashboard</span>
                   <RiArrowRightLine size={15} />
                 </Link>
               ) : (
                 <>
-                  <Link to="/login" className="lp-btn-ghost">
+                  <Link to="/login" className="lp-nav-signin">
                     Sign In
                   </Link>
-                  <Link to="/register/apply" className="lp-btn-primary">
+                  <Link to="/register/apply" className="lp-nav-signup">
                     Sign Up
                   </Link>
                 </>
