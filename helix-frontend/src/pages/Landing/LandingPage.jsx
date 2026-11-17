@@ -223,127 +223,191 @@ export default function LandingPage() {
           transform: translateY(-1px);
         }
 
-        /* Nav Sign-In Button */
+        /* ═══════════════════════════════════════════════════════
+           BUTTON SYSTEM — All four landing page buttons
+           Root cause of text-visibility bug: global index.css rule
+             a:hover { color: var(--color-blue-dark) }
+           overrides button text color because Link renders as <a>.
+           Fix: explicit high-specificity color on every state,
+           plus transition scoped to individual props (never 'all')
+           so color is never animated from white to blue-dark.
+        ═══════════════════════════════════════════════════════ */
+
+        /* ── Nav Sign-In (glass navy, cyan hover illumination) ── */
         .lp-nav-signin {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: #E2E8F0;
+          color: #E8EEF8 !important;        /* locked — beats global a { color } */
           font-size: 0.84rem;
           font-weight: 600;
           letter-spacing: 0.015em;
-          padding: 0.5rem 1.25rem;
+          padding: 0.5rem 1.3rem;
+          height: 38px;
           border-radius: 0.625rem;
-          background: rgba(8, 21, 47, 0.7);
-          border: 1px solid rgba(56, 189, 248, 0.22);
+          background: rgba(8, 21, 47, 0.75);
+          border: 1px solid rgba(56, 189, 248, 0.26);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+          /* Explicit property list — never animates color from white to blue-dark */
+          transition:
+            background 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+            border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
           user-select: none;
+          text-decoration: none !important;
+          white-space: nowrap;
         }
-        .lp-nav-signin:hover {
-          color: #FFFFFF;
-          background: linear-gradient(180deg, rgba(20, 52, 115, 0.75) 0%, rgba(10, 27, 65, 0.88) 100%);
-          border-color: rgba(56, 189, 248, 0.6);
-          box-shadow: 0 0 22px rgba(56, 189, 248, 0.32), 0 4px 14px rgba(3, 8, 23, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+        .lp-nav-signin:hover,
+        .lp-nav-signin:focus {
+          color: #FFFFFF !important;
+          background: linear-gradient(180deg, rgba(22, 55, 125, 0.8) 0%, rgba(10, 27, 68, 0.92) 100%);
+          border-color: rgba(56, 189, 248, 0.65);
+          box-shadow: 0 0 20px rgba(56, 189, 248, 0.28), 0 4px 14px rgba(3, 8, 23, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
           transform: translateY(-1.5px);
+          text-decoration: none !important;
         }
         .lp-nav-signin:active {
+          color: #FFFFFF !important;
           transform: translateY(0) scale(0.98);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         }
 
-        /* Nav Sign-Up Button */
+        /* ── Nav Sign-Up (electric-blue gradient, persistent white text) ── */
         .lp-nav-signup {
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 0.45rem;
-          color: #FFFFFF;
+          color: #FFFFFF !important;        /* locked — beats global a:hover */
           font-size: 0.84rem;
           font-weight: 600;
           letter-spacing: 0.015em;
           padding: 0.5rem 1.4rem;
+          height: 38px;
           border-radius: 0.625rem;
           background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #173FB5 100%);
-          border: 1px solid rgba(147, 197, 253, 0.42);
-          box-shadow: 0 0 20px rgba(37, 99, 235, 0.45), 0 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
-          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          border: 1px solid rgba(147, 197, 253, 0.45);
+          box-shadow: 0 0 18px rgba(37, 99, 235, 0.42), 0 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+          transition:
+            background 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+            border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
           user-select: none;
+          text-decoration: none !important;
+          white-space: nowrap;
         }
-        .lp-nav-signup:hover {
+        .lp-nav-signup:hover,
+        .lp-nav-signup:focus {
+          color: #FFFFFF !important;
           background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
-          border-color: rgba(191, 219, 254, 0.7);
-          box-shadow: 0 0 32px rgba(56, 189, 248, 0.55), 0 6px 18px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+          border-color: rgba(191, 219, 254, 0.72);
+          box-shadow: 0 0 28px rgba(56, 189, 248, 0.5), 0 6px 18px rgba(37, 99, 235, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4);
           transform: translateY(-1.5px);
+          text-decoration: none !important;
         }
         .lp-nav-signup:active {
+          color: #FFFFFF !important;
           transform: translateY(0) scale(0.98);
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
         }
 
-        /* Hero Primary Action */
+        /* ── Hero Primary CTA (royal-blue gradient, always white text, arrow) ── */
         .lp-hero-primary {
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 0.625rem;
-          color: #FFFFFF;
-          font-size: 0.95rem;
+          color: #FFFFFF !important;        /* locked — beats global a:hover */
+          font-size: 0.9375rem;
           font-weight: 600;
-          letter-spacing: 0.015em;
-          padding: 0.85rem 2.2rem;
+          letter-spacing: 0.012em;
+          padding: 0.875rem 2.2rem;
+          height: 52px;
           border-radius: 0.75rem;
           background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 55%, #1B4FC0 100%);
-          border: 1px solid rgba(147, 197, 253, 0.45);
-          box-shadow: 0 0 36px rgba(37, 99, 235, 0.48), 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          border: 1px solid rgba(147, 197, 253, 0.48);
+          box-shadow:
+            0 0 32px rgba(37, 99, 235, 0.45),
+            0 4px 20px rgba(0, 0, 0, 0.45),
+            inset 0 1px 0 rgba(255, 255, 255, 0.32);
+          transition:
+            background 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+            border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          text-decoration: none !important;
+          white-space: nowrap;
         }
-        .lp-hero-primary:hover {
+        .lp-hero-primary:hover,
+        .lp-hero-primary:focus {
+          color: #FFFFFF !important;
           background: linear-gradient(135deg, #3B82F6 0%, #2563EB 55%, #1D4ED8 100%);
-          border-color: rgba(191, 219, 254, 0.75);
-          box-shadow: 0 0 54px rgba(56, 189, 248, 0.55), 0 8px 28px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+          border-color: rgba(191, 219, 254, 0.78);
+          box-shadow:
+            0 0 48px rgba(56, 189, 248, 0.52),
+            0 8px 28px rgba(37, 99, 235, 0.42),
+            inset 0 1px 0 rgba(255, 255, 255, 0.46);
           transform: translateY(-2px);
+          text-decoration: none !important;
         }
         .lp-hero-primary:active {
+          color: #FFFFFF !important;
           transform: translateY(0) scale(0.98);
+          box-shadow: 0 2px 10px rgba(37, 99, 235, 0.5);
         }
+        /* Arrow micro-animation — isolated so it cannot interfere with text */
         .lp-hero-primary .lp-arrow {
+          flex-shrink: 0;
           transition: transform 0.2s ease;
         }
         .lp-hero-primary:hover .lp-arrow {
           transform: translateX(4px);
         }
 
-        /* Hero Secondary Action */
+        /* ── Hero Secondary CTA (navy glass, cyan outline, always readable) ── */
         .lp-hero-secondary {
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 0.625rem;
-          color: #E2E8F0;
-          font-size: 0.95rem;
+          color: #E2EAF8 !important;        /* locked — beats global a { color } */
+          font-size: 0.9375rem;
           font-weight: 500;
-          letter-spacing: 0.015em;
-          padding: 0.85rem 2.2rem;
+          letter-spacing: 0.012em;
+          padding: 0.875rem 2.2rem;
+          height: 52px;
           border-radius: 0.75rem;
-          background: rgba(8, 21, 47, 0.65);
-          border: 1px solid rgba(167, 183, 206, 0.25);
+          background: rgba(8, 21, 47, 0.68);
+          border: 1px solid rgba(167, 183, 206, 0.28);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+          transition:
+            color 0.22s ease,
+            background 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+            border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          text-decoration: none !important;
+          white-space: nowrap;
         }
-        .lp-hero-secondary:hover {
-          color: #FFFFFF;
-          background: rgba(18, 49, 107, 0.5);
-          border-color: rgba(56, 189, 248, 0.5);
-          box-shadow: 0 0 28px rgba(56, 189, 248, 0.22), 0 6px 20px rgba(0, 0, 0, 0.4);
+        .lp-hero-secondary:hover,
+        .lp-hero-secondary:focus {
+          color: #FFFFFF !important;
+          background: rgba(16, 42, 100, 0.72);
+          border-color: rgba(56, 189, 248, 0.55);
+          box-shadow: 0 0 24px rgba(56, 189, 248, 0.2), 0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
           transform: translateY(-2px);
+          text-decoration: none !important;
         }
         .lp-hero-secondary:active {
+          color: #FFFFFF !important;
           transform: translateY(0) scale(0.98);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
         }
 
         /* Ambient Glow Spheres */
@@ -403,13 +467,41 @@ export default function LandingPage() {
           );
         }
 
-        /* Focus rings for keyboard navigation */
-        .lp-nav-signin:focus-visible,
-        .lp-nav-signup:focus-visible,
-        .lp-hero-primary:focus-visible,
+        /* Keyboard focus rings — clearly visible, locked text color */
+        .lp-nav-signin:focus-visible {
+          outline: 2px solid #38BDF8;
+          outline-offset: 3px;
+          color: #FFFFFF !important;
+        }
+        .lp-nav-signup:focus-visible {
+          outline: 2px solid #93C5FD;
+          outline-offset: 3px;
+          color: #FFFFFF !important;
+        }
+        .lp-hero-primary:focus-visible {
+          outline: 2px solid #38BDF8;
+          outline-offset: 3px;
+          color: #FFFFFF !important;
+        }
         .lp-hero-secondary:focus-visible {
           outline: 2px solid #38BDF8;
           outline-offset: 3px;
+          color: #FFFFFF !important;
+        }
+
+        /* Reduced-motion: preserve color, disable transform and glow transitions */
+        @media (prefers-reduced-motion: reduce) {
+          .lp-nav-signin,
+          .lp-nav-signup,
+          .lp-hero-primary,
+          .lp-hero-secondary {
+            transition: border-color 0.15s ease, background 0.15s ease !important;
+          }
+          .lp-nav-signin:hover, .lp-nav-signup:hover,
+          .lp-hero-primary:hover, .lp-hero-secondary:hover {
+            transform: none !important;
+            box-shadow: none !important;
+          }
         }
       `}</style>
 

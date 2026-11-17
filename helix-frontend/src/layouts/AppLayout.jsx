@@ -50,16 +50,77 @@ const NAV_ITEMS = [
   },
 ]
 
-// ── Logo mark SVG ──────────────────────────────────────────────────────────
-function HelixLogo() {
+// ── Sidebar Logo — ONCO SPHERE · CLINICAL INTELLIGENCE ───────────────────
+function HelixLogo({ collapsed }) {
   return (
-    <div className="flex items-center gap-3 px-4 h-16 shrink-0">
-      {/* Logo image — always visible */}
-      <img
-        src={ICSRLogo}
-        alt="ICSR Logo"
-        className="h-9 w-auto object-contain shrink-0"
-      />
+    <div
+      className="flex items-center shrink-0 overflow-hidden"
+      style={{
+        height: '64px',
+        paddingLeft: collapsed ? '10px' : '14px',
+        paddingRight: collapsed ? '10px' : '14px',
+        gap: collapsed ? 0 : '10px',
+        transition: 'padding 200ms cubic-bezier(0.4,0,0.2,1)',
+      }}
+    >
+      {/* Logo tile — always visible */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '36px',
+          height: '36px',
+          borderRadius: '10px',
+          background: 'linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(8,21,47,0.65) 100%)',
+          border: '1px solid rgba(56,189,248,0.28)',
+          boxShadow: '0 0 14px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.14)',
+          flexShrink: 0,
+          transition: 'all 200ms cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
+        <img
+          src={ICSRLogo}
+          alt="Onco Sphere"
+          style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+        />
+      </div>
+
+      {/* Brand name — hidden when collapsed */}
+      <div
+        className="label-transition flex flex-col justify-center leading-none overflow-hidden"
+        style={{
+          opacity: collapsed ? 0 : 1,
+          width: collapsed ? 0 : 'auto',
+          visibility: collapsed ? 'hidden' : 'visible',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '1.05rem',
+            fontWeight: 800,
+            color: 'var(--ink-primary)',
+            letterSpacing: '-0.02em',
+            lineHeight: '1.15',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Onco Sphere
+        </span>
+        <span
+          style={{
+            fontSize: '0.52rem',
+            fontWeight: 600,
+            color: 'var(--color-blue)',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            marginTop: '2px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Clinical Intelligence
+        </span>
+      </div>
     </div>
   )
 }
@@ -139,9 +200,9 @@ function SidebarContent({ collapsed, onClose, user, filteredNav, onLogout, onNav
       className="sidebar-transition flex flex-col h-full bg-surface-card border-r border-surface-border text-ink-primary"
       style={{ width: collapsed ? 64 : 240 }}
     >
-      {/* Header — logo + close button */}
+      {/* Header — logo + collapse button */}
       <div className="flex items-center justify-between shrink-0">
-        <HelixLogo />
+        <HelixLogo collapsed={collapsed} />
         {!collapsed && (
           <button
             onClick={onClose}
@@ -331,14 +392,49 @@ export default function AppLayout() {
               <RiMenuLine size={20} />
             </button>
 
-            {/* Platform Title */}
+            {/* Platform Identity — ONCO SPHERE · CLINICAL INTELLIGENCE */}
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-base sm:text-lg md:text-xl font-bold tracking-tight">
-                <span className="text-ink-primary font-extrabold font-sans">
-                  <span className="hidden md:inline">Onco Sphere Oncology Intelligence Platform</span>
-                  <span className="md:hidden">Onco Sphere</span>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, rgba(37,99,235,0.15) 0%, rgba(8,21,47,0.5) 100%)',
+                  border: '1px solid rgba(37,99,235,0.3)',
+                  flexShrink: 0,
+                }}
+                className="lg:hidden"
+              >
+                <img
+                  src={ICSRLogo}
+                  alt="Onco Sphere"
+                  style={{ width: '22px', height: '22px', objectFit: 'contain' }}
+                />
+              </div>
+              <div className="flex flex-col justify-center leading-none min-w-0">
+                <span
+                  className="text-ink-primary font-extrabold truncate"
+                  style={{ fontSize: '0.95rem', letterSpacing: '-0.015em', lineHeight: '1.15' }}
+                >
+                  Onco Sphere
                 </span>
-              </span>
+                <span
+                  className="hidden sm:block"
+                  style={{
+                    fontSize: '0.5rem',
+                    fontWeight: 600,
+                    color: 'var(--color-blue)',
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    marginTop: '1px',
+                  }}
+                >
+                  Clinical Intelligence
+                </span>
+              </div>
             </div>
           </div>
 
