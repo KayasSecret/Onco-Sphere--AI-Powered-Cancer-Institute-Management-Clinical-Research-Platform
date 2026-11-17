@@ -1306,7 +1306,7 @@ export default function ResearcherApplicationPage() {
       <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src={ICSRLogo} alt="ICSR Logo" className="h-9 w-auto object-contain" />
+            <img src={ICSRLogo} alt="Onco Sphere Logo" className="h-9 w-auto object-contain bg-transparent" />
             <span className="hidden sm:block text-slate-600 text-xs ml-2">Researcher Application</span>
           </div>
 

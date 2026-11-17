@@ -204,25 +204,6 @@ export default function LandingPage() {
           border-bottom: 1px solid rgba(56, 189, 248, 0.12);
         }
 
-        /* Logo badge tile */
-        .lp-logo-tile {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 42px;
-          height: 42px;
-          border-radius: 12px;
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.22) 0%, rgba(8, 21, 47, 0.75) 100%);
-          border: 1px solid rgba(56, 189, 248, 0.3);
-          box-shadow: 0 0 16px rgba(37, 99, 235, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.16);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .lp-logo-wrap:hover .lp-logo-tile {
-          border-color: rgba(56, 189, 248, 0.65);
-          box-shadow: 0 0 24px rgba(56, 189, 248, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-          transform: translateY(-1px);
-        }
-
         /* ═══════════════════════════════════════════════════════
            BUTTON SYSTEM — All four landing page buttons
            Root cause of text-visibility bug: global index.css rule
@@ -518,14 +499,18 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto flex items-center justify-between h-[70px] px-6 lg:px-12">
             
             {/* Branding: ONCO SPHERE · CLINICAL INTELLIGENCE */}
-            <div className="lp-logo-wrap flex items-center gap-3.5 shrink-0 cursor-default">
-              <div className="lp-logo-tile">
-                <img
-                  src={ICSRLogo}
-                  alt="Onco Sphere Logo"
-                  style={{ width: '34px', height: '34px', objectFit: 'contain' }}
-                />
-              </div>
+            <div className="flex items-center gap-3.5 shrink-0 cursor-default">
+              <img
+                src={ICSRLogo}
+                alt="Onco Sphere Logo"
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  objectFit: 'contain',
+                  flexShrink: 0,
+                  background: 'transparent',
+                }}
+              />
               <div className="flex flex-col justify-center leading-none">
                 <span
                   style={{
@@ -653,9 +638,9 @@ export default function LandingPage() {
             <div className="flex items-center gap-2.5">
               <img
                 src={ICSRLogo}
-                alt="Onco Sphere Mark"
+                alt="Onco Sphere Logo"
                 aria-hidden="true"
-                style={{ width: '22px', height: '22px', objectFit: 'contain', opacity: 0.6 }}
+                style={{ width: '22px', height: '22px', objectFit: 'contain', background: 'transparent' }}
               />
               <span className="text-xs font-bold text-slate-300 tracking-[0.1em] uppercase">
                 Onco Sphere

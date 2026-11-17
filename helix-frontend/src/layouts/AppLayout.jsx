@@ -57,34 +57,23 @@ function HelixLogo({ collapsed }) {
       className="flex items-center shrink-0 overflow-hidden"
       style={{
         height: '64px',
-        paddingLeft: collapsed ? '10px' : '14px',
-        paddingRight: collapsed ? '10px' : '14px',
-        gap: collapsed ? 0 : '10px',
+        paddingLeft: collapsed ? '14px' : '16px',
+        paddingRight: collapsed ? '14px' : '16px',
+        gap: collapsed ? 0 : '12px',
         transition: 'padding 200ms cubic-bezier(0.4,0,0.2,1)',
       }}
     >
-      {/* Logo tile — always visible */}
-      <div
+      <img
+        src={ICSRLogo}
+        alt="Onco Sphere"
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '36px',
-          height: '36px',
-          borderRadius: '10px',
-          background: 'linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(8,21,47,0.65) 100%)',
-          border: '1px solid rgba(56,189,248,0.28)',
-          boxShadow: '0 0 14px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.14)',
+          width: '34px',
+          height: '34px',
+          objectFit: 'contain',
           flexShrink: 0,
-          transition: 'all 200ms cubic-bezier(0.4,0,0.2,1)',
+          background: 'transparent',
         }}
-      >
-        <img
-          src={ICSRLogo}
-          alt="Onco Sphere"
-          style={{ width: '28px', height: '28px', objectFit: 'contain' }}
-        />
-      </div>
+      />
 
       {/* Brand name — hidden when collapsed */}
       <div
@@ -394,26 +383,18 @@ export default function AppLayout() {
 
             {/* Platform Identity — ONCO SPHERE · CLINICAL INTELLIGENCE */}
             <div className="flex items-center gap-2.5 min-w-0">
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, rgba(37,99,235,0.15) 0%, rgba(8,21,47,0.5) 100%)',
-                  border: '1px solid rgba(37,99,235,0.3)',
-                  flexShrink: 0,
-                }}
+              <img
+                src={ICSRLogo}
+                alt="Onco Sphere"
                 className="lg:hidden"
-              >
-                <img
-                  src={ICSRLogo}
-                  alt="Onco Sphere"
-                  style={{ width: '22px', height: '22px', objectFit: 'contain' }}
-                />
-              </div>
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  objectFit: 'contain',
+                  flexShrink: 0,
+                  background: 'transparent',
+                }}
+              />
               <div className="flex flex-col justify-center leading-none min-w-0">
                 <span
                   className="text-ink-primary font-extrabold truncate"

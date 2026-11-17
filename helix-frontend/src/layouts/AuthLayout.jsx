@@ -20,7 +20,7 @@ export default function AuthLayout() {
 
         {/* Logo */}
         <div className="flex items-center gap-3 relative z-10">
-          <img src={ICSRLogo} alt="ICSR Logo" className="h-12 w-auto object-contain" />
+          <img src={ICSRLogo} alt="Onco Sphere Logo" className="h-12 w-auto object-contain bg-transparent" />
         </div>
 
         {/* Tagline */}
@@ -62,7 +62,7 @@ export default function AuthLayout() {
         <div className="w-full max-w-md relative z-10">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-            <img src={ICSRLogo} alt="ICSR Logo" className="h-10 w-auto object-contain" />
+            <img src={ICSRLogo} alt="Onco Sphere Logo" className="h-10 w-auto object-contain bg-transparent" />
           </div>
 
           {/* Auth form content injected here */}
