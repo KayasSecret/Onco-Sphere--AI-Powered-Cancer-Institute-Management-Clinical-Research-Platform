@@ -6,8 +6,9 @@ import ICSRLogo from '../../assets/ICSR-LOGO.png'
 import { useEffect, useRef } from 'react'
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   MolecularCanvas — lightweight CSS-canvas scientific background
-   Pure JS Canvas. No external library. Respects prefers-reduced-motion.
+   MolecularCanvas — High-precision scientific laboratory background
+   Pure 2D Canvas with HiDPI / Retina scaling. Zero heavy dependencies.
+   Respects prefers-reduced-motion.
 ───────────────────────────────────────────────────────────────────────────── */
 function MolecularCanvas() {
   const canvasRef = useRef(null)
@@ -18,104 +19,119 @@ function MolecularCanvas() {
     const ctx = canvas.getContext('2d')
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    // Node config
-    const NODE_COUNT = 38
-    const CONNECT_DIST = 160
-    const nodes = []
+    let width = 0
+    let height = 0
+    let dpr = 1
 
     function resize() {
-      canvas.width = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
+      dpr = Math.min(window.devicePixelRatio || 1, 2)
+      width = canvas.offsetWidth
+      height = canvas.offsetHeight
+      canvas.width = width * dpr
+      canvas.height = height * dpr
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.scale(dpr, dpr)
     }
+
     resize()
     window.addEventListener('resize', resize)
 
-    // Seed nodes
+    // Scientific node topology
+    const NODE_COUNT = 42
+    const CONNECT_DIST = 150
+    const nodes = []
+
     for (let i = 0; i < NODE_COUNT; i++) {
-      const isMolecule = i < 8
+      const isCoreMolecule = i < 9
       nodes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: isMolecule ? 3.5 + Math.random() * 2.5 : 1.5 + Math.random() * 2,
-        vx: prefersReduced ? 0 : (Math.random() - 0.5) * 0.18,
-        vy: prefersReduced ? 0 : (Math.random() - 0.5) * 0.18,
-        alpha: 0.35 + Math.random() * 0.4,
+        x: Math.random() * (width || window.innerWidth),
+        y: Math.random() * (height || window.innerHeight),
+        r: isCoreMolecule ? 3.0 + Math.random() * 2.2 : 1.4 + Math.random() * 1.6,
+        vx: prefersReduced ? 0 : (Math.random() - 0.5) * 0.16,
+        vy: prefersReduced ? 0 : (Math.random() - 0.5) * 0.16,
+        alpha: 0.35 + Math.random() * 0.45,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.008 + Math.random() * 0.012,
-        isMolecule,
+        pulseSpeed: 0.009 + Math.random() * 0.012,
+        isCore: isCoreMolecule,
       })
     }
 
-    let raf
-    let t = 0
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      t += 1
+    let rafId
+    function render() {
+      ctx.clearRect(0, 0, width, height)
 
       // Update positions
-      nodes.forEach(n => {
-        if (!prefersReduced) {
+      if (!prefersReduced) {
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i]
           n.x += n.vx
           n.y += n.vy
           n.pulse += n.pulseSpeed
-          if (n.x < -20) n.x = canvas.width + 20
-          if (n.x > canvas.width + 20) n.x = -20
-          if (n.y < -20) n.y = canvas.height + 20
-          if (n.y > canvas.height + 20) n.y = -20
-        }
-      })
 
-      // Draw edges
+          if (n.x < -20) n.x = width + 20
+          if (n.x > width + 20) n.x = -20
+          if (n.y < -20) n.y = height + 20
+          if (n.y > height + 20) n.y = -20
+        }
+      }
+
+      // Draw connective network lines
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i], b = nodes[j]
-          const dx = a.x - b.x, dy = a.y - b.y
+          const a = nodes[i]
+          const b = nodes[j]
+          const dx = a.x - b.x
+          const dy = a.y - b.y
           const dist = Math.sqrt(dx * dx + dy * dy)
+
           if (dist < CONNECT_DIST) {
-            const opacity = (1 - dist / CONNECT_DIST) * 0.22
+            const factor = 1 - dist / CONNECT_DIST
+            const alpha = factor * (a.isCore || b.isCore ? 0.24 : 0.12)
             ctx.beginPath()
             ctx.moveTo(a.x, a.y)
             ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(56,189,248,${opacity})`
-            ctx.lineWidth = 0.6
+            ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`
+            ctx.lineWidth = 0.65
             ctx.stroke()
           }
         }
       }
 
-      // Draw nodes
-      nodes.forEach(n => {
-        const pulse = n.isMolecule ? Math.sin(n.pulse) * 0.3 + 0.7 : 1
+      // Draw nodes and subtle orbital halos
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i]
+        const pulse = n.isCore ? Math.sin(n.pulse) * 0.35 + 0.75 : 1
         const r = n.r * pulse
         const alpha = n.alpha * pulse
 
-        if (n.isMolecule) {
-          // Outer ring glow for molecule nodes
-          const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r * 3.5)
-          grad.addColorStop(0, `rgba(56,189,248,${alpha * 0.6})`)
-          grad.addColorStop(1, `rgba(37,99,235,0)`)
+        if (n.isCore) {
+          // Ambient cellular / molecular radial glow
+          const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r * 4.2)
+          grad.addColorStop(0, `rgba(56, 189, 248, ${alpha * 0.55})`)
+          grad.addColorStop(0.5, `rgba(37, 99, 235, ${alpha * 0.2})`)
+          grad.addColorStop(1, 'rgba(3, 8, 23, 0)')
           ctx.beginPath()
-          ctx.arc(n.x, n.y, r * 3.5, 0, Math.PI * 2)
+          ctx.arc(n.x, n.y, r * 4.2, 0, Math.PI * 2)
           ctx.fillStyle = grad
           ctx.fill()
         }
 
-        // Core dot
+        // Nucleus dot
         ctx.beginPath()
         ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
-        ctx.fillStyle = n.isMolecule
-          ? `rgba(56,189,248,${alpha})`
-          : `rgba(96,165,250,${alpha * 0.7})`
+        ctx.fillStyle = n.isCore
+          ? `rgba(56, 189, 248, ${alpha})`
+          : `rgba(147, 197, 253, ${alpha * 0.75})`
         ctx.fill()
-      })
+      }
 
-      raf = requestAnimationFrame(draw)
+      rafId = requestAnimationFrame(render)
     }
 
-    draw()
+    render()
+
     return () => {
-      cancelAnimationFrame(raf)
+      cancelAnimationFrame(rafId)
       window.removeEventListener('resize', resize)
     }
   }, [])
@@ -130,18 +146,18 @@ function MolecularCanvas() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   LandingPage — Premium Clinical Intelligence Landing Page
+   LandingPage — Onco Sphere Clinical Intelligence Platform
 ───────────────────────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
 
   return (
     <>
-      {/* ── Injected styles for landing page only ──────────────────── */}
+      {/* ── Scoped styles for high-end oncology laboratory aesthetic ── */}
       <style>{`
-        /* Landing page entrance animations */
+        /* Smooth micro-animations */
         @keyframes lp-fade-up {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(18px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes lp-fade-in {
@@ -149,88 +165,66 @@ export default function LandingPage() {
           to   { opacity: 1; }
         }
         @keyframes lp-badge-pop {
-          0%   { opacity: 0; transform: translateY(10px) scale(0.95); }
+          0%   { opacity: 0; transform: translateY(8px) scale(0.96); }
           100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-        @keyframes lp-glow-pulse {
-          0%, 100% { opacity: 0.18; }
-          50%       { opacity: 0.32; }
+        @keyframes lp-ambient-pulse {
+          0%, 100% { opacity: 0.16; transform: scale(1) translate(-50%, -50%); }
+          50%      { opacity: 0.28; transform: scale(1.08) translate(-50%, -50%); }
         }
         @keyframes lp-grid-drift {
-          0%   { transform: translate(0,0); }
-          100% { transform: translate(40px, 40px); }
-        }
-        @keyframes lp-border-shine {
-          0%   { background-position: 200% center; }
-          100% { background-position: -200% center; }
+          0%   { background-position: 0 0; }
+          100% { background-position: 48px 48px; }
         }
 
         /* Entrance timing */
-        .lp-animate-nav    { animation: lp-fade-in  0.6s ease both; }
-        .lp-animate-badge  { animation: lp-badge-pop 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.2s both; }
-        .lp-animate-h1     { animation: lp-fade-up  0.75s ease 0.4s both; }
-        .lp-animate-p      { animation: lp-fade-up  0.75s ease 0.55s both; }
-        .lp-animate-cta    { animation: lp-fade-up  0.75s ease 0.7s both; }
+        .lp-anim-nav    { animation: lp-fade-in 0.55s ease both; }
+        .lp-anim-badge  { animation: lp-badge-pop 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+        .lp-anim-h1     { animation: lp-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+        .lp-anim-p      { animation: lp-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+        .lp-anim-cta    { animation: lp-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
+        .lp-anim-strip  { animation: lp-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; }
 
-        /* Respect reduced-motion */
         @media (prefers-reduced-motion: reduce) {
-          .lp-animate-nav, .lp-animate-badge, .lp-animate-h1,
-          .lp-animate-p, .lp-animate-cta {
+          .lp-anim-nav, .lp-anim-badge, .lp-anim-h1, .lp-anim-p, .lp-anim-cta, .lp-anim-strip {
             animation: none !important;
             opacity: 1 !important;
             transform: none !important;
           }
+          .lp-ambient-top, .lp-ambient-bottom, .lp-grid-bg {
+            animation: none !important;
+          }
         }
 
-        /* Ambient glows */
-        .lp-glow-top {
-          animation: lp-glow-pulse 6s ease-in-out infinite;
-        }
-        .lp-glow-bottom {
-          animation: lp-glow-pulse 8s ease-in-out 2s infinite;
-        }
-
-        /* Grid drift */
-        .lp-grid {
-          animation: lp-grid-drift 20s linear infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .lp-grid { animation: none !important; }
-          .lp-glow-top, .lp-glow-bottom { animation: none !important; }
-        }
-
-        /* Navbar glass */
-        .lp-nav {
+        /* Glassmorphic Top Navbar */
+        .lp-navbar {
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
-          background: rgba(3, 8, 23, 0.78);
+          background: rgba(3, 8, 23, 0.82);
           border-bottom: 1px solid rgba(56, 189, 248, 0.12);
-          transition: background 0.3s ease, border-color 0.3s ease;
         }
 
-        /* Logo badge & icon container */
-        .lp-logo-badge {
-          position: relative;
+        /* Logo badge tile */
+        .lp-logo-tile {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
+          width: 42px;
+          height: 42px;
           border-radius: 12px;
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(8, 21, 47, 0.65) 100%);
-          border: 1px solid rgba(56, 189, 248, 0.28);
-          box-shadow: 0 0 16px rgba(37, 99, 235, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.22) 0%, rgba(8, 21, 47, 0.75) 100%);
+          border: 1px solid rgba(56, 189, 248, 0.3);
+          box-shadow: 0 0 16px rgba(37, 99, 235, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .lp-logo-group:hover .lp-logo-badge {
-          border-color: rgba(56, 189, 248, 0.6);
-          box-shadow: 0 0 24px rgba(56, 189, 248, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        .lp-logo-wrap:hover .lp-logo-tile {
+          border-color: rgba(56, 189, 248, 0.65);
+          box-shadow: 0 0 24px rgba(56, 189, 248, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
           transform: translateY(-1px);
         }
 
-        /* Sign-in button: transparent navy glass surface, refined border, cyan-blue hover illumination */
+        /* Nav Sign-In Button */
         .lp-nav-signin {
-          position: relative;
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -238,21 +232,21 @@ export default function LandingPage() {
           font-size: 0.84rem;
           font-weight: 600;
           letter-spacing: 0.015em;
-          padding: 0.52rem 1.25rem;
+          padding: 0.5rem 1.25rem;
           border-radius: 0.625rem;
           background: rgba(8, 21, 47, 0.7);
           border: 1px solid rgba(56, 189, 248, 0.22);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
           transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
           user-select: none;
         }
         .lp-nav-signin:hover {
           color: #FFFFFF;
-          background: linear-gradient(180deg, rgba(20, 52, 115, 0.72) 0%, rgba(10, 27, 65, 0.85) 100%);
-          border-color: rgba(56, 189, 248, 0.55);
-          box-shadow: 0 0 22px rgba(56, 189, 248, 0.3), 0 4px 14px rgba(3, 8, 23, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+          background: linear-gradient(180deg, rgba(20, 52, 115, 0.75) 0%, rgba(10, 27, 65, 0.88) 100%);
+          border-color: rgba(56, 189, 248, 0.6);
+          box-shadow: 0 0 22px rgba(56, 189, 248, 0.32), 0 4px 14px rgba(3, 8, 23, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.24);
           transform: translateY(-1.5px);
         }
         .lp-nav-signin:active {
@@ -260,9 +254,8 @@ export default function LandingPage() {
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
-        /* Sign-up button: premium electric-blue gradient, subtle depth, sophisticated shadow, refined border, hover glow */
+        /* Nav Sign-Up Button */
         .lp-nav-signup {
-          position: relative;
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -271,18 +264,18 @@ export default function LandingPage() {
           font-size: 0.84rem;
           font-weight: 600;
           letter-spacing: 0.015em;
-          padding: 0.52rem 1.4rem;
+          padding: 0.5rem 1.4rem;
           border-radius: 0.625rem;
           background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #173FB5 100%);
-          border: 1px solid rgba(147, 197, 253, 0.4);
-          box-shadow: 0 0 20px rgba(37, 99, 235, 0.4), 0 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+          border: 1px solid rgba(147, 197, 253, 0.42);
+          box-shadow: 0 0 20px rgba(37, 99, 235, 0.45), 0 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
           transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
           user-select: none;
         }
         .lp-nav-signup:hover {
           background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
           border-color: rgba(191, 219, 254, 0.7);
-          box-shadow: 0 0 32px rgba(56, 189, 248, 0.55), 0 6px 18px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+          box-shadow: 0 0 32px rgba(56, 189, 248, 0.55), 0 6px 18px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45);
           transform: translateY(-1.5px);
         }
         .lp-nav-signup:active {
@@ -290,191 +283,155 @@ export default function LandingPage() {
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
         }
 
-        /* Backward-compatible aliases */
-        .lp-btn-ghost {
-          position: relative;
-          color: #A7B7CE;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          transition: color 0.2s ease, background 0.2s ease;
-          letter-spacing: 0.01em;
-        }
-        .lp-btn-ghost:hover {
-          color: #F8FAFC;
-          background: rgba(37,99,235,0.1);
-        }
-
-        /* Primary CTA button */
-        .lp-btn-primary {
+        /* Hero Primary Action */
+        .lp-hero-primary {
           display: inline-flex;
           align-items: center;
-          gap: 0.5rem;
-          background: linear-gradient(135deg, #2563EB 0%, #1B4FC0 100%);
-          color: #F8FAFC;
-          font-size: 0.8125rem;
-          font-weight: 600;
-          padding: 0.5rem 1.25rem;
-          border-radius: 0.5rem;
-          letter-spacing: 0.01em;
-          box-shadow: 0 0 20px rgba(37,99,235,0.35), 0 2px 8px rgba(0,0,0,0.3);
-          transition: box-shadow 0.25s ease, transform 0.2s ease, background 0.25s ease;
-          border: 1px solid rgba(37,99,235,0.6);
-        }
-        .lp-btn-primary:hover {
-          background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-          box-shadow: 0 0 32px rgba(56,189,248,0.4), 0 4px 16px rgba(0,0,0,0.3);
-          transform: translateY(-1px);
-        }
-        .lp-btn-primary:active {
-          transform: translateY(0);
-        }
-
-        /* Hero CTA primary */
-        .lp-cta-primary {
-          display: inline-flex;
-          align-items: center;
+          justify-content: center;
           gap: 0.625rem;
-          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 60%, #1B4FC0 100%);
-          color: #F8FAFC;
-          font-size: 0.9375rem;
+          color: #FFFFFF;
+          font-size: 0.95rem;
           font-weight: 600;
-          padding: 0.875rem 2rem;
+          letter-spacing: 0.015em;
+          padding: 0.85rem 2.2rem;
           border-radius: 0.75rem;
-          letter-spacing: 0.01em;
-          box-shadow: 0 0 40px rgba(37,99,235,0.45), 0 4px 24px rgba(0,0,0,0.4);
-          transition: box-shadow 0.3s ease, transform 0.25s ease, background 0.3s ease;
-          border: 1px solid rgba(56,189,248,0.3);
+          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 55%, #1B4FC0 100%);
+          border: 1px solid rgba(147, 197, 253, 0.45);
+          box-shadow: 0 0 36px rgba(37, 99, 235, 0.48), 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .lp-cta-primary:hover {
-          background: linear-gradient(135deg, #3B82F6 0%, #2563EB 60%, #1D4ED8 100%);
-          box-shadow: 0 0 60px rgba(56,189,248,0.5), 0 8px 32px rgba(0,0,0,0.4);
+        .lp-hero-primary:hover {
+          background: linear-gradient(135deg, #3B82F6 0%, #2563EB 55%, #1D4ED8 100%);
+          border-color: rgba(191, 219, 254, 0.75);
+          box-shadow: 0 0 54px rgba(56, 189, 248, 0.55), 0 8px 28px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
           transform: translateY(-2px);
         }
-        .lp-cta-primary:active { transform: translateY(0); }
-
-        .lp-cta-primary .lp-arrow {
+        .lp-hero-primary:active {
+          transform: translateY(0) scale(0.98);
+        }
+        .lp-hero-primary .lp-arrow {
           transition: transform 0.2s ease;
         }
-        .lp-cta-primary:hover .lp-arrow {
+        .lp-hero-primary:hover .lp-arrow {
           transform: translateX(4px);
         }
 
-        /* Hero CTA secondary */
-        .lp-cta-secondary {
+        /* Hero Secondary Action */
+        .lp-hero-secondary {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 0.625rem;
-          background: rgba(8,21,47,0.6);
-          color: #CBD5E1;
-          font-size: 0.9375rem;
+          color: #E2E8F0;
+          font-size: 0.95rem;
           font-weight: 500;
-          padding: 0.875rem 2rem;
+          letter-spacing: 0.015em;
+          padding: 0.85rem 2.2rem;
           border-radius: 0.75rem;
-          letter-spacing: 0.01em;
-          border: 1px solid rgba(167,183,206,0.2);
-          backdrop-filter: blur(8px);
-          transition: color 0.25s ease, border-color 0.25s ease,
-                      background 0.25s ease, transform 0.25s ease,
-                      box-shadow 0.25s ease;
+          background: rgba(8, 21, 47, 0.65);
+          border: 1px solid rgba(167, 183, 206, 0.25);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .lp-cta-secondary:hover {
-          color: #F8FAFC;
-          border-color: rgba(56,189,248,0.4);
-          background: rgba(37,99,235,0.12);
-          box-shadow: 0 0 24px rgba(56,189,248,0.15);
+        .lp-hero-secondary:hover {
+          color: #FFFFFF;
+          background: rgba(18, 49, 107, 0.5);
+          border-color: rgba(56, 189, 248, 0.5);
+          box-shadow: 0 0 28px rgba(56, 189, 248, 0.22), 0 6px 20px rgba(0, 0, 0, 0.4);
           transform: translateY(-2px);
         }
-        .lp-cta-secondary:active { transform: translateY(0); }
-
-        /* Badge */
-        .lp-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: #38BDF8;
-          background: rgba(56,189,248,0.07);
-          border: 1px solid rgba(56,189,248,0.2);
-          padding: 0.4rem 1rem;
-          border-radius: 9999px;
+        .lp-hero-secondary:active {
+          transform: translateY(0) scale(0.98);
         }
 
-        /* Hero h1 gradient */
-        .lp-gradient-text {
-          background: linear-gradient(90deg, #60A5FA 0%, #38BDF8 50%, #67E8F9 100%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
+        /* Ambient Glow Spheres */
+        .lp-ambient-top {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          width: 860px;
+          height: 600px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.26) 0%, rgba(56, 189, 248, 0.08) 45%, transparent 70%);
+          filter: blur(40px);
+          animation: lp-ambient-pulse 8s ease-in-out infinite;
+          pointer-events: none;
+        }
+        .lp-ambient-bottom {
+          position: absolute;
+          bottom: -100px;
+          right: -100px;
+          width: 580px;
+          height: 580px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.12) 0%, rgba(18, 49, 107, 0.15) 50%, transparent 70%);
+          filter: blur(50px);
+          pointer-events: none;
         }
 
-        /* Glass divider line above footer */
-        .lp-footer-line {
-          height: 1px;
-          background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(56,189,248,0.25) 30%,
-            rgba(37,99,235,0.35) 50%,
-            rgba(56,189,248,0.25) 70%,
-            transparent 100%
-          );
-        }
-
-        /* Focus rings on nav links */
-        .lp-nav-signin:focus-visible,
-        .lp-nav-signup:focus-visible,
-        .lp-btn-ghost:focus-visible,
-        .lp-btn-primary:focus-visible,
-        .lp-cta-primary:focus-visible,
-        .lp-cta-secondary:focus-visible {
-          outline: 2px solid #38BDF8;
-          outline-offset: 3px;
-        }
-
-        /* Technical grid lines */
-        .lp-technical-grid {
+        /* Scientific Grid Pattern */
+        .lp-grid-bg {
           background-image:
-            linear-gradient(rgba(56,189,248,0.045) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56,189,248,0.045) 1px, transparent 1px);
+            linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
           background-size: 48px 48px;
+          animation: lp-grid-drift 24s linear infinite;
         }
 
-        /* Scanline overlay */
-        .lp-scanline {
+        /* Subtle Laboratory Scanline Effect */
+        .lp-scanlines {
           background: repeating-linear-gradient(
             0deg,
             transparent,
             transparent 2px,
-            rgba(0,0,0,0.04) 2px,
-            rgba(0,0,0,0.04) 4px
+            rgba(0, 0, 0, 0.035) 2px,
+            rgba(0, 0, 0, 0.035) 4px
           );
+        }
+
+        /* Divider gradient line */
+        .lp-divider-line {
+          height: 1px;
+          background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(56, 189, 248, 0.15) 25%,
+            rgba(37, 99, 235, 0.45) 50%,
+            rgba(56, 189, 248, 0.15) 75%,
+            transparent 100%
+          );
+        }
+
+        /* Focus rings for keyboard navigation */
+        .lp-nav-signin:focus-visible,
+        .lp-nav-signup:focus-visible,
+        .lp-hero-primary:focus-visible,
+        .lp-hero-secondary:focus-visible {
+          outline: 2px solid #38BDF8;
+          outline-offset: 3px;
         }
       `}</style>
 
       <div
-        className="min-h-screen flex flex-col"
+        className="min-h-screen flex flex-col relative select-none"
         style={{
-          background: 'linear-gradient(170deg, #030817 0%, #08152F 45%, #030F22 75%, #030817 100%)',
+          background: 'linear-gradient(175deg, #030817 0%, #061129 40%, #040D21 75%, #020612 100%)',
           color: '#F8FAFC',
           fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
         }}
       >
-
-        {/* ── Navigation Bar ─────────────────────────────────────────── */}
-        <header className="lp-nav lp-animate-nav sticky top-0 z-50 w-full">
-          <div className="max-w-7xl mx-auto flex items-center justify-between h-[72px] px-6 lg:px-12">
-
-            {/* Logo & Brand Name */}
-            <div className="lp-logo-group flex items-center gap-3.5 shrink-0 cursor-default select-none">
-              <div className="lp-logo-badge">
+        {/* ── Top Navigation Bar ────────────────────────────────────────── */}
+        <header className="lp-navbar lp-anim-nav sticky top-0 z-50 w-full">
+          <div className="max-w-7xl mx-auto flex items-center justify-between h-[70px] px-6 lg:px-12">
+            
+            {/* Branding: ONCO SPHERE · CLINICAL INTELLIGENCE */}
+            <div className="lp-logo-wrap flex items-center gap-3.5 shrink-0 cursor-default">
+              <div className="lp-logo-tile">
                 <img
                   src={ICSRLogo}
                   alt="Onco Sphere Logo"
-                  style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+                  style={{ width: '34px', height: '34px', objectFit: 'contain' }}
                 />
               </div>
               <div className="flex flex-col justify-center leading-none">
@@ -486,7 +443,7 @@ export default function LandingPage() {
                     letterSpacing: '-0.025em',
                     lineHeight: '1.1',
                     whiteSpace: 'nowrap',
-                    textShadow: '0 2px 10px rgba(0,0,0,0.5), 0 0 18px rgba(56,189,248,0.2)',
+                    textShadow: '0 2px 10px rgba(0,0,0,0.6), 0 0 20px rgba(56,189,248,0.22)',
                   }}
                 >
                   Onco Sphere
@@ -507,7 +464,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Nav actions */}
+            {/* Nav authentication controls */}
             <div className="flex items-center gap-3">
               {isAuthenticated ? (
                 <Link to="/dashboard" className="lp-nav-signup">
@@ -528,231 +485,102 @@ export default function LandingPage() {
           </div>
         </header>
 
-        {/* ── Hero Section ────────────────────────────────────────────── */}
-        <main className="flex-1 relative flex flex-col items-center justify-center overflow-hidden">
+        {/* ── Central Hero Section ──────────────────────────────────────── */}
+        <main className="flex-1 relative flex flex-col items-center justify-center overflow-hidden px-6 py-20 lg:py-24 text-center">
+          
+          {/* Subtle laboratory background textures */}
+          <div className="lp-grid-bg absolute inset-0 pointer-events-none" aria-hidden="true" />
+          <div className="lp-scanlines absolute inset-0 pointer-events-none" aria-hidden="true" />
+          <div className="lp-ambient-top" aria-hidden="true" />
+          <div className="lp-ambient-bottom" aria-hidden="true" />
 
-          {/* Technical grid */}
-          <div
-            className="lp-technical-grid lp-grid absolute inset-0 pointer-events-none"
-            aria-hidden="true"
-            style={{ opacity: 1 }}
-          />
-
-          {/* Scanline texture */}
-          <div
-            className="lp-scanline absolute inset-0 pointer-events-none"
-            aria-hidden="true"
-          />
-
-          {/* Molecular network canvas */}
+          {/* HiDPI Molecular connection canvas */}
           <MolecularCanvas />
 
-          {/* Ambient glow — top center */}
-          <div
-            className="lp-glow-top absolute pointer-events-none"
-            aria-hidden="true"
-            style={{
-              top: '-120px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '800px',
-              height: '600px',
-              borderRadius: '50%',
-              background: 'radial-gradient(ellipse, rgba(37,99,235,0.22) 0%, rgba(56,189,248,0.08) 50%, transparent 70%)',
-              filter: 'blur(1px)',
-            }}
-          />
-
-          {/* Ambient glow — bottom right */}
-          <div
-            className="lp-glow-bottom absolute pointer-events-none"
-            aria-hidden="true"
-            style={{
-              bottom: '-80px',
-              right: '-80px',
-              width: '500px',
-              height: '500px',
-              borderRadius: '50%',
-              background: 'radial-gradient(ellipse, rgba(56,189,248,0.1) 0%, transparent 65%)',
-              filter: 'blur(2px)',
-            }}
-          />
-
-          {/* Ambient glow — bottom left */}
-          <div
-            className="absolute pointer-events-none"
-            aria-hidden="true"
-            style={{
-              bottom: '0',
-              left: '-60px',
-              width: '380px',
-              height: '380px',
-              borderRadius: '50%',
-              background: 'radial-gradient(ellipse, rgba(18,49,107,0.3) 0%, transparent 65%)',
-              opacity: 0.6,
-            }}
-          />
-
-          {/* Hero content */}
-          <div
-            className="relative z-10 flex flex-col items-center text-center"
-            style={{
-              maxWidth: '820px',
-              padding: '6rem 2rem 5rem',
-            }}
-          >
-
-            {/* Clinical intelligence badge */}
-            <div className="lp-animate-badge lp-badge mb-7">
-              <RiShieldCheckLine size={12} />
-              Clinical Intelligence Platform
+          {/* Hero Content Container */}
+          <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+            
+            {/* Clinical Intelligence Badge */}
+            <div className="lp-anim-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-sky-400/25 bg-sky-500/10 backdrop-blur-md mb-8 shadow-[0_0_24px_rgba(56,189,248,0.18)]">
+              <RiShieldCheckLine size={13} className="text-sky-400" />
+              <span className="text-[11px] font-bold tracking-[0.16em] uppercase text-sky-300">
+                Clinical Intelligence Platform
+              </span>
             </div>
 
-            {/* Main headline */}
-            <h1
-              className="lp-animate-h1"
-              style={{
-                fontSize: 'clamp(2.25rem, 5vw, 3.75rem)',
-                fontWeight: 300,
-                lineHeight: 1.12,
-                letterSpacing: '-0.02em',
-                color: '#F8FAFC',
-                marginBottom: '1.5rem',
-              }}
-            >
-              Every patient.{' '}
-              <span className="lp-gradient-text" style={{ fontWeight: 600 }}>
-                Every protocol.
-              </span>
+            {/* Refined Headline */}
+            <h1 className="lp-anim-h1 text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-white leading-[1.14] mb-6">
+              Precision in Every Patient.
               <br />
-              <span style={{ fontWeight: 300 }}>One clear line of sight.</span>
+              <span className="font-semibold bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-200 bg-clip-text text-transparent">
+                Clarity in Every Protocol.
+              </span>
             </h1>
 
-            {/* Supporting description */}
-            <p
-              className="lp-animate-p"
-              style={{
-                fontSize: 'clamp(0.9375rem, 2vw, 1.0625rem)',
-                fontWeight: 400,
-                lineHeight: 1.75,
-                color: '#A7B7CE',
-                maxWidth: '620px',
-                marginBottom: '2.75rem',
-              }}
-            >
-              Onco Sphere unites patient registries, longitudinal EMR charting,
-              and oncology workflow management in a clean, quiet interface
-              designed for hospital networks and cancer centers.
+            {/* Concise Supporting Description */}
+            <p className="lp-anim-p text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-light leading-relaxed mb-10">
+              One intelligent platform connecting oncology workflows, clinical research and patient records.
             </p>
 
             {/* CTA Buttons */}
-            <div
-              className="lp-animate-cta flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
+            <div className="lp-anim-cta flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
               <Link
                 to={isAuthenticated ? '/dashboard' : '/login'}
-                className="lp-cta-primary"
+                className="lp-hero-primary w-full sm:w-auto"
               >
-                {isAuthenticated ? 'Open Dashboard' : 'Sign in to Onco Sphere'}
+                <span>{isAuthenticated ? 'Open Dashboard' : 'Sign in to Onco Sphere'}</span>
                 <RiArrowRightLine size={18} className="lp-arrow" />
               </Link>
 
               {!isAuthenticated && (
                 <Link
                   to="/register/apply"
-                  className="lp-cta-secondary"
+                  className="lp-hero-secondary w-full sm:w-auto"
                 >
                   Request Access
                 </Link>
               )}
             </div>
 
-            {/* Trust indicator strip */}
-            <div
-              className="lp-animate-cta mt-10 flex items-center gap-2"
-              style={{ animationDelay: '0.85s' }}
-            >
-              <div
-                style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: '#38BDF8',
-                  boxShadow: '0 0 8px rgba(56,189,248,0.8)',
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 500,
-                  color: '#4B6A8A',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                HIPAA-aware architecture &nbsp;·&nbsp; PHI access audited &nbsp;·&nbsp; Institutional use only
+            {/* Institutional Trust Indicator Strip */}
+            <div className="lp-anim-strip mt-12 flex items-center gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)] animate-pulse" />
+              <span className="text-[10px] sm:text-xs font-medium text-slate-400 tracking-[0.12em] uppercase">
+                HIPAA-aware Architecture &nbsp;·&nbsp; Continuous PHI Audit &nbsp;·&nbsp; Institutional Oncology Use
               </span>
             </div>
           </div>
         </main>
 
-        {/* ── Footer ────────────────────────────────────────────────── */}
-        <footer
-          style={{
-            background: 'rgba(3,8,23,0.95)',
-            padding: '2rem 1.5rem',
-          }}
-        >
-          <div className="lp-footer-line mb-6" />
-
-          <div className="max-w-4xl mx-auto flex flex-col items-center gap-3 text-center">
-            {/* Logo row */}
-            <div className="flex items-center gap-2 mb-1">
+        {/* ── Modern Compact Footer ─────────────────────────────────────── */}
+        <footer className="relative z-10 bg-[#020614]/90 backdrop-blur-md px-6 py-8 text-center">
+          <div className="lp-divider-line max-w-5xl mx-auto mb-6" />
+          
+          <div className="max-w-4xl mx-auto flex flex-col items-center gap-2.5">
+            {/* Logo and Subtitle */}
+            <div className="flex items-center gap-2.5">
               <img
                 src={ICSRLogo}
-                alt=""
+                alt="Onco Sphere Mark"
                 aria-hidden="true"
-                style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 0.5 }}
+                style={{ width: '22px', height: '22px', objectFit: 'contain', opacity: 0.6 }}
               />
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: '#4B6A8A',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                }}
-              >
+              <span className="text-xs font-bold text-slate-300 tracking-[0.1em] uppercase">
                 Onco Sphere
+              </span>
+              <span className="text-slate-600 text-xs">·</span>
+              <span className="text-[11px] font-semibold text-sky-400/80 tracking-[0.14em] uppercase">
+                Clinical Intelligence
               </span>
             </div>
 
-            {/* Legal notice */}
-            <p
-              style={{
-                fontSize: '0.6875rem',
-                fontWeight: 400,
-                color: '#2D4A6B',
-                lineHeight: 1.65,
-                maxWidth: '480px',
-              }}
-            >
-              Onco Sphere is a medical information registry designed strictly for
-              institutional use. Protected health information (PHI) access is
-              audited continuously.
+            {/* Institutional Notice */}
+            <p className="text-[11px] font-normal text-slate-400 max-w-lg leading-relaxed">
+              Institutional oncology research & clinical intelligence registry. Protected Health Information (PHI) access is strictly monitored and audited.
             </p>
 
-            {/* Copyright */}
-            <p
-              style={{
-                fontSize: '0.625rem',
-                fontWeight: 400,
-                color: '#1E3A5F',
-                letterSpacing: '0.04em',
-                marginTop: '0.25rem',
-              }}
-            >
+            {/* Minimal Copyright */}
+            <p className="text-[10px] font-normal text-slate-500 tracking-wider mt-1">
               &copy; {new Date().getFullYear()} Onco Sphere — Oncology Intelligence. All rights reserved.
             </p>
           </div>
