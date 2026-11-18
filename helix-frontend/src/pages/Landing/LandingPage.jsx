@@ -6,9 +6,10 @@ import ICSRLogo from '../../assets/ICSR-LOGO.png'
 import { useEffect, useRef } from 'react'
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   MolecularCanvas — High-precision scientific laboratory background
-   Pure 2D Canvas with HiDPI / Retina scaling. Zero heavy dependencies.
-   Respects prefers-reduced-motion.
+   ScientificLabCanvas — Immersive oncology research laboratory animation
+   Layers: molecular network · glass flasks · microscopic particles ·
+           cellular structures · liquid chemistry · volumetric lighting
+   Pure 2D Canvas, HiDPI/Retina aware. Respects prefers-reduced-motion.
 ───────────────────────────────────────────────────────────────────────────── */
 function MolecularCanvas() {
   const canvasRef = useRef(null)
@@ -19,121 +20,468 @@ function MolecularCanvas() {
     const ctx = canvas.getContext('2d')
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    let width = 0
-    let height = 0
-    let dpr = 1
+    let W = 0, H = 0, dpr = 1, rafId = null, t = 0
 
+    // ── Resize & HiDPI ──────────────────────────────────────────────────────
     function resize() {
       dpr = Math.min(window.devicePixelRatio || 1, 2)
-      width = canvas.offsetWidth
-      height = canvas.offsetHeight
-      canvas.width = width * dpr
-      canvas.height = height * dpr
+      W = canvas.offsetWidth
+      H = canvas.offsetHeight
+      canvas.width  = W * dpr
+      canvas.height = H * dpr
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.scale(dpr, dpr)
+      initScene()
+    }
+
+    // ── Seeded helpers ───────────────────────────────────────────────────────
+    const rng = (() => { let s = 42; return () => { s ^= s<<13; s ^= s>>7; s ^= s<<17; return (s >>> 0) / 4294967295 } })()
+
+    // ── LAYER 1: Molecular network nodes ────────────────────────────────────
+    const MOL_COUNT = 38
+    let molecules = []
+    function initMolecules() {
+      molecules = []
+      for (let i = 0; i < MOL_COUNT; i++) {
+        const core = i < 10
+        molecules.push({
+          x: rng() * W, y: rng() * H,
+          vx: prefersReduced ? 0 : (rng() - 0.5) * 0.14,
+          vy: prefersReduced ? 0 : (rng() - 0.5) * 0.14,
+          r: core ? 2.8 + rng() * 2.0 : 1.2 + rng() * 1.4,
+          alpha: 0.3 + rng() * 0.45,
+          phase: rng() * Math.PI * 2,
+          speed: 0.008 + rng() * 0.011,
+          core,
+          // color channel: 0=cyan, 1=blue, 2=purple
+          hue: core ? Math.floor(rng() * 2) : Math.floor(rng() * 3),
+        })
+      }
+    }
+
+    // ── LAYER 2: Travelling pulses along connections ─────────────────────────
+    let pulses = []
+    function spawnPulse(a, b) {
+      pulses.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y, prog: 0, speed: 0.004 + rng() * 0.006 })
+    }
+
+    // ── LAYER 3: Hexagonal molecular formations ──────────────────────────────
+    const HEX_COUNT = 5
+    let hexRings = []
+    function initHex() {
+      hexRings = []
+      const positions = [
+        [W * 0.08,  H * 0.18],
+        [W * 0.88,  H * 0.12],
+        [W * 0.92,  H * 0.78],
+        [W * 0.05,  H * 0.80],
+        [W * 0.50,  H * 0.07],
+      ]
+      for (let k = 0; k < HEX_COUNT; k++) {
+        const [cx, cy] = positions[k] || [rng() * W, rng() * H]
+        hexRings.push({
+          cx, cy,
+          r: 32 + rng() * 22,
+          rot: rng() * Math.PI * 2,
+          rotSpeed: prefersReduced ? 0 : (rng() - 0.5) * 0.0018,
+          alpha: 0.08 + rng() * 0.08,
+        })
+      }
+    }
+
+    // ── LAYER 4: Floating microscopic dust/spore particles ───────────────────
+    const DUST_COUNT = 55
+    let dust = []
+    function initDust() {
+      dust = []
+      for (let i = 0; i < DUST_COUNT; i++) {
+        dust.push({
+          x: rng() * W, y: rng() * H,
+          r: 0.5 + rng() * 1.6,
+          vx: prefersReduced ? 0 : (rng() - 0.5) * 0.08,
+          vy: prefersReduced ? 0 : -0.04 - rng() * 0.06,   // slight upward drift
+          alpha: 0.12 + rng() * 0.28,
+          phase: rng() * Math.PI * 2,
+          speed: 0.012 + rng() * 0.018,
+          depth: rng(),   // 0=far, 1=near
+        })
+      }
+    }
+
+    // ── LAYER 5: Glass flasks ────────────────────────────────────────────────
+    const FLASK_DEFS = [
+      // [normX, normY, scaleW, scaleH, liquidHue, bubbleCount]
+      [0.04,  0.60, 0.055, 0.28, 0, 4],
+      [0.90,  0.42, 0.045, 0.22, 1, 3],
+      [0.95,  0.72, 0.038, 0.18, 2, 2],
+      [0.01,  0.30, 0.035, 0.16, 3, 2],
+    ]
+    let flasks = []
+
+    // Bubble per-flask state
+    function initFlasks() {
+      flasks = FLASK_DEFS.map(([nx, ny, nw, nh, hue, nBubbles]) => {
+        const x = nx * W, y = ny * H
+        const w = nw * W, h = nh * H
+        const bubbles = []
+        for (let i = 0; i < nBubbles; i++) {
+          bubbles.push({
+            px: 0.2 + rng() * 0.6,   // relative x inside flask
+            py: 0.5 + rng() * 0.45,  // relative y (0=top 1=bottom)
+            r: 1.2 + rng() * 2.2,
+            speed: prefersReduced ? 0 : 0.0008 + rng() * 0.0012,
+          })
+        }
+        return { x, y, w, h, hue, bubbles, liquidPhase: rng() * Math.PI * 2, liquidSpeed: 0.006 + rng() * 0.006 }
+      })
+    }
+
+    // Liquid hue helper → RGBA string
+    function liquidColor(hue, alpha) {
+      const palettes = [
+        [8, 124, 255, alpha],      // electric blue
+        [25, 217, 255, alpha],     // cyan
+        [121, 91, 255, alpha],     // soft purple
+        [56, 189, 248, alpha],     // sky
+      ]
+      const [r, g, b, a] = palettes[hue % palettes.length]
+      return `rgba(${r},${g},${b},${a})`
+    }
+
+    // ── LAYER 6: Scanning light beam ─────────────────────────────────────────
+    let scanPhase = 0
+
+    // ── LAYER 7: Cellular membrane circles ──────────────────────────────────
+    const CELL_COUNT = 4
+    let cells = []
+    function initCells() {
+      cells = []
+      const positions = [[W*0.12, H*0.70], [W*0.84, H*0.60], [W*0.60, H*0.88], [W*0.30, H*0.15]]
+      for (let i = 0; i < CELL_COUNT; i++) {
+        const [cx, cy] = positions[i] || [rng()*W, rng()*H]
+        cells.push({
+          cx, cy,
+          r: 28 + rng() * 36,
+          phase: rng() * Math.PI * 2,
+          speed: 0.004 + rng() * 0.005,
+          alpha: 0.07 + rng() * 0.06,
+          hue: Math.floor(rng() * 4),
+        })
+      }
+    }
+
+    // ── Init all layers ──────────────────────────────────────────────────────
+    function initScene() {
+      initMolecules(); initHex(); initDust(); initFlasks(); initCells()
     }
 
     resize()
     window.addEventListener('resize', resize)
 
-    // Scientific node topology
-    const NODE_COUNT = 42
-    const CONNECT_DIST = 150
-    const nodes = []
-
-    for (let i = 0; i < NODE_COUNT; i++) {
-      const isCoreMolecule = i < 9
-      nodes.push({
-        x: Math.random() * (width || window.innerWidth),
-        y: Math.random() * (height || window.innerHeight),
-        r: isCoreMolecule ? 3.0 + Math.random() * 2.2 : 1.4 + Math.random() * 1.6,
-        vx: prefersReduced ? 0 : (Math.random() - 0.5) * 0.16,
-        vy: prefersReduced ? 0 : (Math.random() - 0.5) * 0.16,
-        alpha: 0.35 + Math.random() * 0.45,
-        pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.009 + Math.random() * 0.012,
-        isCore: isCoreMolecule,
-      })
+    // ── Draw helpers ─────────────────────────────────────────────────────────
+    function molColor(hue, alpha) {
+      if (hue === 0) return `rgba(56,189,248,${alpha})`   // cyan
+      if (hue === 1) return `rgba(37,99,235,${alpha})`    // blue
+      return `rgba(121,91,255,${alpha})`                   // purple
     }
 
-    let rafId
+    function drawHexRing(hx) {
+      const { cx, cy, r, rot, alpha } = hx
+      ctx.save()
+      ctx.translate(cx, cy)
+      ctx.rotate(rot)
+      ctx.beginPath()
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * Math.PI * 2
+        const px = Math.cos(a) * r, py = Math.sin(a) * r
+        k === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+      }
+      ctx.closePath()
+      ctx.strokeStyle = `rgba(56,189,248,${alpha})`
+      ctx.lineWidth = 0.8
+      ctx.stroke()
+
+      // vertices as small nodes
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * Math.PI * 2
+        ctx.beginPath()
+        ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 1.5, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(56,189,248,${alpha * 2.2})`
+        ctx.fill()
+      }
+      ctx.restore()
+    }
+
+    function drawFlask({ x, y, w, h, hue, bubbles, liquidPhase }) {
+      const neckW = w * 0.28
+      const neckH = h * 0.28
+      const bodyBottom = y + h
+
+      // ── Glass body outline (Erlenmeyer-ish) ─────────────────────────────
+      ctx.save()
+      ctx.beginPath()
+      // neck
+      ctx.moveTo(x + w/2 - neckW/2, y)
+      ctx.lineTo(x + w/2 + neckW/2, y)
+      // neck to body
+      ctx.lineTo(x + w, bodyBottom)
+      ctx.lineTo(x, bodyBottom)
+      ctx.closePath()
+
+      // subtle glass fill
+      const glassGrad = ctx.createLinearGradient(x, y, x + w, y)
+      glassGrad.addColorStop(0,   'rgba(56,189,248,0.04)')
+      glassGrad.addColorStop(0.4, 'rgba(255,255,255,0.02)')
+      glassGrad.addColorStop(1,   'rgba(56,189,248,0.03)')
+      ctx.fillStyle = glassGrad
+      ctx.fill()
+
+      // outline
+      ctx.strokeStyle = `rgba(56,189,248,0.18)`
+      ctx.lineWidth = 0.8
+      ctx.stroke()
+
+      // ── Liquid inside ────────────────────────────────────────────────────
+      const liquidTop = y + h * (0.35 + 0.06 * Math.sin(liquidPhase))
+      const liquidPath = new Path2D()
+      liquidPath.moveTo(x + 2, bodyBottom - 1)
+      liquidPath.lineTo(x + w - 2, bodyBottom - 1)
+      liquidPath.lineTo(x + w * (0.7 + 0.04 * Math.cos(liquidPhase * 1.3)), liquidTop + 2)
+      // gentle wave on surface
+      for (let wx = 0; wx <= 1; wx += 0.1) {
+        const waveY = liquidTop + Math.sin(liquidPhase * 2 + wx * Math.PI * 2) * 2
+        liquidPath.lineTo(x + w * (1 - wx), waveY)
+      }
+      liquidPath.closePath()
+      ctx.save()
+      ctx.clip(liquidPath)
+
+      const liqGrad = ctx.createLinearGradient(x, liquidTop, x, bodyBottom)
+      liqGrad.addColorStop(0, liquidColor(hue, 0.22))
+      liqGrad.addColorStop(0.5, liquidColor(hue, 0.30))
+      liqGrad.addColorStop(1,   liquidColor(hue, 0.18))
+      ctx.fillStyle = liqGrad
+      ctx.fillRect(x, liquidTop, w, bodyBottom - liquidTop)
+
+      // inner glow
+      const lgInner = ctx.createRadialGradient(x + w*0.5, bodyBottom, 0, x + w*0.5, bodyBottom, h*0.5)
+      lgInner.addColorStop(0, liquidColor(hue, 0.18))
+      lgInner.addColorStop(1, liquidColor(hue, 0))
+      ctx.fillStyle = lgInner
+      ctx.fillRect(x, liquidTop, w, bodyBottom - liquidTop)
+
+      ctx.restore() // unclip
+
+      // ── Bubbles ──────────────────────────────────────────────────────────
+      for (const b of bubbles) {
+        const bx = x + (b.px * w) * 0.6 + w * 0.2
+        const by = y + h * b.py
+        if (by < liquidTop) continue
+        ctx.beginPath()
+        ctx.arc(bx, by, b.r, 0, Math.PI * 2)
+        ctx.strokeStyle = liquidColor(hue, 0.45)
+        ctx.lineWidth = 0.6
+        ctx.stroke()
+        // inner shimmer
+        ctx.beginPath()
+        ctx.arc(bx - b.r * 0.3, by - b.r * 0.3, b.r * 0.3, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255,255,255,0.18)`
+        ctx.fill()
+      }
+
+      // ── Glass highlight streak ───────────────────────────────────────────
+      ctx.beginPath()
+      ctx.moveTo(x + w * 0.08, y + h * 0.1)
+      ctx.lineTo(x + w * 0.14, y + h * 0.75)
+      ctx.strokeStyle = 'rgba(255,255,255,0.09)'
+      ctx.lineWidth = 1.5
+      ctx.stroke()
+
+      ctx.restore()
+    }
+
+    function drawScanLine(scanX) {
+      const grad = ctx.createLinearGradient(scanX - 60, 0, scanX + 60, 0)
+      grad.addColorStop(0,   'rgba(56,189,248,0)')
+      grad.addColorStop(0.4, 'rgba(56,189,248,0.04)')
+      grad.addColorStop(0.5, 'rgba(56,189,248,0.07)')
+      grad.addColorStop(0.6, 'rgba(56,189,248,0.04)')
+      grad.addColorStop(1,   'rgba(56,189,248,0)')
+      ctx.fillStyle = grad
+      ctx.fillRect(scanX - 60, 0, 120, H)
+    }
+
+    // ── Main render loop ─────────────────────────────────────────────────────
     function render() {
-      ctx.clearRect(0, 0, width, height)
+      ctx.clearRect(0, 0, W, H)
+      t += prefersReduced ? 0 : 1
 
-      // Update positions
-      if (!prefersReduced) {
-        for (let i = 0; i < nodes.length; i++) {
-          const n = nodes[i]
-          n.x += n.vx
-          n.y += n.vy
-          n.pulse += n.pulseSpeed
-
-          if (n.x < -20) n.x = width + 20
-          if (n.x > width + 20) n.x = -20
-          if (n.y < -20) n.y = height + 20
-          if (n.y > height + 20) n.y = -20
+      // ── Update molecules ─────────────────────────────────────────────────
+      for (const m of molecules) {
+        if (!prefersReduced) {
+          m.x += m.vx; m.y += m.vy; m.phase += m.speed
+          if (m.x < -20) m.x = W + 20; if (m.x > W + 20) m.x = -20
+          if (m.y < -20) m.y = H + 20; if (m.y > H + 20) m.y = -20
         }
       }
 
-      // Draw connective network lines
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i]
-          const b = nodes[j]
-          const dx = a.x - b.x
-          const dy = a.y - b.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
+      // ── Update hex rings ─────────────────────────────────────────────────
+      for (const h of hexRings) h.rot += h.rotSpeed
 
-          if (dist < CONNECT_DIST) {
-            const factor = 1 - dist / CONNECT_DIST
-            const alpha = factor * (a.isCore || b.isCore ? 0.24 : 0.12)
-            ctx.beginPath()
-            ctx.moveTo(a.x, a.y)
-            ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`
-            ctx.lineWidth = 0.65
-            ctx.stroke()
+      // ── Update dust ──────────────────────────────────────────────────────
+      for (const d of dust) {
+        if (!prefersReduced) {
+          d.x += d.vx; d.y += d.vy; d.phase += d.speed
+          if (d.y < -10) { d.y = H + 10; d.x = rng() * W }
+          if (d.x < -10) d.x = W + 10; if (d.x > W + 10) d.x = -10
+        }
+      }
+
+      // ── Update bubbles (rise up) ─────────────────────────────────────────
+      for (const f of flasks) {
+        f.liquidPhase += f.liquidSpeed
+        for (const b of f.bubbles) {
+          b.py -= b.speed
+          if (b.py < 0.05) { b.py = 0.9 + rng() * 0.08; b.px = 0.2 + rng() * 0.6 }
+        }
+      }
+
+      // ── Update scan ──────────────────────────────────────────────────────
+      scanPhase += 0.0012
+
+      // ── Update cells ─────────────────────────────────────────────────────
+      for (const c of cells) c.phase += c.speed
+
+      // ══ DRAW LAYERS (back → front) ═══════════════════════════════════════
+
+      // 1. Volumetric ambient light pools
+      const ambPulse = Math.sin(t * 0.008) * 0.5 + 0.5
+      ;[
+        [W * 0.5, H * 0.3, 420, 0.13 + ambPulse * 0.06, [37, 99, 235]],
+        [W * 0.1, H * 0.7, 280, 0.08 + ambPulse * 0.03, [56, 189, 248]],
+        [W * 0.9, H * 0.5, 260, 0.07, [121, 91, 255]],
+      ].forEach(([ax, ay, ar, aa, [r, g, b]]) => {
+        const ag = ctx.createRadialGradient(ax, ay, 0, ax, ay, ar)
+        ag.addColorStop(0,   `rgba(${r},${g},${b},${aa})`)
+        ag.addColorStop(0.5, `rgba(${r},${g},${b},${aa * 0.4})`)
+        ag.addColorStop(1,   `rgba(${r},${g},${b},0)`)
+        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2)
+        ctx.fillStyle = ag; ctx.fill()
+      })
+
+      // 2. Cellular membrane structures (deep back)
+      for (const c of cells) {
+        const pulse = Math.sin(c.phase) * 0.3 + 0.7
+        ctx.save()
+        ctx.translate(c.cx, c.cy)
+        // outer membrane
+        ctx.beginPath()
+        ctx.arc(0, 0, c.r * pulse, 0, Math.PI * 2)
+        ctx.strokeStyle = liquidColor(c.hue, c.alpha * pulse)
+        ctx.lineWidth = 1.2
+        ctx.stroke()
+        // inner membrane
+        ctx.beginPath()
+        ctx.arc(0, 0, c.r * 0.62 * pulse, 0, Math.PI * 2)
+        ctx.strokeStyle = liquidColor(c.hue, c.alpha * 0.5 * pulse)
+        ctx.lineWidth = 0.6
+        ctx.stroke()
+        // nucleus
+        const nucGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, c.r * 0.18)
+        nucGrad.addColorStop(0, liquidColor(c.hue, c.alpha * 1.5 * pulse))
+        nucGrad.addColorStop(1, liquidColor(c.hue, 0))
+        ctx.beginPath(); ctx.arc(0, 0, c.r * 0.18, 0, Math.PI * 2)
+        ctx.fillStyle = nucGrad; ctx.fill()
+        ctx.restore()
+      }
+
+      // 3. Glass flasks (laboratory equipment)
+      for (const f of flasks) drawFlask(f)
+
+      // 4. Hexagonal molecular formations
+      for (const h of hexRings) drawHexRing(h)
+
+      // 5. Molecular connection network
+      for (let i = 0; i < molecules.length; i++) {
+        for (let j = i + 1; j < molecules.length; j++) {
+          const a = molecules[i], b = molecules[j]
+          const dx = a.x - b.x, dy = a.y - b.y
+          const dist = Math.sqrt(dx*dx + dy*dy)
+          if (dist < 155) {
+            const fac = 1 - dist / 155
+            const lineAlpha = fac * (a.core || b.core ? 0.22 : 0.10)
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
+            ctx.strokeStyle = `rgba(56,189,248,${lineAlpha})`
+            ctx.lineWidth = 0.6; ctx.stroke()
+
+            // occasionally spawn pulse
+            if (!prefersReduced && t % 180 === 0 && fac > 0.6 && rng() < 0.15) spawnPulse(a, b)
           }
         }
       }
 
-      // Draw nodes and subtle orbital halos
-      for (let i = 0; i < nodes.length; i++) {
-        const n = nodes[i]
-        const pulse = n.isCore ? Math.sin(n.pulse) * 0.35 + 0.75 : 1
-        const r = n.r * pulse
-        const alpha = n.alpha * pulse
+      // 6. Travelling pulses along edges
+      pulses = pulses.filter(p => p.prog <= 1)
+      for (const p of pulses) {
+        p.prog += p.speed
+        const px = p.ax + (p.bx - p.ax) * p.prog
+        const py = p.ay + (p.by - p.ay) * p.prog
+        const pGrad = ctx.createRadialGradient(px, py, 0, px, py, 5)
+        pGrad.addColorStop(0,   'rgba(56,189,248,0.90)')
+        pGrad.addColorStop(0.4, 'rgba(56,189,248,0.30)')
+        pGrad.addColorStop(1,   'rgba(56,189,248,0)')
+        ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2)
+        ctx.fillStyle = pGrad; ctx.fill()
+      }
 
-        if (n.isCore) {
-          // Ambient cellular / molecular radial glow
-          const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r * 4.2)
-          grad.addColorStop(0, `rgba(56, 189, 248, ${alpha * 0.55})`)
-          grad.addColorStop(0.5, `rgba(37, 99, 235, ${alpha * 0.2})`)
-          grad.addColorStop(1, 'rgba(3, 8, 23, 0)')
-          ctx.beginPath()
-          ctx.arc(n.x, n.y, r * 4.2, 0, Math.PI * 2)
-          ctx.fillStyle = grad
-          ctx.fill()
+      // 7. Molecule nodes (core + secondary)
+      for (const m of molecules) {
+        const pulse = m.core ? Math.sin(m.phase) * 0.32 + 0.78 : 1
+        const r = m.r * pulse, a = m.alpha * pulse
+
+        if (m.core) {
+          const glow = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, r * 5)
+          glow.addColorStop(0,   molColor(m.hue, a * 0.5))
+          glow.addColorStop(0.4, molColor(m.hue, a * 0.15))
+          glow.addColorStop(1,   molColor(m.hue, 0))
+          ctx.beginPath(); ctx.arc(m.x, m.y, r * 5, 0, Math.PI * 2)
+          ctx.fillStyle = glow; ctx.fill()
         }
 
-        // Nucleus dot
-        ctx.beginPath()
-        ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
-        ctx.fillStyle = n.isCore
-          ? `rgba(56, 189, 248, ${alpha})`
-          : `rgba(147, 197, 253, ${alpha * 0.75})`
+        ctx.beginPath(); ctx.arc(m.x, m.y, r, 0, Math.PI * 2)
+        ctx.fillStyle = molColor(m.hue, m.core ? a : a * 0.72)
         ctx.fill()
+
+        // small ring on core nodes
+        if (m.core) {
+          ctx.beginPath(); ctx.arc(m.x, m.y, r * 2.4, 0, Math.PI * 2)
+          ctx.strokeStyle = molColor(m.hue, a * 0.18)
+          ctx.lineWidth = 0.6; ctx.stroke()
+        }
+      }
+
+      // 8. Foreground microscopic dust (depth: near)
+      for (const d of dust) {
+        const pa = d.alpha * (0.5 + 0.5 * Math.sin(d.phase)) * (0.4 + d.depth * 0.6)
+        const pr = d.r * (0.5 + d.depth * 0.5)
+        ctx.beginPath(); ctx.arc(d.x, d.y, pr, 0, Math.PI * 2)
+        ctx.fillStyle = d.depth > 0.6
+          ? `rgba(56,189,248,${pa})`
+          : `rgba(147,197,253,${pa})`
+        ctx.fill()
+      }
+
+      // 9. Scanning laboratory light beam
+      if (!prefersReduced) {
+        const scanX = ((Math.sin(scanPhase) * 0.5 + 0.5)) * W
+        drawScanLine(scanX)
       }
 
       rafId = requestAnimationFrame(render)
     }
 
     render()
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      window.removeEventListener('resize', resize)
-    }
+    return () => { cancelAnimationFrame(rafId); window.removeEventListener('resize', resize) }
   }, [])
 
   return (
@@ -155,6 +503,24 @@ export default function LandingPage() {
     <>
       {/* ── Scoped styles for high-end oncology laboratory aesthetic ── */}
       <style>{`
+        @keyframes lp-flask-glow {
+          0%, 100% { opacity: 0.6; }
+          50%       { opacity: 1; }
+        }
+        @keyframes lp-cell-pulse {
+          0%, 100% { transform: scale(1); opacity: 0.5; }
+          50%       { transform: scale(1.06); opacity: 0.85; }
+        }
+        @keyframes lp-liquid-drift {
+          0%   { transform: translateX(0px) rotate(0deg); }
+          50%  { transform: translateX(3px) rotate(0.6deg); }
+          100% { transform: translateX(0px) rotate(0deg); }
+        }
+        @keyframes lp-scanbeam {
+          0%   { left: -20%; }
+          100% { left: 110%; }
+        }
+
         /* Smooth micro-animations */
         @keyframes lp-fade-up {
           from { opacity: 0; transform: translateY(18px); }
@@ -419,10 +785,32 @@ export default function LandingPage() {
         /* Scientific Grid Pattern */
         .lp-grid-bg {
           background-image:
-            linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
-          background-size: 48px 48px;
-          animation: lp-grid-drift 24s linear infinite;
+            linear-gradient(rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(56, 189, 248, 0.035) 1px, transparent 1px);
+          background-size: 52px 52px;
+          animation: lp-grid-drift 28s linear infinite;
+        }
+
+        /* CSS lab depth layers — complement the Canvas */
+        .lp-vignette {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: radial-gradient(ellipse at center, transparent 50%, rgba(2,8,23,0.65) 100%);
+        }
+        .lp-depth-left {
+          position: absolute;
+          top: 0; left: 0;
+          width: 220px; height: 100%;
+          pointer-events: none;
+          background: linear-gradient(90deg, rgba(6,27,58,0.38) 0%, transparent 100%);
+        }
+        .lp-depth-right {
+          position: absolute;
+          top: 0; right: 0;
+          width: 220px; height: 100%;
+          pointer-events: none;
+          background: linear-gradient(-90deg, rgba(6,27,58,0.38) 0%, transparent 100%);
         }
 
         /* Subtle Laboratory Scanline Effect */
@@ -571,7 +959,12 @@ export default function LandingPage() {
           <div className="lp-ambient-top" aria-hidden="true" />
           <div className="lp-ambient-bottom" aria-hidden="true" />
 
-          {/* HiDPI Molecular connection canvas */}
+          {/* CSS depth-of-field vignette + side depth gradients */}
+          <div className="lp-vignette" aria-hidden="true" />
+          <div className="lp-depth-left" aria-hidden="true" />
+          <div className="lp-depth-right" aria-hidden="true" />
+
+          {/* Full scientific laboratory animation canvas */}
           <MolecularCanvas />
 
           {/* Hero Content Container */}
