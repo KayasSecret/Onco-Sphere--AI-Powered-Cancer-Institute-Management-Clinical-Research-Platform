@@ -29,6 +29,7 @@ class ReportTemplateResponse(BaseModel):
 
 class ReportValueCreate(BaseModel):
     parameter_id: int
+    parameter_code: Optional[str] = None
     result_value: float
     reference_range: str
     interpretation: str
@@ -44,9 +45,9 @@ class ReportCreateRequest(BaseModel):
     lab_number: str
     overall_summary: Optional[str] = None
     status: Optional[str] = "Draft"
-    damage_score: float
-    defence_score: float
-    ratio_score: float
+    damage_score: Optional[float] = 0.0
+    defence_score: Optional[float] = 0.0
+    ratio_score: Optional[float] = 0.0
     values: List[ReportValueCreate]
 
 class ReportValueResponse(BaseModel):

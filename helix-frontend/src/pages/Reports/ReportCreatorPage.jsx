@@ -108,37 +108,30 @@ const calculateAge = (dobString) => {
   return age.toString()
 }
 
-// Auto-evaluate interpretation when a numeric result is entered
-function deriveClinicalInterpretation(code, rawVal, currentInterpretation) {
+// Evaluate whether a numeric result is within or outside the reference range (informational only; never blocks submission)
+function evaluateRangeStatus(rawVal, rangeStr) {
+  if (rawVal === '' || rawVal === null || rawVal === undefined) return null
   const num = parseFloat(rawVal)
-  if (isNaN(num)) return currentInterpretation
-  switch (code) {
-    case 'MDA':
-      if (num < 0.5) return 'Low baseline lipid peroxidation'
-      if (num <= 2.0) return 'Normal lipid peroxidation level'
-      return 'Elevated MDA — increased membrane lipid peroxidation'
-    case 'FOX2':
-      if (num < 2.0) return 'Low hydroperoxide activity'
-      if (num <= 10.0) return 'Within physiological hydroperoxide range'
-      return 'Elevated FOX-2 — active lipid hydroperoxide accumulation'
-    case 'DNPH':
-      if (num < 0.5) return 'Minimal protein carbonylation'
-      if (num <= 2.5) return 'Normal protein oxidative modification'
-      return 'Elevated Protein Carbonyls — oxidative protein injury'
-    case 'GRIESS':
-      if (num < 20.0) return 'Below reference nitrosative baseline'
-      if (num <= 40.0) return 'Normal nitrosative stress marker'
-      return 'Elevated Nitric Oxide — increased nitrosative stress'
-    case 'GSH':
-      if (num < 650) return 'Depleted GSH — reduced intracellular antioxidant reserve'
-      if (num <= 1100) return 'Adequate intracellular glutathione reserve'
-      return 'High GSH — robust intracellular thiol protection'
-    case 'TAC':
-      if (num < 600) return 'Reduced TAC — suboptimal systemic antioxidant capacity'
-      if (num <= 1200) return 'Optimal plasma antioxidant capacity'
-      return 'High TAC — strong systemic antioxidant potential'
-    default:
-      return currentInterpretation
+  if (isNaN(num) || !rangeStr) return null
+  const matches = String(rangeStr).match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)/)
+  if (!matches) return null
+  const min = parseFloat(matches[1])
+  const max = parseFloat(matches[2])
+  if (num < min) {
+    return {
+      label: 'Below Reference Range (Low)',
+      className: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25',
+    }
+  }
+  if (num > max) {
+    return {
+      label: 'Outside Reference Range (Elevated)',
+      className: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/25',
+    }
+  }
+  return {
+    label: 'Within Reference Range (Normal)',
+    className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25',
   }
 }
 
@@ -534,8 +527,15 @@ export default function ReportCreatorPage() {
         setTemplate(activeTemplate)
       }
 
+      const paramIdByCode = {}
+      if (activeTemplate?.parameters?.length > 0) {
+        activeTemplate.parameters.forEach((tp) => {
+          paramIdByCode[tp.code] = tp.id
+        })
+      }
+
       const payload = {
-        template_id: activeTemplate.id,
+        template_id: activeTemplate?.id || 1,
         patient_id: parseInt(selectedPatientId, 10),
         doctor_name: doctorName || 'Dr. Somani',
         reference_by: referenceBy.trim(),
@@ -549,7 +549,8 @@ export default function ReportCreatorPage() {
         defence_score: parseFloat(defenceScore) || 0,
         ratio_score: parseFloat(ratioScore) || 0,
         values: paramValues.map((p) => ({
-          parameter_id: p.parameter_id,
+          parameter_id: paramIdByCode[p.code] || p.parameter_id,
+          parameter_code: p.code,
           result_value: parseFloat(p.result_value),
           reference_range: p.reference_range,
           interpretation: p.interpretation,
@@ -955,68 +956,78 @@ export default function ReportCreatorPage() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                  Score: {damageScore}/10
-                </span>
-                <RiArrowDownSLine
-                  size={18}
-                  className={`text-ink-secondary transition-transform ${
-                    openSections.damage ? 'rotate-180' : ''
-                  }`}
-                />
-              </div>
+              <RiArrowDownSLine
+                size={18}
+                className={`text-ink-secondary transition-transform ${
+                  openSections.damage ? 'rotate-180' : ''
+                }`}
+              />
             </button>
 
             {openSections.damage && (
               <div className="p-4 space-y-3">
-                {damageParams.map((param) => (
-                  <div key={param.code} className="onco-param-card space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-ink-primary">
-                        {param.name}
-                      </span>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-blue/10 text-brand-blue dark:text-sky-300">
-                        {param.code} · {param.unit || 'µmol/L'}
-                      </span>
-                    </div>
+                {damageParams.map((param) => {
+                  const rangeStatus = evaluateRangeStatus(
+                    param.result_value,
+                    param.reference_range
+                  )
+                  return (
+                    <div key={param.code} className="onco-param-card space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-ink-primary">
+                          {param.name}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {rangeStatus && (
+                            <span
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${rangeStatus.className}`}
+                            >
+                              {rangeStatus.label}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-blue/10 text-brand-blue dark:text-sky-300">
+                            {param.code}
+                          </span>
+                        </div>
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      <FormField label={`Measured Result (${param.unit || 'µmol/L'})`} required>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <FormField label="Measured Result" required>
+                          <Input
+                            type="number"
+                            step="any"
+                            value={param.result_value}
+                            onChange={(e) =>
+                              handleParamChangeByCode(param.code, 'result_value', e.target.value)
+                            }
+                            placeholder="Enter numeric value"
+                            className="h-8 font-mono text-xs font-bold"
+                          />
+                        </FormField>
+                        <FormField label="Reference Range">
+                          <Input
+                            value={param.reference_range}
+                            onChange={(e) =>
+                              handleParamChangeByCode(param.code, 'reference_range', e.target.value)
+                            }
+                            className="h-8 font-mono text-xs"
+                          />
+                        </FormField>
+                      </div>
+
+                      <FormField label="Clinical Interpretation">
                         <Input
-                          type="number"
-                          step="0.01"
-                          value={param.result_value}
+                          value={param.interpretation}
                           onChange={(e) =>
-                            handleParamChangeByCode(param.code, 'result_value', e.target.value)
+                            handleParamChangeByCode(param.code, 'interpretation', e.target.value)
                           }
-                          placeholder="Enter numeric value"
-                          className="h-8 font-mono text-xs font-bold"
+                          placeholder="Clinical interpretation..."
+                          className="h-8 text-xs"
                         />
                       </FormField>
-                      <FormField label="Reference Range">
-                        <Input
-                          value={param.reference_range}
-                          onChange={(e) =>
-                            handleParamChangeByCode(param.code, 'reference_range', e.target.value)
-                          }
-                          className="h-8 font-mono text-xs"
-                        />
-                      </FormField>
                     </div>
-
-                    <FormField label="Clinical Interpretation">
-                      <Input
-                        value={param.interpretation}
-                        onChange={(e) =>
-                          handleParamChangeByCode(param.code, 'interpretation', e.target.value)
-                        }
-                        placeholder="Clinical interpretation..."
-                        className="h-8 text-xs"
-                      />
-                    </FormField>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -1041,68 +1052,78 @@ export default function ReportCreatorPage() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  Score: {defenceScore}/10
-                </span>
-                <RiArrowDownSLine
-                  size={18}
-                  className={`text-ink-secondary transition-transform ${
-                    openSections.defence ? 'rotate-180' : ''
-                  }`}
-                />
-              </div>
+              <RiArrowDownSLine
+                size={18}
+                className={`text-ink-secondary transition-transform ${
+                  openSections.defence ? 'rotate-180' : ''
+                }`}
+              />
             </button>
 
             {openSections.defence && (
               <div className="p-4 space-y-3">
-                {defenceParams.map((param) => (
-                  <div key={param.code} className="onco-param-card space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-ink-primary">
-                        {param.name}
-                      </span>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                        {param.code} · {param.unit || 'µmol/L'}
-                      </span>
-                    </div>
+                {defenceParams.map((param) => {
+                  const rangeStatus = evaluateRangeStatus(
+                    param.result_value,
+                    param.reference_range
+                  )
+                  return (
+                    <div key={param.code} className="onco-param-card space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-ink-primary">
+                          {param.name}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {rangeStatus && (
+                            <span
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${rangeStatus.className}`}
+                            >
+                              {rangeStatus.label}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                            {param.code}
+                          </span>
+                        </div>
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      <FormField label={`Measured Result (${param.unit || 'µmol/L'})`} required>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <FormField label="Measured Result" required>
+                          <Input
+                            type="number"
+                            step="any"
+                            value={param.result_value}
+                            onChange={(e) =>
+                              handleParamChangeByCode(param.code, 'result_value', e.target.value)
+                            }
+                            placeholder="Enter numeric value"
+                            className="h-8 font-mono text-xs font-bold"
+                          />
+                        </FormField>
+                        <FormField label="Reference Range">
+                          <Input
+                            value={param.reference_range}
+                            onChange={(e) =>
+                              handleParamChangeByCode(param.code, 'reference_range', e.target.value)
+                            }
+                            className="h-8 font-mono text-xs"
+                          />
+                        </FormField>
+                      </div>
+
+                      <FormField label="Clinical Interpretation">
                         <Input
-                          type="number"
-                          step="0.01"
-                          value={param.result_value}
+                          value={param.interpretation}
                           onChange={(e) =>
-                            handleParamChangeByCode(param.code, 'result_value', e.target.value)
+                            handleParamChangeByCode(param.code, 'interpretation', e.target.value)
                           }
-                          placeholder="Enter numeric value"
-                          className="h-8 font-mono text-xs font-bold"
+                          placeholder="Clinical interpretation..."
+                          className="h-8 text-xs"
                         />
                       </FormField>
-                      <FormField label="Reference Range">
-                        <Input
-                          value={param.reference_range}
-                          onChange={(e) =>
-                            handleParamChangeByCode(param.code, 'reference_range', e.target.value)
-                          }
-                          className="h-8 font-mono text-xs"
-                        />
-                      </FormField>
                     </div>
-
-                    <FormField label="Clinical Interpretation">
-                      <Input
-                        value={param.interpretation}
-                        onChange={(e) =>
-                          handleParamChangeByCode(param.code, 'interpretation', e.target.value)
-                        }
-                        placeholder="Clinical interpretation..."
-                        className="h-8 text-xs"
-                      />
-                    </FormField>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -1123,7 +1144,7 @@ export default function ReportCreatorPage() {
                     5. Summary &amp; Diagnostic Interpretation
                   </span>
                   <span className="text-[11px] text-ink-secondary">
-                    Composite scores (DDR: {ratioScore}/10), clinical narrative &amp; disclaimer
+                    Quantitative analysis indices, clinical narrative &amp; disclaimer
                   </span>
                 </div>
               </div>
@@ -1139,7 +1160,7 @@ export default function ReportCreatorPage() {
               <div className="p-4 space-y-3.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-ink-primary">
-                    Composite Indices (1 – 10 Scale)
+                    Quantitative Indices (Shown on Pages 2 &amp; 3)
                   </span>
                   {manualScoreOverride && (
                     <button
@@ -1153,12 +1174,10 @@ export default function ReportCreatorPage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2.5">
-                  <FormField label="Damage Score">
+                  <FormField label="Damage Index">
                     <Input
                       type="number"
-                      step="0.1"
-                      min="0"
-                      max="10"
+                      step="any"
                       value={damageScore}
                       onChange={(e) => {
                         setManualScoreOverride(true)
@@ -1167,12 +1186,10 @@ export default function ReportCreatorPage() {
                       className="h-8 font-mono text-xs font-bold"
                     />
                   </FormField>
-                  <FormField label="Defence Score">
+                  <FormField label="Defence Index">
                     <Input
                       type="number"
-                      step="0.1"
-                      min="0"
-                      max="10"
+                      step="any"
                       value={defenceScore}
                       onChange={(e) => {
                         setManualScoreOverride(true)
@@ -1184,9 +1201,7 @@ export default function ReportCreatorPage() {
                   <FormField label="DDR Ratio">
                     <Input
                       type="number"
-                      step="0.1"
-                      min="0"
-                      max="10"
+                      step="any"
                       value={ratioScore}
                       onChange={(e) => {
                         setManualScoreOverride(true)

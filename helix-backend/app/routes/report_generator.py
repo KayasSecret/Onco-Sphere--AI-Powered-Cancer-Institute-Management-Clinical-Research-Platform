@@ -261,6 +261,8 @@ def create_or_version_report(
         version = 1
         action_type = "Created"
 
+    ensure_oxidative_stress_template(db)
+
     # Verify patient exists
     patient = db.query(Patient).filter(Patient.id == payload.patient_id).first()
     if not patient:
@@ -269,8 +271,10 @@ def create_or_version_report(
             detail="Patient not found."
         )
 
-    # Verify template exists
+    # Verify template exists (fallback to OXIDATIVE_STRESS template if ID differs)
     template = db.query(ReportTemplate).filter(ReportTemplate.id == payload.template_id).first()
+    if not template:
+        template = db.query(ReportTemplate).filter(ReportTemplate.code == "OXIDATIVE_STRESS").first()
     if not template:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -280,10 +284,10 @@ def create_or_version_report(
     # Build new Report
     new_report = Report(
         report_number=report_number,
-        template_id=payload.template_id,
+        template_id=template.id,
         patient_id=payload.patient_id,
         version=version,
-        status=payload.status,
+        status=payload.status or "Draft",
         doctor_name=payload.doctor_name,
         reference_by=payload.reference_by,
         report_date=payload.report_date,
@@ -291,9 +295,9 @@ def create_or_version_report(
         collection_date=payload.collection_date,
         lab_number=payload.lab_number,
         overall_summary=payload.overall_summary,
-        damage_score=payload.damage_score,
-        defence_score=payload.defence_score,
-        ratio_score=payload.ratio_score,
+        damage_score=payload.damage_score if payload.damage_score is not None else 0.0,
+        defence_score=payload.defence_score if payload.defence_score is not None else 0.0,
+        ratio_score=payload.ratio_score if payload.ratio_score is not None else 0.0,
         created_by_id=current_user.id,
         updated_by_id=current_user.id if version > 1 else None,
     )
@@ -302,15 +306,20 @@ def create_or_version_report(
     db.commit()
     db.refresh(new_report)
 
-    # Add Report Values
+    # Add Report Values (match by parameter_code first, then parameter_id)
     for val in payload.values:
-        # Check parameter exists
-        param = db.query(ReportParameter).filter(
-            ReportParameter.id == val.parameter_id
-        ).first()
+        param = None
+        if val.parameter_code:
+            param = db.query(ReportParameter).filter(
+                ReportParameter.template_id == template.id,
+                ReportParameter.code == val.parameter_code,
+            ).first()
+        if not param:
+            param = db.query(ReportParameter).filter(
+                ReportParameter.id == val.parameter_id
+            ).first()
         
         if not param:
-            # Cleanup report before throwing
             db.delete(new_report)
             db.commit()
             raise HTTPException(
@@ -320,7 +329,7 @@ def create_or_version_report(
             
         r_val = ReportValue(
             report_id=new_report.id,
-            parameter_id=val.parameter_id,
+            parameter_id=param.id,
             result_value=val.result_value,
             reference_range=val.reference_range,
             interpretation=val.interpretation,
