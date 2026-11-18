@@ -1,21 +1,110 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import PageHeader from '../../components/PageHeader'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import FormField from '../../components/FormField'
-import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { toast } from 'sonner'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
 import reportService from '../../services/reportService'
 import patientService from '../../services/patientService'
 import DatePicker from '../../components/DatePicker'
+import OxidativeReportDocument from './OxidativeReportDocument'
 import {
   RiArrowLeftLine,
   RiSaveLine,
   RiPrinterLine,
   RiDownload2Line,
+  RiUserHeartLine,
+  RiStethoscopeLine,
+  RiFlaskLine,
+  RiShieldCrossLine,
+  RiFileTextLine,
+  RiCheckDoubleLine,
+  RiArrowDownSLine,
+  RiMagicLine,
+  RiRefreshLine,
 } from 'react-icons/ri'
+import './ReportsModule.css'
+
+const DEFAULT_SUMMARY_TEXT =
+  "The Damage vs. Defense Ratio (DDR) summarizes the body's oxidative stress by comparing total oxidative damage to antioxidant capacity. It is calculated as (MDA + FOX-2 + Protein Carbonyl + Nitric Oxide) / (GSH + TAC). A low DDR indicates that antioxidants effectively counteract oxidative damage; a moderate DDR suggests that oxidative stress is present and defenses are partially overwhelmed; and a high DDR indicates that damage exceeds the body's protective capacity, reflecting severe oxidative stress and higher risk for cellular dysfunction or disease."
+
+const DEFAULT_DISCLAIMER_TEXT =
+  'The information provided by this panel reflects biochemical markers of oxidative balance and is intended for research or clinical monitoring purposes. It should be considered alongside comprehensive oncology clinical evaluation and not as a standalone diagnostic tool.'
+
+const FALLBACK_PARAMETERS = [
+  {
+    parameter_id: 1,
+    code: 'MDA',
+    name: 'Lipid Peroxidation — MDA (TBARS)',
+    section: 'Oxidative Damage',
+    unit: 'µmol/L',
+    result_value: '',
+    reference_range: '0.5 - 2.0 µmol/L',
+    interpretation: 'Normal lipid peroxidation level',
+  },
+  {
+    parameter_id: 2,
+    code: 'FOX2',
+    name: 'Lipid Hydroperoxides — FOX-2 Assay',
+    section: 'Oxidative Damage',
+    unit: 'µmol/L',
+    result_value: '',
+    reference_range: '2.0 - 10.0 µmol/L',
+    interpretation: 'Within physiological hydroperoxide range',
+  },
+  {
+    parameter_id: 3,
+    code: 'DNPH',
+    name: 'Protein Carbonyl Content (DNPH)',
+    section: 'Oxidative Damage',
+    unit: 'nmol/mg',
+    result_value: '',
+    reference_range: '0.5 - 2.5 nmol/mg',
+    interpretation: 'Normal protein oxidative modification',
+  },
+  {
+    parameter_id: 4,
+    code: 'GRIESS',
+    name: 'Nitric Oxide Metabolites (Griess Assay)',
+    section: 'Oxidative Damage',
+    unit: 'µmol/L',
+    result_value: '',
+    reference_range: '20.0 - 40.0 µmol/L',
+    interpretation: 'Normal nitrosative stress marker',
+  },
+  {
+    parameter_id: 5,
+    code: 'GSH',
+    name: 'Reduced Glutathione (GSH)',
+    section: 'Antioxidant Defence',
+    unit: 'µmol/L',
+    result_value: '',
+    reference_range: '650 - 1100 µmol/L',
+    interpretation: 'Adequate intracellular glutathione reserve',
+  },
+  {
+    parameter_id: 6,
+    code: 'TAC',
+    name: 'Total Antioxidant Capacity (TAC)',
+    section: 'Antioxidant Defence',
+    unit: 'µmol/L',
+    result_value: '',
+    reference_range: '600 - 1200 µmol/L',
+    interpretation: 'Optimal plasma antioxidant capacity',
+  },
+]
+
+const SAMPLE_CLINICAL_PRESET = {
+  MDA: { result: '1.42', interpretation: 'Within normal lipid peroxidation limits' },
+  FOX2: { result: '6.40', interpretation: 'Moderate lipid hydroperoxide activity' },
+  DNPH: { result: '1.65', interpretation: 'Normal protein carbonyl oxidation level' },
+  GRIESS: { result: '28.5', interpretation: 'Physiological nitric oxide metabolite balance' },
+  GSH: { result: '845', interpretation: 'Strong intracellular glutathione defence' },
+  TAC: { result: '920', interpretation: 'Optimal total plasma antioxidant capacity' },
+}
 
 // Helper age calculator
 const calculateAge = (dobString) => {
@@ -28,6 +117,40 @@ const calculateAge = (dobString) => {
     age--
   }
   return age.toString()
+}
+
+// Auto-evaluate interpretation when a numeric result is entered
+function deriveClinicalInterpretation(code, rawVal, currentInterpretation) {
+  const num = parseFloat(rawVal)
+  if (isNaN(num)) return currentInterpretation
+  switch (code) {
+    case 'MDA':
+      if (num < 0.5) return 'Low baseline lipid peroxidation'
+      if (num <= 2.0) return 'Normal lipid peroxidation level'
+      return 'Elevated MDA — increased membrane lipid peroxidation'
+    case 'FOX2':
+      if (num < 2.0) return 'Low hydroperoxide activity'
+      if (num <= 10.0) return 'Within physiological hydroperoxide range'
+      return 'Elevated FOX-2 — active lipid hydroperoxide accumulation'
+    case 'DNPH':
+      if (num < 0.5) return 'Minimal protein carbonylation'
+      if (num <= 2.5) return 'Normal protein oxidative modification'
+      return 'Elevated Protein Carbonyls — oxidative protein injury'
+    case 'GRIESS':
+      if (num < 20.0) return 'Below reference nitrosative baseline'
+      if (num <= 40.0) return 'Normal nitrosative stress marker'
+      return 'Elevated Nitric Oxide — increased nitrosative stress'
+    case 'GSH':
+      if (num < 650) return 'Depleted GSH — reduced intracellular antioxidant reserve'
+      if (num <= 1100) return 'Adequate intracellular glutathione reserve'
+      return 'High GSH — robust intracellular thiol protection'
+    case 'TAC':
+      if (num < 600) return 'Reduced TAC — suboptimal systemic antioxidant capacity'
+      if (num <= 1200) return 'Optimal plasma antioxidant capacity'
+      return 'High TAC — strong systemic antioxidant potential'
+    default:
+      return currentInterpretation
+  }
 }
 
 export default function ReportCreatorPage() {
@@ -46,7 +169,21 @@ export default function ReportCreatorPage() {
   const [instSettings, setInstSettings] = useState(null)
   const [signatures, setSignatures] = useState([])
 
-  // 2. Patient Profile Selector state
+  // Collapsible section toggles (all open by default for full visibility)
+  const [openSections, setOpenSections] = useState({
+    patient: true,
+    metadata: true,
+    damage: true,
+    defence: true,
+    summary: true,
+    auth: true,
+  })
+
+  const toggleSection = (key) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  // 2. Patient Profile Selector & Editable Demographics state
   const [selectedPatientId, setSelectedPatientId] = useState('')
   const [patientDetails, setPatientDetails] = useState({
     name: '',
@@ -62,20 +199,23 @@ export default function ReportCreatorPage() {
   // 3. Clinical metadata form states
   const [reportNumber, setReportNumber] = useState('')
   const [version, setVersion] = useState(1)
-  const [doctorName, setDoctorName] = useState('')
+  const [doctorName, setDoctorName] = useState('Dr. Somani')
   const [referenceBy, setReferenceBy] = useState('')
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0])
   const [collectionDate, setCollectionDate] = useState(new Date().toISOString().split('T')[0])
   const [sampleType, setSampleType] = useState('Serum')
-  const [labNumber, setLabNumber] = useState('')
-  const [overallSummary, setOverallSummary] = useState('')
+  const [labNumber, setLabNumber] = useState(() =>
+    Math.floor(10000 + Math.random() * 90000).toString()
+  )
+  const [overallSummary, setOverallSummary] = useState(DEFAULT_SUMMARY_TEXT)
+  const [disclaimerText, setDisclaimerText] = useState(DEFAULT_DISCLAIMER_TEXT)
   const [reportStatus, setReportStatus] = useState('Draft')
 
   // 4. Parameter Results (values array)
-  // Format: { parameter_id, code, name, section, unit, result_value, reference_range, interpretation }
-  const [paramValues, setParamValues] = useState([])
+  const [paramValues, setParamValues] = useState(FALLBACK_PARAMETERS)
 
-  // 5. Scores (Both computed and manually overrideable)
+  // 5. Scores (Auto-computed from parameters + manually overrideable)
+  const [manualScoreOverride, setManualScoreOverride] = useState(false)
   const [damageScore, setDamageScore] = useState(0)
   const [defenceScore, setDefenceScore] = useState(0)
   const [ratioScore, setRatioScore] = useState(0)
@@ -109,13 +249,18 @@ export default function ReportCreatorPage() {
   const loadTemplate = useCallback(async () => {
     try {
       const res = await reportService.getTemplates()
-      const stressTpl = res.data.find(t => t.code === 'OXIDATIVE_STRESS')
+      const stressTpl =
+        res.data.find((t) => t.code === 'OXIDATIVE_STRESS') || res.data[0] || null
       if (stressTpl) {
         setTemplate(stressTpl)
-        setOverallSummary(stressTpl.description || '')
-        
-        if (!id) {
-          const seeded = stressTpl.parameters.map(p => ({
+        if (stressTpl.description) setOverallSummary(stressTpl.description)
+        if (stressTpl.default_disclaimer) setDisclaimerText(stressTpl.default_disclaimer)
+
+        if (!id && stressTpl.parameters?.length > 0) {
+          const sortedParams = [...stressTpl.parameters].sort(
+            (a, b) => (a.display_order || 0) - (b.display_order || 0)
+          )
+          const seeded = sortedParams.map((p) => ({
             parameter_id: p.id,
             code: p.code,
             name: p.name,
@@ -123,10 +268,9 @@ export default function ReportCreatorPage() {
             unit: p.unit,
             result_value: '',
             reference_range: p.reference_range,
-            interpretation: p.default_interpretation
+            interpretation: p.default_interpretation,
           }))
           setParamValues(seeded)
-          setLabNumber(Math.floor(10000 + Math.random() * 90000).toString())
         }
       }
     } catch {
@@ -134,42 +278,37 @@ export default function ReportCreatorPage() {
     }
   }, [id])
 
-  // Fetch initial configuration data
   useEffect(() => {
     loadPatients()
     loadSettings()
     loadTemplate()
   }, [loadPatients, loadSettings, loadTemplate])
 
-  // Auto score calculations
+  // Auto score calculations whenever paramValues change (unless manual override is enabled)
   useEffect(() => {
-    // 1. Auto-calc Oxidative Damage Score (Average of FOX2, MDA, GRIESS, DNPH mapped scores)
-    // If not filled, default mapping of values to 1-10 range:
-    const getMappedScore = (code, val) => {
-      if (!val) return 0
+    if (manualScoreOverride) return
+
+    const getDamageMappedScore = (code, val) => {
+      if (val === '' || val === null || val === undefined) return 0
       const num = parseFloat(val)
       if (isNaN(num)) return 0
-      
+
       if (code === 'FOX2') {
-        // Range 2.0 - 10
         if (num <= 2.0) return 1
         if (num >= 10.0) return 10
         return 1 + ((num - 2.0) / 8.0) * 9
       }
       if (code === 'MDA') {
-        // Range 0.5 - 2.0
         if (num <= 0.5) return 1
         if (num >= 2.0) return 10
         return 1 + ((num - 0.5) / 1.5) * 9
       }
       if (code === 'GRIESS') {
-        // Range 20 - 40
         if (num <= 20.0) return 1
         if (num >= 40.0) return 10
         return 1 + ((num - 20.0) / 20.0) * 9
       }
       if (code === 'DNPH') {
-        // Range 0.5 - 2.5
         if (num <= 0.5) return 1
         if (num >= 2.5) return 10
         return 1 + ((num - 0.5) / 2.0) * 9
@@ -177,62 +316,83 @@ export default function ReportCreatorPage() {
       return 0
     }
 
-    const damageParams = paramValues.filter(p => p.section === 'Oxidative Damage')
+    const getDefenceMappedScore = (code, val) => {
+      if (val === '' || val === null || val === undefined) return 0
+      const num = parseFloat(val)
+      if (isNaN(num)) return 0
+
+      if (code === 'GSH') {
+        // Reference 650 - 1100
+        if (num <= 500) return 1
+        if (num >= 1150) return 10
+        return Math.min(10, Math.max(1, 1 + ((num - 500) / 650) * 9))
+      }
+      if (code === 'TAC') {
+        // Reference 600 - 1200
+        if (num <= 500) return 1
+        if (num >= 1200) return 10
+        return Math.min(10, Math.max(1, 1 + ((num - 500) / 700) * 9))
+      }
+      return 0
+    }
+
+    const damageParams = paramValues.filter((p) => p.section === 'Oxidative Damage')
     let damageSum = 0
     let damageCount = 0
-    damageParams.forEach(p => {
-      const score = getMappedScore(p.code, p.result_value)
+    damageParams.forEach((p) => {
+      const score = getDamageMappedScore(p.code, p.result_value)
       if (score > 0) {
         damageSum += score
         damageCount++
       }
     })
-    
-    const computedDamage = damageCount > 0 ? parseFloat((damageSum / damageCount).toFixed(1)) : 0
+    const computedDamage =
+      damageCount > 0 ? parseFloat((damageSum / damageCount).toFixed(1)) : 0
     setDamageScore(computedDamage)
 
-    // 2. Auto-calc Antioxidant Defence Score (based on TAC)
-    const tacParam = paramValues.find(p => p.code === 'TAC')
-    let computedDefence = 0
-    if (tacParam && tacParam.result_value) {
-      const tacVal = parseFloat(tacParam.result_value)
-      if (!isNaN(tacVal)) {
-        // Range 600 - 1200. Let's map 782 -> 8.3 like sample.
-        // Formula matching the sample: 1 + (tacVal - 600)/600 * 9 + offset
-        if (tacVal >= 1200) computedDefence = 10
-        else if (tacVal <= 600) computedDefence = 1
-        else {
-          computedDefence = parseFloat((1 + ((tacVal - 600) / 600) * 9 + 4.5).toFixed(1))
-          if (computedDefence > 10) computedDefence = 10
-        }
+    const defenceParams = paramValues.filter((p) => p.section === 'Antioxidant Defence')
+    let defenceSum = 0
+    let defenceCount = 0
+    defenceParams.forEach((p) => {
+      const score = getDefenceMappedScore(p.code, p.result_value)
+      if (score > 0) {
+        defenceSum += score
+        defenceCount++
       }
-    }
+    })
+    const computedDefence =
+      defenceCount > 0 ? parseFloat((defenceSum / defenceCount).toFixed(1)) : 0
     setDefenceScore(computedDefence)
 
-    // 3. Auto-calc Ratio Score (Damage / Defence * 4)
     if (computedDamage > 0 && computedDefence > 0) {
-      const computedRatio = parseFloat(((computedDamage / computedDefence) * 4).toFixed(1))
+      const computedRatio = parseFloat(
+        Math.min(10, Math.max(1, (computedDamage / computedDefence) * 4)).toFixed(1)
+      )
       setRatioScore(computedRatio)
     } else {
       setRatioScore(0)
     }
-
-  }, [paramValues])
+  }, [paramValues, manualScoreOverride])
 
   const loadReportDetails = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await reportService.getReport(id)
-      const r = res.data
-      
-      // Autofill patient details
+      const [repRes, tplRes] = await Promise.all([
+        reportService.getReport(id),
+        reportService.getTemplates(),
+      ])
+      const r = repRes.data
+      const stressTpl =
+        tplRes.data.find((t) => t.code === 'OXIDATIVE_STRESS') || tplRes.data[0] || null
+      if (stressTpl) setTemplate(stressTpl)
+
       setSelectedPatientId(r.patient.id.toString())
       setPatientDetails({
         name: r.patient.full_name,
         age: calculateAge(r.patient.date_of_birth),
         gender: r.patient.gender,
         patient_code: r.patient.patient_code,
-        uhid: r.patient.patient_code, // Use patient_code for UHID fallback
+        uhid: r.patient.patient_code,
         email: '',
         phone: '',
         address: '',
@@ -246,30 +406,49 @@ export default function ReportCreatorPage() {
       setCollectionDate(r.collection_date)
       setSampleType(r.sample_type)
       setLabNumber(r.lab_number)
-      setOverallSummary(r.overall_summary || '')
+      setOverallSummary(r.overall_summary || DEFAULT_SUMMARY_TEXT)
       setReportStatus(r.status)
       setDamageScore(r.damage_score)
       setDefenceScore(r.defence_score)
       setRatioScore(r.ratio_score)
 
-      // Map values
-      const mapped = r.values.map(val => ({
+      const mapped = r.values.map((val) => ({
         parameter_id: val.parameter_id,
         code: val.parameter_code,
         name: val.parameter_name,
         section: val.parameter_section,
         unit: val.parameter_unit,
-        result_value: val.result_value.toString(),
+        result_value: val.result_value !== null && val.result_value !== undefined ? val.result_value.toString() : '',
         reference_range: val.reference_range,
-        interpretation: val.interpretation
+        interpretation: val.interpretation,
       }))
-      setParamValues(mapped)
 
-      // Print immediately if requested
+      // Ensure all template parameters are present even if an older report missed any
+      if (stressTpl?.parameters?.length > 0) {
+        const byCode = Object.fromEntries(mapped.map((m) => [m.code, m]))
+        const merged = stressTpl.parameters.map((p) =>
+          byCode[p.code]
+            ? byCode[p.code]
+            : {
+                parameter_id: p.id,
+                code: p.code,
+                name: p.name,
+                section: p.section,
+                unit: p.unit,
+                result_value: '',
+                reference_range: p.reference_range,
+                interpretation: p.default_interpretation,
+              }
+        )
+        setParamValues(merged)
+      } else if (mapped.length > 0) {
+        setParamValues(mapped)
+      }
+
       if (isPrintTriggered) {
         setTimeout(() => {
           window.print()
-        }, 1000)
+        }, 800)
       }
     } catch {
       toast.error('Failed to retrieve report information.')
@@ -278,7 +457,6 @@ export default function ReportCreatorPage() {
     }
   }, [id, isPrintTriggered])
 
-  // Load existing report details if editing or printing
   useEffect(() => {
     if (id) {
       loadReportDetails()
@@ -315,62 +493,111 @@ export default function ReportCreatorPage() {
         phone: p.phone,
         address: p.address,
       })
+      if (p.assigned_doctor && !referenceBy) {
+        setReferenceBy(p.assigned_doctor)
+      }
     } catch {
       toast.error('Failed to retrieve patient profile details.')
     }
   }
 
-  // Handle parameter input changes
-  const handleParamValueChange = (index, field, value) => {
-    const updated = [...paramValues]
-    updated[index][field] = value
-    setParamValues(updated)
+  // Handle parameter input changes by parameter_id or code
+  const handleParamChangeByCode = (code, field, value) => {
+    setParamValues((prev) =>
+      prev.map((item) => {
+        if (item.code !== code) return item
+        const next = { ...item, [field]: value }
+        if (field === 'result_value') {
+          next.interpretation = deriveClinicalInterpretation(
+            code,
+            value,
+            item.interpretation
+          )
+        }
+        return next
+      })
+    )
+  }
+
+  // Quick-fill sample clinical values for rapid testing & workflow verification
+  const handleFillSampleValues = () => {
+    setParamValues((prev) =>
+      prev.map((item) => {
+        const sample = SAMPLE_CLINICAL_PRESET[item.code]
+        if (!sample) return item
+        return {
+          ...item,
+          result_value: sample.result,
+          interpretation: sample.interpretation,
+        }
+      })
+    )
+    if (!referenceBy.trim()) {
+      setReferenceBy('Dr. Somani (Oncology Research)')
+    }
+    toast.success('Sample clinical biomarker values populated. You can edit any field.')
   }
 
   // Save report submission
   const handleSaveReport = async () => {
     if (!selectedPatientId) {
-      toast.error('Please select a patient.')
+      toast.error('Please select a patient profile in Section 1.')
+      setOpenSections((p) => ({ ...p, patient: true }))
       return
     }
     if (!referenceBy.trim()) {
-      toast.error('Please specify referring doctor.')
+      toast.error('Please specify Referring Doctor (Ref. By) in Section 2.')
+      setOpenSections((p) => ({ ...p, metadata: true }))
       return
     }
 
-    // Verify all parameter values are filled
-    const invalid = paramValues.some(p => p.result_value === '')
+    const invalid = paramValues.some(
+      (p) => p.result_value === '' || isNaN(parseFloat(p.result_value))
+    )
     if (invalid) {
-      toast.error('Please fill in all parameter result values.')
+      toast.error('Please enter numeric result values for all 6 biomarkers.')
+      setOpenSections((p) => ({ ...p, damage: true, defence: true }))
       return
     }
 
     setLoading(true)
-    const payload = {
-      template_id: template.id,
-      patient_id: parseInt(selectedPatientId),
-      doctor_name: doctorName,
-      reference_by: referenceBy.trim(),
-      report_date: reportDate,
-      sample_type: sampleType,
-      collection_date: collectionDate,
-      lab_number: labNumber,
-      overall_summary: overallSummary,
-      status: reportStatus,
-      damage_score: damageScore,
-      defence_score: defenceScore,
-      ratio_score: ratioScore,
-      values: paramValues.map(p => ({
-        parameter_id: p.parameter_id,
-        result_value: parseFloat(p.result_value),
-        reference_range: p.reference_range,
-        interpretation: p.interpretation,
-      }))
-    }
-
     try {
+      let activeTemplate = template
+      if (!activeTemplate?.id) {
+        const tplRes = await reportService.getTemplates()
+        activeTemplate =
+          tplRes.data.find((t) => t.code === 'OXIDATIVE_STRESS') || tplRes.data[0]
+        setTemplate(activeTemplate)
+      }
+
+      const payload = {
+        template_id: activeTemplate.id,
+        patient_id: parseInt(selectedPatientId, 10),
+        doctor_name: doctorName || 'Dr. Somani',
+        reference_by: referenceBy.trim(),
+        report_date: reportDate,
+        sample_type: sampleType || 'Serum',
+        collection_date: collectionDate,
+        lab_number: labNumber || '10001',
+        overall_summary: overallSummary,
+        status: reportStatus,
+        damage_score: parseFloat(damageScore) || 0,
+        defence_score: parseFloat(defenceScore) || 0,
+        ratio_score: parseFloat(ratioScore) || 0,
+        values: paramValues.map((p) => ({
+          parameter_id: p.parameter_id,
+          result_value: parseFloat(p.result_value),
+          reference_range: p.reference_range,
+          interpretation: p.interpretation,
+        })),
+      }
+
       const res = await reportService.createReport(payload, id ? reportNumber : null)
-      toast.success(id ? `Report version v${res.data.version} saved successfully.` : 'New report saved successfully.')
+      toast.success(
+        id
+          ? `Report version v${res.data.version} saved successfully.`
+          : 'New pathology report saved successfully.'
+      )
       navigate('/reports')
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to save report details.')
@@ -379,720 +606,809 @@ export default function ReportCreatorPage() {
     }
   }
 
-  // Download PDF using html2canvas & jsPDF
-  const handleDownloadPDF = () => {
-    if (id) {
-      window.open(`/reports/print/${id}`, '_blank')
-    } else {
-      toast.info('Please save the report first to download/view PDF.')
+  // Direct high-resolution single-page A4 PDF download right from creator or print view
+  const handleDownloadPDF = async () => {
+    const element = printAreaRef.current
+    if (!element) return
+
+    const toastId = toast.loading('Generating compact high-resolution A4 PDF…')
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      })
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      const pageWidth = 210
+      const pageHeight = 297
+      const imgWidth = pageWidth
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      // Fit onto a single A4 page if within 15% of single-page height, otherwise paginate cleanly
+      if (imgHeight <= pageHeight * 1.15) {
+        const scaleFactor = Math.min(1, pageHeight / imgHeight)
+        const finalW = imgWidth * scaleFactor
+        const finalH = imgHeight * scaleFactor
+        const offsetX = (pageWidth - finalW) / 2
+        pdf.addImage(imgData, 'JPEG', offsetX, 0, finalW, finalH)
+      } else {
+        let heightLeft = imgHeight
+        let position = 0
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
+        heightLeft -= pageHeight
+        while (heightLeft > 5) {
+          position = heightLeft - imgHeight
+          pdf.addPage()
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
+          heightLeft -= pageHeight
+        }
+      }
+
+      const fileName = reportNumber
+        ? `${reportNumber}.pdf`
+        : `OXIDATIVE_REPORT_${patientDetails.patient_code || 'DRAFT'}.pdf`
+      pdf.save(fileName)
+
+      if (id) {
+        try {
+          await reportService.logPrint(id)
+        } catch {}
+      }
+      toast.success('Compact PDF downloaded successfully.', { id: toastId })
+    } catch {
+      toast.error('Failed to generate PDF file.', { id: toastId })
     }
   }
 
-  const triggerSystemPrint = () => {
+  const triggerSystemPrint = async () => {
     if (id) {
-      window.open(`/reports/print/${id}?print=true`, '_blank')
-    } else {
-      toast.info('Please save the report first to print.')
+      try {
+        await reportService.logPrint(id)
+      } catch {}
     }
+    window.print()
   }
 
-  // Score Qualitative Circle Color Builders
-  const getDamageCircleColor = (score) => {
-    if (score <= 3) return 'bg-[#FFEB3B]' // Light Yellow
-    if (score <= 7) return 'bg-[#FF9800]' // Orange
-    return 'bg-[#F44336]' // Red
-  }
-
-  const getDefenceCircleColor = (score) => {
-    if (score <= 3) return 'bg-[#FFEB3B]' // Light Yellow
-    if (score <= 7) return 'bg-[#8BC34A]' // Light Green
-    return 'bg-[#2E7D32]' // Dark Green
-  }
-
-  const getRatioCircleColor = (score) => {
-    if (score <= 3) return 'bg-[#4CAF50]' // Green
-    if (score <= 6) return 'bg-[#FFEB3B]' // Yellow
-    return 'bg-[#F44336]' // Red
-  }
-
-  // Score Indicator Pin position percentages
-  const getPinLeftPercent = (score) => {
-    const val = parseFloat(score)
-    if (isNaN(val) || val <= 1) return '0%'
-    if (val >= 10) return '96%'
-    return `${((val - 1) / 9) * 96}%`
-  }
+  const damageParams = paramValues.filter((p) => p.section === 'Oxidative Damage')
+  const defenceParams = paramValues.filter((p) => p.section === 'Antioxidant Defence')
+  const matchedSignatureUrl =
+    signatures.find((s) => s.doctor_name === doctorName)?.signature_url || null
 
   return (
-    <div className="space-y-6 animate-fade-in no-print-layout">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 no-print">
-        <PageHeader
-          title={id ? `Report Creator (v${version})` : 'New Oxidative Stress Report'}
-          breadcrumbs={[
-            { label: 'Dashboard', to: '/dashboard' },
-            { label: 'Onco Receipt', to: '/reports' },
-            { label: id ? `Edit ${reportNumber}` : 'New Report' },
-          ]}
-        />
-        <Button onClick={() => navigate('/reports')} variant="ghost" className="text-ink-secondary flex items-center gap-1 self-start sm:self-center shrink-0">
-          <RiArrowLeftLine size={16} /> Back to History
-        </Button>
+    <div className="onco-rep-root space-y-5 pb-6">
+      {/* ── Top Clinical Banner (Hidden on Print) ────────────────────────── */}
+      <div className="onco-rep-banner onco-rep-anim no-print">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <nav
+              aria-label="Breadcrumb"
+              className="flex items-center gap-1.5 text-xs text-ink-secondary"
+            >
+              <Link
+                to="/dashboard"
+                className="font-semibold text-brand-blue dark:text-sky-400 hover:underline"
+              >
+                Dashboard
+              </Link>
+              <span className="opacity-40">/</span>
+              <Link
+                to="/reports"
+                className="font-semibold text-brand-blue dark:text-sky-400 hover:underline"
+              >
+                Onco Receipt
+              </Link>
+              <span className="opacity-40">/</span>
+              <span className="text-ink-secondary font-medium">
+                {id ? `Edit ${reportNumber}` : 'New Report'}
+              </span>
+            </nav>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-primary tracking-tight">
+                {id ? `Report Creator (${reportNumber} · v${version})` : 'New Oxidative Stress Report'}
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.14em] bg-brand-blue/10 dark:bg-sky-500/15 text-brand-navy dark:text-sky-300 border border-brand-blue/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live A4 Synchronized
+              </span>
+            </div>
+
+            <p className="text-xs sm:text-sm text-ink-secondary max-w-2xl">
+              Configure patient account, oxidative damage &amp; antioxidant defence biomarkers, and diagnostic interpretation with real-time single-page PDF preview.
+            </p>
+          </div>
+
+          {/* Action Toolbar */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate('/reports')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-ink-primary bg-surface-card hover:bg-surface-hover border border-surface-border transition-colors cursor-pointer"
+            >
+              <RiArrowLeftLine size={15} />
+              <span>History</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleFillSampleValues}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 transition-colors cursor-pointer"
+              title="Prefill realistic clinical values to test live report"
+            >
+              <RiMagicLine size={15} />
+              <span>Sample Values</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={triggerSystemPrint}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-ink-primary bg-surface-card hover:bg-surface-hover border border-surface-border transition-colors cursor-pointer"
+            >
+              <RiPrinterLine size={15} />
+              <span>Print</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadPDF}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-brand-blue dark:text-sky-300 bg-brand-blue/10 hover:bg-brand-blue/20 border border-brand-blue/25 transition-colors cursor-pointer"
+            >
+              <RiDownload2Line size={15} />
+              <span>Download PDF</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSaveReport}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border border-sky-300/35 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Saving…</span>
+                </>
+              ) : (
+                <>
+                  <RiSaveLine size={15} />
+                  <span>Save Document</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Side-by-side Creator & Live Preview Split Panel */}
+      {/* ── Split-Screen Workspace: Left Form + Right Live A4 Preview ───── */}
       <div className="flex flex-col xl:flex-row gap-6 items-start">
-        
-        {/* Creator Inputs Form (Left side) */}
-        <div className="w-full xl:w-[450px] space-y-5 bg-surface-card border border-surface-border p-5 rounded-xl no-print shrink-0">
-          <h3 className="text-sm font-bold text-ink-primary uppercase tracking-wider border-b pb-2 border-surface-border">Pathology Data Entry</h3>
+        {/* ══════════════════════════════════════════════════════════════════
+            LEFT COLUMN: 6-SECTION CLINICAL DATA ENTRY WORKSPACE
+        ══════════════════════════════════════════════════════════════════ */}
+        <div className="w-full xl:w-[490px] space-y-4 no-print shrink-0">
+          {/* ── SECTION 1: PATIENT ACCOUNT ───────────────────────────────── */}
+          <div className="onco-rep-section">
+            <button
+              type="button"
+              onClick={() => toggleSection('patient')}
+              className="onco-rep-section-header"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+                  <RiUserHeartLine size={15} />
+                </div>
+                <div>
+                  <span className="text-xs font-extrabold text-ink-primary uppercase tracking-wider block">
+                    1. Patient Account
+                  </span>
+                  <span className="text-[11px] text-ink-secondary">
+                    {patientDetails.name
+                      ? `${patientDetails.name} (${patientDetails.patient_code})`
+                      : 'Select patient & verify demographics'}
+                  </span>
+                </div>
+              </div>
+              <RiArrowDownSLine
+                size={18}
+                className={`text-ink-secondary transition-transform ${
+                  openSections.patient ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-          {/* Section 1: Patient Selection */}
-          <div className="space-y-3.5">
-            <label className="text-[10px] font-bold uppercase text-ink-secondary tracking-widest">1. Patient Account</label>
-            
-            {!id ? (
-              <FormField label="Select Patient Profile" required>
-                <Select value={selectedPatientId} onValueChange={handlePatientSelect} disabled={patientsLoading}>
-                  <SelectTrigger className="bg-surface-base border-surface-border">
-                    <SelectValue placeholder={patientsLoading ? 'Loading patients...' : 'Search Registered Patients...'} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface-card border border-surface-border">
-                    {patientsLoading ? (
-                      <div className="py-4 text-center text-xs text-ink-secondary">Loading...</div>
-                    ) : patients.length === 0 ? (
-                      <div className="py-4 text-center text-xs text-ink-secondary">No patients registered yet.</div>
-                    ) : (
-                      patients.map(p => (
+            {openSections.patient && (
+              <div className="p-4 space-y-3.5">
+                <FormField label="Select Registered Patient" required>
+                  <Select
+                    value={selectedPatientId}
+                    onValueChange={handlePatientSelect}
+                    disabled={patientsLoading || Boolean(id)}
+                  >
+                    <SelectTrigger className="bg-surface-base border-surface-border h-9 text-xs">
+                      <SelectValue
+                        placeholder={
+                          patientsLoading
+                            ? 'Loading patients...'
+                            : 'Choose Registered Patient...'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="bg-surface-card border border-surface-border max-h-64">
+                      {patients.map((p) => (
                         <SelectItem key={p.id} value={p.id.toString()}>
                           {p.full_name} ({p.patient_code})
                         </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </FormField>
-            ) : (
-              <div className="p-3 bg-surface-base/50 rounded-lg border border-surface-border text-xs space-y-1">
-                <p className="font-bold text-ink-primary">{patientDetails.name}</p>
-                <p className="text-ink-secondary">{patientDetails.patient_code} | Age: {patientDetails.age} | {patientDetails.gender}</p>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormField>
+
+                {/* Editable Patient Fields for Live Report Synchronization */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <FormField label="Patient Name (On Report)">
+                    <Input
+                      value={patientDetails.name}
+                      onChange={(e) =>
+                        setPatientDetails((p) => ({ ...p, name: e.target.value }))
+                      }
+                      placeholder="Full Name"
+                      className="h-8 text-xs"
+                    />
+                  </FormField>
+                  <FormField label="Patient ID / UHID">
+                    <Input
+                      value={patientDetails.patient_code}
+                      onChange={(e) =>
+                        setPatientDetails((p) => ({
+                          ...p,
+                          patient_code: e.target.value,
+                          uhid: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. ICSR-00021"
+                      className="h-8 text-xs font-mono"
+                    />
+                  </FormField>
+                  <FormField label="Age (Years)">
+                    <Input
+                      value={patientDetails.age}
+                      onChange={(e) =>
+                        setPatientDetails((p) => ({ ...p, age: e.target.value }))
+                      }
+                      placeholder="e.g. 42"
+                      className="h-8 text-xs font-mono"
+                    />
+                  </FormField>
+                  <FormField label="Gender">
+                    <Input
+                      value={patientDetails.gender}
+                      onChange={(e) =>
+                        setPatientDetails((p) => ({ ...p, gender: e.target.value }))
+                      }
+                      placeholder="Male / Female"
+                      className="h-8 text-xs"
+                    />
+                  </FormField>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Section 2: Clinical Details */}
-          <div className="space-y-3.5 pt-3 border-t border-surface-border/50">
-            <label className="text-[10px] font-bold uppercase text-ink-secondary tracking-widest">2. Clinical Metadata</label>
-            
-            <FormField label="Referring Doctor (Ref. By)" required>
-              <Input value={referenceBy} onChange={(e) => setReferenceBy(e.target.value)} placeholder="Dr. Somani (Rehuman)" />
-            </FormField>
-
-            <FormField label="Authorised Signatory" required>
-              <Select value={doctorName} onValueChange={setDoctorName}>
-                <SelectTrigger className="bg-surface-base border-surface-border">
-                  <SelectValue placeholder="Select Doctor..." />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-card border border-surface-border">
-                  {signatures.map(sig => (
-                    <SelectItem key={sig.id} value={sig.doctor_name}>
-                      {sig.doctor_name}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="Dr. Somani">Dr. Somani</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormField>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <DatePicker
-                label="Collection Date"
-                required
-                value={collectionDate}
-                onChange={setCollectionDate}
-                maxDate={new Date()}
+          {/* ── SECTION 2: CLINICAL METADATA ─────────────────────────────── */}
+          <div className="onco-rep-section">
+            <button
+              type="button"
+              onClick={() => toggleSection('metadata')}
+              className="onco-rep-section-header"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-xs">
+                  <RiStethoscopeLine size={15} />
+                </div>
+                <div>
+                  <span className="text-xs font-extrabold text-ink-primary uppercase tracking-wider block">
+                    2. Clinical Metadata
+                  </span>
+                  <span className="text-[11px] text-ink-secondary">
+                    Referring clinician, specimen type, lab ID &amp; chronology
+                  </span>
+                </div>
+              </div>
+              <RiArrowDownSLine
+                size={18}
+                className={`text-ink-secondary transition-transform ${
+                  openSections.metadata ? 'rotate-180' : ''
+                }`}
               />
-              <DatePicker
-                label="Report Date"
-                required
-                value={reportDate}
-                onChange={setReportDate}
-                maxDate={new Date()}
-              />
-            </div>
+            </button>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <FormField label="Sample Type" required>
-                <Input value={sampleType} onChange={(e) => setSampleType(e.target.value)} />
-              </FormField>
-              <FormField label="Laboratory No." required>
-                <Input value={labNumber} onChange={(e) => setLabNumber(e.target.value)} />
-              </FormField>
-            </div>
+            {openSections.metadata && (
+              <div className="p-4 space-y-3.5">
+                <FormField label="Referring Doctor (Ref. By)" required>
+                  <Input
+                    value={referenceBy}
+                    onChange={(e) => setReferenceBy(e.target.value)}
+                    placeholder="e.g. Dr. Somani (Oncology)"
+                    className="h-9 text-xs"
+                  />
+                </FormField>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <DatePicker
+                    label="Collection Date"
+                    required
+                    value={collectionDate}
+                    onChange={setCollectionDate}
+                    maxDate={new Date()}
+                  />
+                  <DatePicker
+                    label="Report Date"
+                    required
+                    value={reportDate}
+                    onChange={setReportDate}
+                    maxDate={new Date()}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField label="Sample Type" required>
+                    <Input
+                      value={sampleType}
+                      onChange={(e) => setSampleType(e.target.value)}
+                      placeholder="Serum / Plasma"
+                      className="h-9 text-xs"
+                    />
+                  </FormField>
+                  <FormField label="Laboratory No." required>
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        value={labNumber}
+                        onChange={(e) => setLabNumber(e.target.value)}
+                        className="h-9 text-xs font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLabNumber(Math.floor(10000 + Math.random() * 90000).toString())
+                        }
+                        title="Generate new Lab No."
+                        className="h-9 px-2.5 rounded-md border border-surface-border bg-surface-base hover:bg-surface-hover text-ink-secondary cursor-pointer"
+                      >
+                        <RiRefreshLine size={14} />
+                      </button>
+                    </div>
+                  </FormField>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Section 3: Pathology Values */}
-          <div className="space-y-3.5 pt-3 border-t border-surface-border/50">
-            <label className="text-[10px] font-bold uppercase text-ink-secondary tracking-widest">3. Measured Results</label>
-            
-            <div className="space-y-4">
-              {paramValues.map((val, idx) => (
-                <div key={val.parameter_id} className="p-3 border border-surface-border bg-surface-base/30 rounded-lg space-y-2.5">
-                  <p className="text-xs font-bold text-ink-primary leading-tight">{val.name}</p>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <FormField label="Result" required>
+          {/* ── SECTION 3: OXIDATIVE DAMAGE PARAMETERS ───────────────────── */}
+          <div className="onco-rep-section">
+            <button
+              type="button"
+              onClick={() => toggleSection('damage')}
+              className="onco-rep-section-header"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
+                  <RiFlaskLine size={15} />
+                </div>
+                <div>
+                  <span className="text-xs font-extrabold text-ink-primary uppercase tracking-wider block">
+                    3. Oxidative Damage Parameters ({damageParams.length})
+                  </span>
+                  <span className="text-[11px] text-ink-secondary">
+                    MDA (TBARS), FOX-2, Protein Carbonyl (DNPH) &amp; Nitric Oxide
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                  Score: {damageScore}/10
+                </span>
+                <RiArrowDownSLine
+                  size={18}
+                  className={`text-ink-secondary transition-transform ${
+                    openSections.damage ? 'rotate-180' : ''
+                  }`}
+                />
+              </div>
+            </button>
+
+            {openSections.damage && (
+              <div className="p-4 space-y-3">
+                {damageParams.map((param) => (
+                  <div key={param.code} className="onco-param-card space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-ink-primary">
+                        {param.name}
+                      </span>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-blue/10 text-brand-blue dark:text-sky-300">
+                        {param.code} · {param.unit || 'µmol/L'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <FormField label={`Measured Result (${param.unit || 'µmol/L'})`} required>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={param.result_value}
+                          onChange={(e) =>
+                            handleParamChangeByCode(param.code, 'result_value', e.target.value)
+                          }
+                          placeholder="Enter numeric value"
+                          className="h-8 font-mono text-xs font-bold"
+                        />
+                      </FormField>
+                      <FormField label="Reference Range">
+                        <Input
+                          value={param.reference_range}
+                          onChange={(e) =>
+                            handleParamChangeByCode(param.code, 'reference_range', e.target.value)
+                          }
+                          className="h-8 font-mono text-xs"
+                        />
+                      </FormField>
+                    </div>
+
+                    <FormField label="Clinical Interpretation">
                       <Input
-                        type="number"
-                        step="0.01"
-                        value={val.result_value}
-                        onChange={(e) => handleParamValueChange(idx, 'result_value', e.target.value)}
-                        placeholder="e.g. 23.8"
-                        className="h-8 font-mono text-xs"
-                      />
-                    </FormField>
-                    <FormField label="Range">
-                      <Input
-                        value={val.reference_range}
-                        onChange={(e) => handleParamValueChange(idx, 'reference_range', e.target.value)}
-                        className="h-8 font-mono text-xs"
-                      />
-                    </FormField>
-                    <FormField label="Interpretation">
-                      <Input
-                        value={val.interpretation}
-                        onChange={(e) => handleParamValueChange(idx, 'interpretation', e.target.value)}
+                        value={param.interpretation}
+                        onChange={(e) =>
+                          handleParamChangeByCode(param.code, 'interpretation', e.target.value)
+                        }
+                        placeholder="Clinical interpretation..."
                         className="h-8 text-xs"
                       />
                     </FormField>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── SECTION 4: ANTIOXIDANT DEFENCE PARAMETERS ────────────────── */}
+          <div className="onco-rep-section">
+            <button
+              type="button"
+              onClick={() => toggleSection('defence')}
+              className="onco-rep-section-header"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                  <RiShieldCrossLine size={15} />
                 </div>
-              ))}
-            </div>
+                <div>
+                  <span className="text-xs font-extrabold text-ink-primary uppercase tracking-wider block">
+                    4. Antioxidant Defence Parameters ({defenceParams.length})
+                  </span>
+                  <span className="text-[11px] text-ink-secondary">
+                    Reduced Glutathione (GSH) &amp; Total Antioxidant Capacity (TAC)
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Score: {defenceScore}/10
+                </span>
+                <RiArrowDownSLine
+                  size={18}
+                  className={`text-ink-secondary transition-transform ${
+                    openSections.defence ? 'rotate-180' : ''
+                  }`}
+                />
+              </div>
+            </button>
+
+            {openSections.defence && (
+              <div className="p-4 space-y-3">
+                {defenceParams.map((param) => (
+                  <div key={param.code} className="onco-param-card space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-ink-primary">
+                        {param.name}
+                      </span>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                        {param.code} · {param.unit || 'µmol/L'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <FormField label={`Measured Result (${param.unit || 'µmol/L'})`} required>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={param.result_value}
+                          onChange={(e) =>
+                            handleParamChangeByCode(param.code, 'result_value', e.target.value)
+                          }
+                          placeholder="Enter numeric value"
+                          className="h-8 font-mono text-xs font-bold"
+                        />
+                      </FormField>
+                      <FormField label="Reference Range">
+                        <Input
+                          value={param.reference_range}
+                          onChange={(e) =>
+                            handleParamChangeByCode(param.code, 'reference_range', e.target.value)
+                          }
+                          className="h-8 font-mono text-xs"
+                        />
+                      </FormField>
+                    </div>
+
+                    <FormField label="Clinical Interpretation">
+                      <Input
+                        value={param.interpretation}
+                        onChange={(e) =>
+                          handleParamChangeByCode(param.code, 'interpretation', e.target.value)
+                        }
+                        placeholder="Clinical interpretation..."
+                        className="h-8 text-xs"
+                      />
+                    </FormField>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Section 4: Summary & Status */}
-          <div className="space-y-3.5 pt-3 border-t border-surface-border/50">
-            <label className="text-[10px] font-bold uppercase text-ink-secondary tracking-widest">4. Summary & Status</label>
-            <FormField label="Overall Summary Explanation">
-              <Textarea value={overallSummary} onChange={(e) => setOverallSummary(e.target.value)} rows={3} placeholder="Overall diagnostic summary..." className="text-xs" />
-            </FormField>
+          {/* ── SECTION 5: SUMMARY & DIAGNOSTIC INTERPRETATION ───────────── */}
+          <div className="onco-rep-section">
+            <button
+              type="button"
+              onClick={() => toggleSection('summary')}
+              className="onco-rep-section-header"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold text-xs">
+                  <RiFileTextLine size={15} />
+                </div>
+                <div>
+                  <span className="text-xs font-extrabold text-ink-primary uppercase tracking-wider block">
+                    5. Summary &amp; Diagnostic Interpretation
+                  </span>
+                  <span className="text-[11px] text-ink-secondary">
+                    Composite scores (DDR: {ratioScore}/10), clinical narrative &amp; disclaimer
+                  </span>
+                </div>
+              </div>
+              <RiArrowDownSLine
+                size={18}
+                className={`text-ink-secondary transition-transform ${
+                  openSections.summary ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-            <FormField label="Report Document Status">
-              <Select value={reportStatus} onValueChange={setReportStatus}>
-                <SelectTrigger className="bg-surface-base border-surface-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-card border border-surface-border">
-                  <SelectItem value="Draft">Draft (Editable)</SelectItem>
-                  <SelectItem value="Completed">Completed (Clinical Record)</SelectItem>
-                  <SelectItem value="Verified">Verified (Finalized & Audited)</SelectItem>
-                  <SelectItem value="Archived">Archived (Read-Only)</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormField>
+            {openSections.summary && (
+              <div className="p-4 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-ink-primary">
+                    Composite Indices (1 – 10 Scale)
+                  </span>
+                  <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-blue dark:text-sky-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={manualScoreOverride}
+                      onChange={(e) => setManualScoreOverride(e.target.checked)}
+                      className="rounded border-surface-border"
+                    />
+                    <span>Manual Score Override</span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5">
+                  <FormField label="Damage Score">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="10"
+                      disabled={!manualScoreOverride}
+                      value={damageScore}
+                      onChange={(e) => setDamageScore(parseFloat(e.target.value) || 0)}
+                      className="h-8 font-mono text-xs font-bold"
+                    />
+                  </FormField>
+                  <FormField label="Defence Score">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="10"
+                      disabled={!manualScoreOverride}
+                      value={defenceScore}
+                      onChange={(e) => setDefenceScore(parseFloat(e.target.value) || 0)}
+                      className="h-8 font-mono text-xs font-bold"
+                    />
+                  </FormField>
+                  <FormField label="DDR Ratio">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="10"
+                      disabled={!manualScoreOverride}
+                      value={ratioScore}
+                      onChange={(e) => setRatioScore(parseFloat(e.target.value) || 0)}
+                      className="h-8 font-mono text-xs font-bold"
+                    />
+                  </FormField>
+                </div>
+
+                <FormField label="Overall Summary & Diagnostic Interpretation">
+                  <Textarea
+                    value={overallSummary}
+                    onChange={(e) => setOverallSummary(e.target.value)}
+                    rows={4}
+                    placeholder="Enter overall diagnostic summary..."
+                    className="text-xs leading-relaxed"
+                  />
+                </FormField>
+
+                <FormField label="Clinical Disclaimer Notice">
+                  <Textarea
+                    value={disclaimerText}
+                    onChange={(e) => setDisclaimerText(e.target.value)}
+                    rows={2}
+                    placeholder="Enter clinical disclaimer..."
+                    className="text-xs leading-relaxed"
+                  />
+                </FormField>
+              </div>
+            )}
           </div>
 
-          {/* Actions */}
-          <div className="pt-4 border-t border-surface-border flex gap-2">
-            <Button onClick={handleSaveReport} disabled={loading} className="bg-brand-blue hover:bg-brand-blue-dark text-ink-inverse text-xs flex-1 flex items-center justify-center gap-2 font-bold h-10">
-              {loading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Saving Document…</span>
-                </>
-              ) : (
-                <>
-                  <RiSaveLine size={16} /> Save Document
-                </>
-              )}
-            </Button>
-          </div>
+          {/* ── SECTION 6: REPORT STATUS & AUTHORISATION ─────────────────── */}
+          <div className="onco-rep-section">
+            <button
+              type="button"
+              onClick={() => toggleSection('auth')}
+              className="onco-rep-section-header"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+                  <RiCheckDoubleLine size={15} />
+                </div>
+                <div>
+                  <span className="text-xs font-extrabold text-ink-primary uppercase tracking-wider block">
+                    6. Report Status &amp; Authorisation
+                  </span>
+                  <span className="text-[11px] text-ink-secondary">
+                    Status: {reportStatus} · Signatory: {doctorName || 'Unassigned'}
+                  </span>
+                </div>
+              </div>
+              <RiArrowDownSLine
+                size={18}
+                className={`text-ink-secondary transition-transform ${
+                  openSections.auth ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-          <div className="lg:hidden p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 rounded-lg text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
-            <span className="font-semibold mt-0.5">ℹ️</span>
-            <span>Live report preview is available on larger screens. Save the report to view and print it.</span>
+            {openSections.auth && (
+              <div className="p-4 space-y-3.5">
+                <FormField label="Report Document Status">
+                  <Select value={reportStatus} onValueChange={setReportStatus}>
+                    <SelectTrigger className="bg-surface-base border-surface-border h-9 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-surface-card border border-surface-border">
+                      <SelectItem value="Draft">Draft (Editable)</SelectItem>
+                      <SelectItem value="Completed">Completed (Clinical Record)</SelectItem>
+                      <SelectItem value="Verified">Verified (Finalized &amp; Audited)</SelectItem>
+                      <SelectItem value="Archived">Archived (Read-Only)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+
+                <FormField label="Select Configured Signatory" required>
+                  <Select value={doctorName} onValueChange={setDoctorName}>
+                    <SelectTrigger className="bg-surface-base border-surface-border h-9 text-xs">
+                      <SelectValue placeholder="Select Signatory Doctor..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-surface-card border border-surface-border">
+                      {signatures.map((sig) => (
+                        <SelectItem key={sig.id} value={sig.doctor_name}>
+                          {sig.doctor_name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="Dr. Somani">Dr. Somani</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+
+                <FormField label="Custom Signatory Name Override">
+                  <Input
+                    value={doctorName}
+                    onChange={(e) => setDoctorName(e.target.value)}
+                    placeholder="Type custom authorising doctor name..."
+                    className="h-8 text-xs"
+                  />
+                </FormField>
+
+                <div className="pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveReport}
+                    disabled={loading}
+                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <RiSaveLine size={16} />
+                    <span>{loading ? 'Saving Document…' : 'Save Clinical Report'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Pathology Report Live Preview Sheet (Right side) */}
-        <div className="flex-1 w-full bg-white/50 border border-surface-border rounded-xl p-5 xl:p-8 hidden lg:flex flex-col items-center overflow-auto max-h-[850px] shadow-inner relative group no-print">
-          <div className="absolute right-4 top-4 flex gap-2 z-10 opacity-70 group-hover:opacity-100 transition-opacity">
-            <Button onClick={triggerSystemPrint} variant="outline" className="border-surface-border bg-white text-ink-primary hover:bg-surface-hover h-8 text-xs flex items-center gap-1">
-              <RiPrinterLine size={14} /> Print
-            </Button>
-            <Button onClick={handleDownloadPDF} variant="outline" className="border-surface-border bg-white text-ink-primary hover:bg-surface-hover h-8 text-xs flex items-center gap-1">
-              <RiDownload2Line size={14} /> Download PDF
-            </Button>
+        {/* ══════════════════════════════════════════════════════════════════
+            RIGHT COLUMN: LIVE SYNCHRONIZED SINGLE-PAGE A4 REPORT PREVIEW
+        ══════════════════════════════════════════════════════════════════ */}
+        <div className="flex-1 w-full onco-preview-shell p-4 sm:p-6 flex flex-col items-center overflow-x-auto">
+          <div className="w-full max-w-[794px] flex items-center justify-between mb-3 no-print">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-bold text-ink-primary uppercase tracking-wider">
+                Live A4 Diagnostic Preview (1-Page Optimized)
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={triggerSystemPrint}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-card hover:bg-surface-hover border border-surface-border text-xs font-semibold text-ink-primary cursor-pointer shadow-2xs"
+              >
+                <RiPrinterLine size={13} /> Print
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadPDF}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-brand-blue text-white hover:bg-brand-blue-dark text-xs font-semibold cursor-pointer shadow-2xs"
+              >
+                <RiDownload2Line size={13} /> Download PDF
+              </button>
+            </div>
           </div>
 
-          {/* A4 Sheet Container */}
-          <div
+          <OxidativeReportDocument
             ref={printAreaRef}
-            className="w-[794px] min-h-[1123px] bg-white border border-surface-border/50 text-black shadow-lg overflow-hidden relative p-[40px] flex flex-col justify-between"
-            style={{ minWidth: '794px', maxWidth: '794px' }}
-          >
-            {/* ── PAGE 1 ── */}
-            <div className="flex-1 flex flex-col justify-between" style={{ minHeight: '1043px', maxHeight: '1043px' }}>
-              <div>
-                {/* Clinic Header Branding */}
-                <div className="flex items-start justify-between border-b-[2px] border-[#6B1D1D] pb-3">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={instSettings?.logo_url || '/static/default_logo.png'}
-                      alt="Logo"
-                      className="h-[60px] w-auto object-contain"
-                      onError={(e) => { e.target.style.display = 'none' }}
-                    />
-                    <div className="h-9 w-px bg-[#6B1D1D]/30" />
-                    <div>
-                      <p className="text-[11px] font-bold text-[#6B1D1D] uppercase tracking-wider">ICSR</p>
-                      <h1 className="text-[17px] font-bold text-[#6B1D1D] uppercase tracking-tight leading-tight">
-                        {instSettings?.name || 'Institute of Cancer and Stem Cell Research'}
-                      </h1>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Patient Header Block Table */}
-                <div className="mt-4 border border-surface-border/80 p-4 bg-[#f9fafb]">
-                  <table className="w-full text-xs border-collapse">
-                    <tbody>
-                      <tr>
-                        <td className="py-1.5 font-bold text-ink-primary w-[14%]">Patient Name:</td>
-                        <td className="py-1.5 text-ink-primary w-[36%]">{patientDetails.name || '-'}</td>
-                        <td className="py-1.5 font-bold text-ink-primary w-[14%]">Report Date:</td>
-                        <td className="py-1.5 text-ink-primary w-[36%]">{reportDate}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 font-bold text-ink-primary">Ref. By:</td>
-                        <td className="py-1.5 text-ink-primary">{referenceBy || '-'}</td>
-                        <td className="py-1.5 font-bold text-ink-primary">Sample:</td>
-                        <td className="py-1.5 text-ink-primary">{sampleType}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Section 1: Oxidative Damage */}
-                <div className="mt-6 space-y-3">
-                  <h2 className="text-[15px] font-bold text-[#6B1D1D] border-b border-[#6B1D1D]/20 pb-1">Oxidative Damage</h2>
-                  <p className="text-[10px] text-ink-secondary leading-relaxed text-justify">
-                    This includes markers that show cellular injury caused by reactive species. MDA (TBARS) and FOX-2 indicate lipid peroxidation and early membrane damage. Protein Carbonyl (DNPH) reflects oxidative modification of proteins. Nitric Oxide (Griess assay) indicates nitrosative stress, which can contribute to tissue and cellular damage. Elevated values of these markers suggest increased oxidative stress in the body.
-                  </p>
-
-                  <table className="w-full text-xs text-left border border-surface-border mt-2">
-                    <thead>
-                      <tr className="bg-surface-base/40 border-b border-surface-border text-[#6B1D1D] font-bold">
-                        <th className="py-2.5 px-3 border-r border-surface-border w-[38%]">Parameter Measured</th>
-                        <th className="py-2.5 px-3 border-r border-surface-border text-center w-[16%]">Result</th>
-                        <th className="py-2.5 px-3 border-r border-surface-border text-center w-[18%]">Refrence Range</th>
-                        <th className="py-2.5 px-3 w-[28%]">Interpretation</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-surface-border text-ink-primary">
-                      {paramValues.filter(p => p.section === 'Oxidative Damage').map((param) => (
-                        <tr key={param.parameter_id}>
-                          <td className="py-2.5 px-3 border-r border-surface-border font-medium">{param.name}</td>
-                          <td className="py-2.5 px-3 border-r border-surface-border text-center font-bold">{param.result_value || '-'}</td>
-                          <td className="py-2.5 px-3 border-r border-surface-border text-center font-mono">{param.reference_range}</td>
-                          <td className="py-2.5 px-3 text-ink-secondary text-[11px]">{param.interpretation}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Section 2: Antioxidant Defence */}
-                <div className="mt-8 space-y-3">
-                  <h2 className="text-[15px] font-bold text-[#6B1D1D] border-b border-[#6B1D1D]/20 pb-1">Antioxidant Defence</h2>
-                  <p className="text-[10px] text-ink-secondary leading-relaxed text-justify">
-                    This panel evaluates the body's capacity to neutralize oxidative stress by measuring multiple antioxidant components. Reduced Glutathione (GSH) reflects the primary intracellular antioxidant that protects cells from reactive oxygen and nitrogen species. Total Antioxidant Capacity (TAC) measures the overall antioxidant potential of plasma, integrating both enzymatic and non-enzymatic systems.
-                  </p>
-
-                  <table className="w-full text-xs text-left border border-surface-border mt-2">
-                    <thead>
-                      <tr className="bg-surface-base/40 border-b border-surface-border text-[#6B1D1D] font-bold">
-                        <th className="py-2.5 px-3 border-r border-surface-border w-[38%]">Parameter Measured</th>
-                        <th className="py-2.5 px-3 border-r border-surface-border text-center w-[16%]">Result</th>
-                        <th className="py-2.5 px-3 border-r border-surface-border text-center w-[18%]">Refrence Range</th>
-                        <th className="py-2.5 px-3 w-[28%]">Your Interpretation</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-surface-border text-ink-primary">
-                      {paramValues.filter(p => p.section === 'Antioxidant Defence').map((param) => (
-                        <tr key={param.parameter_id}>
-                          <td className="py-2.5 px-3 border-r border-surface-border font-medium">{param.name}</td>
-                          <td className="py-2.5 px-3 border-r border-surface-border text-center font-bold">{param.result_value || '-'}</td>
-                          <td className="py-2.5 px-3 border-r border-surface-border text-center font-mono">{param.reference_range}</td>
-                          <td className="py-2.5 px-3 text-ink-secondary text-[11px]">{param.interpretation}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* A4 Sheet Footer (Page 1) */}
-              <div className="border-t border-[#6B1D1D] pt-2 mt-auto">
-                <div className="flex justify-between items-center text-[9px] text-[#6B1D1D] font-bold uppercase tracking-tight">
-                  <span>{instSettings?.name || 'Institute of Cancer and Stem Cell Research'} | SAT</span>
-                  <span className="font-mono">1</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Page Break Spacer */}
-            <div className="h-[80px] no-print" />
-
-            {/* ── PAGE 2 ── */}
-            <div className="flex-1 flex flex-col justify-between" style={{ minHeight: '1043px', maxHeight: '1043px' }}>
-              <div>
-                {/* Header Branding Repeat */}
-                <div className="flex items-start justify-between border-b-[2px] border-[#6B1D1D] pb-3">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={instSettings?.logo_url || '/static/default_logo.png'}
-                      alt="Logo"
-                      className="h-[60px] w-auto object-contain"
-                      onError={(e) => { e.target.style.display = 'none' }}
-                    />
-                    <div className="h-9 w-px bg-[#6B1D1D]/30" />
-                    <div>
-                      <p className="text-[11px] font-bold text-[#6B1D1D] uppercase tracking-wider">ICSR</p>
-                      <h1 className="text-[17px] font-bold text-[#6B1D1D] uppercase tracking-tight leading-tight">
-                        {instSettings?.name || 'Institute of Cancer and Stem Cell Research'}
-                      </h1>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Patient Header Block Repeat */}
-                <div className="mt-4 border border-surface-border/80 p-4 bg-[#f9fafb]">
-                  <table className="w-full text-xs border-collapse">
-                    <tbody>
-                      <tr>
-                        <td className="py-1.5 font-bold text-ink-primary w-[14%]">Patient Name:</td>
-                        <td className="py-1.5 text-ink-primary w-[36%]">{patientDetails.name || '-'}</td>
-                        <td className="py-1.5 font-bold text-ink-primary w-[14%]">Report Date:</td>
-                        <td className="py-1.5 text-ink-primary w-[36%]">{reportDate}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 font-bold text-ink-primary">Ref. By:</td>
-                        <td className="py-1.5 text-ink-primary">{referenceBy || '-'}</td>
-                        <td className="py-1.5 font-bold text-ink-primary">Sample:</td>
-                        <td className="py-1.5 text-ink-primary">{sampleType}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Overall Summary section */}
-                <div className="mt-6 space-y-3">
-                  <h2 className="text-[15px] font-bold text-[#6B1D1D] border-b border-[#6B1D1D]/20 pb-1">Overall Summary</h2>
-                  <p className="text-[10px] text-ink-secondary leading-relaxed text-justify whitespace-pre-line">
-                    The Damage vs. Defense Ratio (DDR) summarizes the body's oxidative stress by comparing total oxidative damage to antioxidant capacity. It is calculated as (MDA + FOX-2 + Protein Carbonyl + Nitric Oxide) / GSH. A low DDR indicates that antioxidants effectively counteract oxidative damage; a moderate DDR suggests that oxidative stress is present and defenses are partially overwhelmed; and a high DDR indicates that damage exceeds the body's protective capacity, reflecting severe oxidative stress and higher risk for cellular dysfunction or disease.
-                  </p>
-                </div>
-
-                {/* Score Section 1: Oxidative Damage Score */}
-                <div className="mt-8 space-y-4">
-                  <h3 className="text-[13px] font-bold text-[#6B1D1D]">Oxidative Damage Score</h3>
-                  <table className="w-full text-xs text-left border border-surface-border">
-                    <thead>
-                      <tr className="bg-surface-base/40 border-b border-surface-border font-bold">
-                        <th className="py-2 px-3 border-r border-surface-border w-[50%]">Parameter</th>
-                        <th className="py-2 px-3 border-r border-surface-border text-center w-[25%]">Quantitative Analysis</th>
-                        <th className="py-2 px-3 text-center w-[25%]">Qualitative Analysis</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="text-ink-primary">
-                        <td className="py-4 px-3 border-r border-surface-border font-medium">Oxidative Damage Score (MDA+FOX2+NO+Protein Carbonyl)</td>
-                        <td className="py-4 px-3 border-r border-surface-border text-center font-bold text-sm">{damageScore || '-'}</td>
-                        <td className="py-4 px-3 flex justify-center items-center">
-                          <div className={['w-6 h-6 rounded-full border border-black/10', getDamageCircleColor(damageScore)].join(' ')} />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  {/* Horizontal color scale */}
-                  <div className="relative pt-6 px-1">
-                    {/* Arrow Indicator */}
-                    <div
-                      className="absolute -top-1.5 transition-all duration-300 flex flex-col items-center"
-                      style={{ left: getPinLeftPercent(damageScore) }}
-                    >
-                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[7px] border-t-black" />
-                    </div>
-
-                    {/* Gradient color bar */}
-                    <div className="h-3 w-full bg-gradient-to-r from-[#FFEB3B] via-[#FF9800] to-[#F44336] rounded-sm" />
-                    
-                    {/* Numbers 1-10 */}
-                    <div className="flex justify-between text-[9px] font-bold text-ink-secondary mt-1 px-1">
-                      <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
-                    </div>
-
-                    <p className="text-[8px] text-ink-secondary leading-tight mt-1.5">
-                      1-3 (Light Yellow): Low oxidative damage, minimal stress on cells.<br />
-                      4-7 (Orange): Moderate oxidative damage, some stress present.<br />
-                      8-10 (Red): High oxidative damage, significant stress and cellular risk.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Score Section 2: Antioxidant Defence Score */}
-                <div className="mt-8 space-y-4">
-                  <h3 className="text-[13px] font-bold text-[#6B1D1D]">Antioxidant Defence</h3>
-                  <table className="w-full text-xs text-left border border-surface-border">
-                    <thead>
-                      <tr className="bg-surface-base/40 border-b border-surface-border font-bold">
-                        <th className="py-2 px-3 border-r border-surface-border w-[50%]">Parameter</th>
-                        <th className="py-2 px-3 border-r border-surface-border text-center w-[25%]">Quantitative Analysis</th>
-                        <th className="py-2 px-3 text-center w-[25%]">Qualitative Analysis</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="text-ink-primary">
-                        <td className="py-4 px-3 border-r border-surface-border font-medium">Antioxidant Defence (GSH)</td>
-                        <td className="py-4 px-3 border-r border-surface-border text-center font-bold text-sm">{defenceScore || '-'}</td>
-                        <td className="py-4 px-3 flex justify-center items-center">
-                          <div className={['w-6 h-6 rounded-full border border-black/10', getDefenceCircleColor(defenceScore)].join(' ')} />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  {/* Horizontal color scale */}
-                  <div className="relative pt-6 px-1">
-                    {/* Arrow Indicator */}
-                    <div
-                      className="absolute -top-1.5 transition-all duration-300 flex flex-col items-center"
-                      style={{ left: getPinLeftPercent(defenceScore) }}
-                    >
-                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[7px] border-t-black" />
-                    </div>
-
-                    {/* Gradient color bar */}
-                    <div className="h-3 w-full bg-gradient-to-r from-[#FFEB3B] via-[#8BC34A] to-[#2E7D32] rounded-sm" />
-                    
-                    {/* Numbers 1-10 */}
-                    <div className="flex justify-between text-[9px] font-bold text-ink-secondary mt-1 px-1">
-                      <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
-                    </div>
-
-                    <p className="text-[8px] text-ink-secondary leading-tight mt-1.5">
-                      1-3 (Light Yellow): Weak antioxidant defense, insufficient protection.<br />
-                      4-7 (Light Green): Moderate defense, partial protection against oxidative stress.<br />
-                      8-10 (Dark Green): Strong defense, effective neutralization of reactive species.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* A4 Sheet Footer (Page 2) */}
-              <div className="border-t border-[#6B1D1D] pt-2 mt-auto">
-                <div className="flex justify-between items-center text-[9px] text-[#6B1D1D] font-bold uppercase tracking-tight">
-                  <span>{instSettings?.name || 'Institute of Cancer and Stem Cell Research'} | SAT</span>
-                  <span className="font-mono">2</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Page Break Spacer */}
-            <div className="h-[80px] no-print" />
-
-            {/* ── PAGE 3 ── */}
-            <div className="flex-1 flex flex-col justify-between" style={{ minHeight: '1043px', maxHeight: '1043px' }}>
-              <div>
-                {/* Header Branding Repeat */}
-                <div className="flex items-start justify-between border-b-[2px] border-[#6B1D1D] pb-3">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={instSettings?.logo_url || '/static/default_logo.png'}
-                      alt="Logo"
-                      className="h-[60px] w-auto object-contain"
-                      onError={(e) => { e.target.style.display = 'none' }}
-                    />
-                    <div className="h-9 w-px bg-[#6B1D1D]/30" />
-                    <div>
-                      <p className="text-[11px] font-bold text-[#6B1D1D] uppercase tracking-wider">ICSR</p>
-                      <h1 className="text-[17px] font-bold text-[#6B1D1D] uppercase tracking-tight leading-tight">
-                        {instSettings?.name || 'Institute of Cancer and Stem Cell Research'}
-                      </h1>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Patient Header Block Repeat */}
-                <div className="mt-4 border border-surface-border/80 p-4 bg-[#f9fafb]">
-                  <table className="w-full text-xs border-collapse">
-                    <tbody>
-                      <tr>
-                        <td className="py-1.5 font-bold text-ink-primary w-[14%]">Patient Name:</td>
-                        <td className="py-1.5 text-ink-primary w-[36%]">{patientDetails.name || '-'}</td>
-                        <td className="py-1.5 font-bold text-ink-primary w-[14%]">Report Date:</td>
-                        <td className="py-1.5 text-ink-primary w-[36%]">{reportDate}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 font-bold text-ink-primary">Ref. By:</td>
-                        <td className="py-1.5 text-ink-primary">{referenceBy || '-'}</td>
-                        <td className="py-1.5 font-bold text-ink-primary">Sample:</td>
-                        <td className="py-1.5 text-ink-primary">{sampleType}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Score Section 3: Damage - Defence Ratio */}
-                <div className="mt-6 space-y-4">
-                  <h3 className="text-[13px] font-bold text-[#6B1D1D]">Damage - Defence Ratio</h3>
-                  <table className="w-full text-xs text-left border border-surface-border">
-                    <thead>
-                      <tr className="bg-surface-base/40 border-b border-surface-border font-bold">
-                        <th className="py-2 px-3 border-r border-surface-border w-[50%]">Parameter</th>
-                        <th className="py-2 px-3 border-r border-surface-border text-center w-[25%]">Quantitative Analysis</th>
-                        <th className="py-2 px-3 text-center w-[25%]">Qualitative Analysis</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="text-ink-primary">
-                        <td className="py-4 px-3 border-r border-surface-border font-medium">Damage - Defence Ratio</td>
-                        <td className="py-4 px-3 border-r border-surface-border text-center font-bold text-sm">{ratioScore || '-'}</td>
-                        <td className="py-4 px-3 flex justify-center items-center">
-                          <div className={['w-6 h-6 rounded-full border border-black/10', getRatioCircleColor(ratioScore)].join(' ')} />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  {/* Horizontal color scale */}
-                  <div className="relative pt-6 px-1">
-                    {/* Arrow Indicator */}
-                    <div
-                      className="absolute -top-1.5 transition-all duration-300 flex flex-col items-center"
-                      style={{ left: getPinLeftPercent(ratioScore) }}
-                    >
-                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[7px] border-t-black" />
-                    </div>
-
-                    {/* Gradient color bar */}
-                    <div className="h-3 w-full bg-gradient-to-r from-[#4CAF50] via-[#FFEB3B] to-[#F44336] rounded-sm" />
-                    
-                    {/* Numbers 1-10 */}
-                    <div className="flex justify-between text-[9px] font-bold text-ink-secondary mt-1 px-1">
-                      <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
-                    </div>
-
-                    <p className="text-[8px] text-ink-secondary leading-tight mt-1.5">
-                      1-3 (Green): Low ratio, body defense is sufficient to counter damage.<br />
-                      4-6 (Yellow): Moderate ratio, damage and defense are somewhat balanced.<br />
-                      7-10 (Red): High ratio, damage exceeds defense, high oxidative stress.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Section 4: Disclaimer */}
-                <div className="mt-8 space-y-2">
-                  <p className="text-[10px] font-bold text-ink-primary">Disclaimer:</p>
-                  <p className="text-[9px] text-ink-secondary leading-relaxed text-justify whitespace-pre-line">
-                    {template?.default_disclaimer || "The information provided by this panel reflects biochemical markers of oxidative balance and is intended for research or monitoring purposes. It should be considered alongside clinical evaluation and not as a standalone diagnostic tool."}
-                  </p>
-                </div>
-
-                {/* Authorised Signatory Block */}
-                <div className="mt-12 flex justify-between items-end">
-                  <div className="text-[10px] text-ink-secondary">
-                    <span>-------</span><span className="font-bold">End of Report</span><span>------</span>
-                  </div>
-
-                  <div className="flex flex-col items-center space-y-1">
-                    {/* Signature image */}
-                    <div className="h-10 flex items-center justify-center p-1 px-3">
-                      {signatures.find(s => s.doctor_name === doctorName)?.signature_url ? (
-                        <img
-                          src={signatures.find(s => s.doctor_name === doctorName).signature_url}
-                          alt="Doctor Signature"
-                          className="h-full object-contain"
-                        />
-                      ) : (
-                        <div className="h-full w-24 border border-dashed border-surface-border flex items-center justify-center text-[8px] text-ink-disabled font-medium">
-                          No Signature
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Stamp overlay if stamp exists */}
-                    {instSettings?.stamp_url && (
-                      <div className="h-10 w-10 flex items-center justify-center overflow-hidden -mt-6 opacity-80 shrink-0">
-                        <img
-                          src={instSettings.stamp_url}
-                          alt="Stamp"
-                          className="h-full object-contain"
-                        />
-                      </div>
-                    )}
-                    
-                    <span className="text-[10px] font-bold text-[#6B1D1D] mt-1">Authorised Signatory</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* A4 Sheet Footer (Page 3) */}
-              <div className="border-t border-[#6B1D1D] pt-4 mt-auto">
-                {/* Contact details row */}
-                <div className="grid grid-cols-2 gap-4 text-[9px] text-ink-secondary mb-3">
-                  <div>
-                    <p><span className="font-bold text-ink-primary">Address - </span>{instSettings?.address || 'M4 Mishika Tower Sampna Sangeeta Indore M.P. 452001'}</p>
-                    <p className="mt-1"><span className="font-bold text-ink-primary">Email - </span>{instSettings?.email || 'icsrofficial@gmail.com'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p><span className="font-bold text-ink-primary">Website - </span>{instSettings?.website || 'www.icsrofficial.com'}</p>
-                    <p className="mt-1"><span className="font-bold text-ink-primary">Contact no - </span>{instSettings?.contact_number || '+91 7582950349'}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center text-[9px] text-[#6B1D1D] font-bold uppercase tracking-tight">
-                  <span>{instSettings?.name || 'Institute of Cancer and Stem Cell Research'} | SAT</span>
-                  <span className="font-mono">3</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
+            instSettings={instSettings}
+            signatureUrl={matchedSignatureUrl}
+            reportNumber={reportNumber}
+            version={version}
+            reportStatus={reportStatus}
+            patientName={patientDetails.name}
+            patientCode={patientDetails.patient_code || patientDetails.uhid}
+            patientAge={patientDetails.age}
+            patientGender={patientDetails.gender}
+            referenceBy={referenceBy}
+            doctorName={doctorName}
+            reportDate={reportDate}
+            collectionDate={collectionDate}
+            sampleType={sampleType}
+            labNumber={labNumber}
+            damageParams={damageParams}
+            defenceParams={defenceParams}
+            damageScore={damageScore}
+            defenceScore={defenceScore}
+            ratioScore={ratioScore}
+            overallSummary={overallSummary}
+            disclaimerText={disclaimerText}
+          />
         </div>
-
       </div>
-
-      {/* Global CSS style block overrides for browser window printing */}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          .no-print-layout, .no-print, header, nav, aside, .topbar {
-            display: none !important;
-          }
-          /* Show print area and position at top left */
-          #print-area, [ref="printAreaRef"], .print-area-selector {
-            visibility: visible !important;
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            border: 0 !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-          /* Define A4 page dimensions */
-          @page {
-            size: A4 portrait;
-            margin: 15mm 10mm 15mm 10mm;
-          }
-        }
-      `}</style>
     </div>
   )
 }
