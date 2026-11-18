@@ -1,0 +1,319 @@
+/* ==========================================================================
+   ONCO SPHERE — Clinical Intelligence & Oncology Research Dashboard Styles
+   Scoped under .onco-dash-* to keep component files lightweight and clean.
+   Supports both Light Mode (clinical laboratory white/navy) and Dark Mode.
+   ========================================================================== */
+
+@keyframes oncoFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes oncoPulseGlow {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes oncoBarShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes oncoFloatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(1.5deg);
+  }
+}
+
+/* ── Root Dashboard Wrapper with Subtle Scientific Grid ───────────────── */
+.onco-dash-root {
+  position: relative;
+  min-height: calc(100vh - 96px);
+  border-radius: 1rem;
+  background-image:
+    radial-gradient(rgba(61, 107, 197, 0.075) 1px, transparent 1px),
+    radial-gradient(ellipse at 90% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 100%, rgba(99, 102, 241, 0.06) 0%, transparent 50%);
+  background-size: 24px 24px, 100% 100%, 100% 100%;
+}
+
+.dark .onco-dash-root {
+  background-image:
+    radial-gradient(rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    radial-gradient(ellipse at 90% 0%, rgba(37, 99, 235, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 100%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+}
+
+/* ── Staggered Entrance Animations ────────────────────────────────────── */
+.onco-anim-1 { animation: oncoFadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.02s both; }
+.onco-anim-2 { animation: oncoFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.onco-anim-3 { animation: oncoFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+
+/* ── Hero Header Banner ───────────────────────────────────────────────── */
+.onco-header-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 1.35rem 1.5rem;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F5F9FF 55%, #EEF5FF 100%);
+  border: 1px solid rgba(61, 107, 197, 0.18);
+  box-shadow:
+    0 10px 30px -10px rgba(27, 34, 96, 0.07),
+    0 2px 6px -1px rgba(27, 34, 96, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark .onco-header-banner {
+  background: linear-gradient(135deg, #1E293B 0%, #152238 55%, #0F1C34 100%);
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow:
+    0 12px 32px -10px rgba(2, 6, 23, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.onco-header-glow {
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, rgba(37, 99, 235, 0.05) 50%, transparent 70%);
+  pointer-events: none;
+  animation: oncoPulseGlow 7s ease-in-out infinite;
+}
+
+.onco-header-dna {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.11;
+  pointer-events: none;
+}
+
+.dark .onco-header-dna {
+  opacity: 0.16;
+}
+
+/* ── KPI Stat Cards ───────────────────────────────────────────────────── */
+.onco-stat-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.95rem;
+  padding: 1.25rem 1.25rem 1.15rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAFDFE 100%);
+  border: 1px solid rgba(221, 227, 238, 0.9);
+  box-shadow:
+    0 4px 18px -4px rgba(26, 31, 54, 0.055),
+    0 1px 3px rgba(26, 31, 54, 0.03);
+  transition:
+    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.24s ease;
+}
+
+.dark .onco-stat-card {
+  background: linear-gradient(180deg, #1E293B 0%, #172234 100%);
+  border-color: rgba(51, 65, 85, 0.85);
+  box-shadow: 0 6px 20px -4px rgba(2, 6, 23, 0.45);
+}
+
+.onco-stat-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Top accent bar on each stat card */
+.onco-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  opacity: 0.85;
+  transition: opacity 0.24s ease, height 0.24s ease;
+}
+
+.onco-stat-card:hover::before {
+  opacity: 1;
+  height: 4px;
+}
+
+/* Color Variants for KPI Cards */
+.onco-stat-indigo::before { background: linear-gradient(90deg, #252D7E, #4F46E5, #38BDF8); }
+.onco-stat-cyan::before   { background: linear-gradient(90deg, #0284C7, #06B6D4, #38BDF8); }
+.onco-stat-teal::before   { background: linear-gradient(90deg, #059669, #14B8A6, #34D399); }
+.onco-stat-amber::before  { background: linear-gradient(90deg, #D97706, #F59E0B, #FBBF24); }
+.onco-stat-violet::before { background: linear-gradient(90deg, #6D28D9, #8B5CF6, #C084FC); }
+
+.onco-stat-indigo:hover {
+  border-color: rgba(79, 70, 229, 0.35);
+  box-shadow: 0 12px 28px -6px rgba(79, 70, 229, 0.14), 0 4px 10px rgba(26, 31, 54, 0.04);
+}
+.onco-stat-cyan:hover {
+  border-color: rgba(6, 182, 212, 0.38);
+  box-shadow: 0 12px 28px -6px rgba(6, 182, 212, 0.14), 0 4px 10px rgba(26, 31, 54, 0.04);
+}
+.onco-stat-teal:hover {
+  border-color: rgba(20, 184, 166, 0.38);
+  box-shadow: 0 12px 28px -6px rgba(20, 184, 166, 0.14), 0 4px 10px rgba(26, 31, 54, 0.04);
+}
+.onco-stat-amber:hover {
+  border-color: rgba(245, 158, 11, 0.38);
+  box-shadow: 0 12px 28px -6px rgba(245, 158, 11, 0.14), 0 4px 10px rgba(26, 31, 54, 0.04);
+}
+.onco-stat-violet:hover {
+  border-color: rgba(139, 92, 246, 0.38);
+  box-shadow: 0 12px 28px -6px rgba(139, 92, 246, 0.14), 0 4px 10px rgba(26, 31, 54, 0.04);
+}
+
+/* Icon Badge inside Stat Card */
+.onco-stat-icon {
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s ease;
+}
+
+.onco-stat-card:hover .onco-stat-icon {
+  transform: scale(1.07) rotate(-2deg);
+}
+
+/* ── Main Analytics & Visualization Panels ────────────────────────────── */
+.onco-glass-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FBFDFF 100%);
+  border: 1px solid rgba(221, 227, 238, 0.95);
+  box-shadow:
+    0 8px 28px -6px rgba(26, 31, 54, 0.055),
+    0 2px 6px rgba(26, 31, 54, 0.025);
+}
+
+.dark .onco-glass-panel {
+  background: linear-gradient(180deg, #1E293B 0%, #162032 100%);
+  border-color: rgba(51, 65, 85, 0.85);
+  box-shadow: 0 10px 30px -8px rgba(2, 6, 23, 0.5);
+}
+
+/* ── Cancer Type Row Item ─────────────────────────────────────────────── */
+.onco-cohort-row {
+  position: relative;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  background: rgba(244, 247, 251, 0.45);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease;
+}
+
+.dark .onco-cohort-row {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.onco-cohort-row:hover {
+  background: #FFFFFF;
+  border-color: rgba(61, 107, 197, 0.28);
+  transform: translateX(3px);
+  box-shadow: 0 4px 14px -3px rgba(37, 45, 126, 0.08);
+}
+
+.dark .onco-cohort-row:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 4px 16px -3px rgba(2, 6, 23, 0.5);
+}
+
+/* Progress Track with Subtle Scientific Calibration Ticks */
+.onco-progress-track {
+  position: relative;
+  width: 100%;
+  height: 0.65rem;
+  border-radius: 9999px;
+  background-color: #EBF0F7;
+  background-image: linear-gradient(
+    90deg,
+    transparent 24.8%,
+    rgba(107, 114, 128, 0.12) 25%,
+    transparent 25.2%,
+    transparent 49.8%,
+    rgba(107, 114, 128, 0.12) 50%,
+    transparent 50.2%,
+    transparent 74.8%,
+    rgba(107, 114, 128, 0.12) 75%,
+    transparent 75.2%
+  );
+  border: 1px solid rgba(209, 218, 230, 0.7);
+  overflow: hidden;
+}
+
+.dark .onco-progress-track {
+  background-color: #0F172A;
+  border-color: rgba(51, 65, 85, 0.8);
+}
+
+/* Animated Progress Fill with Subtle Shimmer Overlay */
+.onco-progress-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.onco-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: oncoBarShimmer 3.5s infinite linear;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .onco-anim-1,
+  .onco-anim-2,
+  .onco-anim-3,
+  .onco-header-glow,
+  .onco-progress-fill::after {
+    animation: none !important;
+  }
+  .onco-stat-card,
+  .onco-cohort-row,
+  .onco-progress-fill {
+    transition: none !important;
+  }
+}
