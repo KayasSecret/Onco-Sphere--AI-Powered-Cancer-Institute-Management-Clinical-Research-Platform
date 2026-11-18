@@ -2,21 +2,39 @@ import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { createPatientThunk } from '../../redux/slices/patientSlice'
-import PageHeader from '../../components/PageHeader'
 import FormField from '../../components/FormField'
-import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Label } from '../../components/ui/label'
 import { toast } from 'sonner'
 import PhotoSelector from '../../components/PhotoSelector'
+import StatusBadge from '../../components/StatusBadge'
 import { cancerHierarchy, cancerCategories } from '../../config/cancerHierarchy'
 import DatePicker from '../../components/DatePicker'
 import { phoneRegex, emailRegex } from '../../lib/validation'
+import {
+  RiUserHeartLine,
+  RiContactsBook2Line,
+  RiMicroscopeLine,
+  RiCheckLine,
+  RiUser3Line,
+  RiPhoneLine,
+  RiMailLine,
+  RiMapPinLine,
+  RiShieldUserLine,
+  RiStethoscopeLine,
+  RiCameraLine,
+  RiArrowLeftLine,
+  RiArrowRightLine,
+  RiShieldCheckLine,
+  RiHeartPulseLine,
+  RiFlaskLine,
+} from 'react-icons/ri'
+import './PatientRegisterPage.css'
 
 const schema = yup.object({
   full_name: yup.string().trim().min(2, 'Name must be at least 2 characters').required('Name is required'),
@@ -46,7 +64,7 @@ const schema = yup.object({
     .matches(emailRegex, 'Enter a valid email address'),
   address: yup.string().min(5, 'Enter detailed address').required('Address is required'),
   emergency_contact_name: yup.string().nullable(),
- emergency_contact_phone: yup
+  emergency_contact_phone: yup
     .string()
     .trim()
     .nullable()
@@ -62,6 +80,27 @@ const schema = yup.object({
   treatment_status: yup.string().nullable(),
   admission_date: yup.mixed().nullable(),
 })
+
+const WIZARD_STEPS = [
+  {
+    step: 1,
+    label: 'Identity',
+    subtitle: 'Demographics & Biometrics',
+    icon: RiUserHeartLine,
+  },
+  {
+    step: 2,
+    label: 'Contact',
+    subtitle: 'Communication & Next of Kin',
+    icon: RiContactsBook2Line,
+  },
+  {
+    step: 3,
+    label: 'Clinical',
+    subtitle: 'Oncology Staging & Protocol',
+    icon: RiMicroscopeLine,
+  },
+]
 
 export default function PatientRegisterPage() {
   const dispatch = useDispatch()
@@ -122,7 +161,7 @@ export default function PatientRegisterPage() {
   // ── Final submit — called ONLY when user clicks "Register Record" on step 3 ──
   const handleFinalSubmit = handleSubmit(
     async (data) => {
-      if (isSubmitting) return          // guard against double-click
+      if (isSubmitting) return // guard against double-click
       setIsSubmitting(true)
 
       const formatDate = (val) => {
@@ -173,56 +212,155 @@ export default function PatientRegisterPage() {
     }
   )
 
-  return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <PageHeader
-        title="Register Patient"
-        breadcrumbs={[
-          { label: 'Dashboard', to: '/dashboard' },
-          { label: 'Patient Register', to: '/patients' },
-          { label: 'Register' },
-        ]}
-      />
+  const progressPercentage = Math.round((activeStep / 3) * 100)
 
-      {/* Stepper Wizard Indicator Header */}
-      <div className="flex items-center justify-between border-b border-surface-border pb-4 mb-6 text-xs font-semibold">
-        {[
-          { step: 1, label: 'Identity' },
-          { step: 2, label: 'Contact' },
-          { step: 3, label: 'Clinical' },
-        ].map((item) => (
-          <button
-            type="button"
-            key={item.step}
-            onClick={async () => {
-              if (item.step < activeStep) {
-                setActiveStep(item.step)
-              } else if (item.step > activeStep) {
-                const fieldsToValidate = STEP_FIELDS[activeStep]
-                if (fieldsToValidate) {
-                  const isValid = await trigger(fieldsToValidate)
-                  if (isValid) setActiveStep(item.step)
-                }
-              }
-            }}
-            className={[
-              'flex items-center gap-2 pb-2 border-b-2 transition-all cursor-pointer',
-              activeStep === item.step
-                ? 'border-brand-blue text-brand-blue font-bold'
-                : 'border-transparent text-ink-secondary hover:text-ink-primary',
-            ].join(' ')}
-          >
-            <span
-              className={[
-                'w-5 h-5 rounded-full flex items-center justify-center text-[10px]',
-                activeStep === item.step ? 'bg-brand-blue text-ink-inverse font-bold' : 'bg-surface-hover text-ink-secondary',
-              ].join(' ')}
+  return (
+    <div className="onco-wiz-root space-y-5 max-w-4xl mx-auto pb-6">
+      {/* ── Clinical Intake Header Banner ─────────────────────────────────── */}
+      <div className="onco-wiz-banner">
+        {/* Decorative DNA / Molecular SVG Watermark */}
+        <svg
+          width="175"
+          height="84"
+          viewBox="0 0 175 84"
+          fill="none"
+          aria-hidden="true"
+          className="absolute right-5 top-1/2 -translate-y-1/2 opacity-[0.09] dark:opacity-[0.14] hidden md:block pointer-events-none text-brand-navy dark:text-sky-400"
+        >
+          <path
+            d="M8 18 C 42 18, 42 66, 76 66 C 110 66, 110 18, 144 18"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeDasharray="4 4"
+          />
+          <path
+            d="M8 66 C 42 66, 42 18, 76 18 C 110 18, 110 66, 144 66"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <circle cx="76" cy="42" r="3.5" fill="currentColor" />
+          <circle cx="144" cy="18" r="3" fill="currentColor" />
+          <circle cx="144" cy="66" r="3" fill="currentColor" />
+        </svg>
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            {/* Breadcrumb Navigation */}
+            <nav
+              aria-label="Breadcrumb"
+              className="flex items-center gap-1.5 text-xs text-ink-secondary"
             >
-              {item.step}
-            </span>
-            {item.label}
-          </button>
-        ))}
+              <Link
+                to="/dashboard"
+                className="font-semibold text-brand-blue dark:text-sky-400 hover:underline"
+              >
+                Dashboard
+              </Link>
+              <span className="opacity-40">/</span>
+              <Link
+                to="/patients"
+                className="font-semibold text-brand-blue dark:text-sky-400 hover:underline"
+              >
+                Patient Register
+              </Link>
+              <span className="opacity-40">/</span>
+              <span className="text-ink-secondary font-medium">Register</span>
+            </nav>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-primary tracking-tight">
+                Register Patient
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.14em] bg-brand-blue/10 dark:bg-sky-500/15 text-brand-navy dark:text-sky-300 border border-brand-blue/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Clinical Intake Protocol
+              </span>
+            </div>
+
+            <p className="text-xs sm:text-sm text-ink-secondary max-w-xl">
+              Enroll a new oncology patient record across biometric identity, emergency contacts, and primary clinical staging.
+            </p>
+          </div>
+
+          {/* Step Completion Pill */}
+          <div className="flex items-center gap-3 self-start sm:self-center shrink-0 bg-surface-card/90 border border-surface-border px-3.5 py-2 rounded-xl shadow-2xs">
+            <div className="text-right">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-ink-secondary">
+                Protocol Stage
+              </span>
+              <span className="text-xs font-mono font-bold text-brand-navy dark:text-sky-300">
+                Step {activeStep} of 3 · {progressPercentage}%
+              </span>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-brand-blue/10 dark:bg-sky-500/15 border border-brand-blue/20 flex items-center justify-center text-brand-blue dark:text-sky-400">
+              <RiHeartPulseLine size={18} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3-Stage Diagnostic Wizard Stepper ─────────────────────────────── */}
+      <div className="onco-wiz-stepper">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {WIZARD_STEPS.map((item) => {
+            const isComplete = item.step < activeStep
+            const isActive = item.step === activeStep
+            const stateClass = isActive
+              ? 'is-active'
+              : isComplete
+              ? 'is-complete'
+              : 'is-upcoming'
+
+            return (
+              <button
+                type="button"
+                key={item.step}
+                onClick={async () => {
+                  if (item.step < activeStep) {
+                    setActiveStep(item.step)
+                  } else if (item.step > activeStep) {
+                    const fieldsToValidate = STEP_FIELDS[activeStep]
+                    if (fieldsToValidate) {
+                      const isValid = await trigger(fieldsToValidate)
+                      if (isValid) setActiveStep(item.step)
+                    }
+                  }
+                }}
+                className={`onco-step-btn ${stateClass}`}
+              >
+                <span className="onco-step-orb">
+                  {isComplete ? <RiCheckLine size={16} /> : item.step}
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`text-xs sm:text-sm font-bold truncate ${
+                        isActive
+                          ? 'text-brand-blue dark:text-sky-300'
+                          : isComplete
+                          ? 'text-emerald-700 dark:text-emerald-300'
+                          : 'text-ink-secondary'
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                  <span className="hidden sm:block text-[11px] text-ink-secondary truncate">
+                    {item.subtitle}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Continuous Animated Progress Track */}
+        <div className="mt-3 w-full h-1.5 bg-surface-hover dark:bg-slate-800 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-brand-navy via-brand-blue to-cyan-400 transition-all duration-500 ease-out"
+            style={{ width: `${((activeStep - 1) / 2) * 50 + (activeStep === 3 ? 50 : 25)}%` }}
+          />
+        </div>
       </div>
 
       {/*
@@ -230,16 +368,12 @@ export default function PatientRegisterPage() {
         IMPORTANT: The <form> element has NO onSubmit handler.
         Form submission is 100% controlled via the "Register Record" button's
         onClick which calls handleFinalSubmit() programmatically.
-        This eliminates ALL accidental submissions from:
-          • Enter key in text inputs
-          • SelectTrigger button clicks
-          • Any other DOM event that would normally bubble to form submit
         ─────────────────────────────────────────────────────────────────────────
       */}
       <form
         onSubmit={(e) => e.preventDefault()}
         noValidate
-        className="space-y-6 bg-surface-card p-6 rounded-lg border border-surface-border"
+        className="onco-wiz-card p-6 sm:p-8 space-y-6"
         onKeyDown={(e) => {
           // Block Enter key on ALL steps to prevent any residual submission path
           if (e.key === 'Enter') {
@@ -248,14 +382,41 @@ export default function PatientRegisterPage() {
           }
         }}
       >
-        {/* Step 1: Identity */}
+        {/* ══════════════════════════════════════════════════════════════════
+            STEP 1: DEMOGRAPHICS & IDENTITY
+        ══════════════════════════════════════════════════════════════════ */}
         {activeStep === 1 && (
-          <div className="space-y-5 animate-fade-in">
-            <h3 className="text-sm font-semibold text-brand-navy uppercase tracking-wider">Demographics &amp; Identity</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="onco-step-panel space-y-6">
+            {/* Step Section Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-surface-border/70">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/15 to-blue-500/10 border border-indigo-500/20 flex items-center justify-center text-brand-navy dark:text-sky-300 shrink-0">
+                  <RiUserHeartLine size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-brand-navy dark:text-sky-300 uppercase tracking-wider">
+                    Demographics &amp; Identity
+                  </h3>
+                  <p className="text-xs text-ink-secondary">
+                    Core patient identification, birth chronology, blood group, and profile photo
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] font-mono font-semibold text-ink-secondary bg-surface-base border border-surface-border px-2.5 py-1 rounded-lg self-start sm:self-center">
+                Fields marked <span className="text-status-critical font-bold">*</span> required
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField label="Full Name" error={errors.full_name?.message} required>
-                <Input placeholder="John Doe" {...register('full_name')} />
+                <div className="onco-input-wrap">
+                  <RiUser3Line size={16} className="onco-input-icon" />
+                  <Input
+                    placeholder="John Doe"
+                    className="onco-field-input pl-9"
+                    {...register('full_name')}
+                  />
+                </div>
               </FormField>
 
               <Controller
@@ -269,6 +430,7 @@ export default function PatientRegisterPage() {
                     onChange={field.onChange}
                     error={errors.date_of_birth?.message}
                     maxDate={new Date()}
+                    className="onco-field-input"
                   />
                 )}
               />
@@ -278,7 +440,7 @@ export default function PatientRegisterPage() {
                   value={formValues.gender}
                   onValueChange={(val) => setValue('gender', val)}
                 >
-                  <SelectTrigger className="bg-surface-card">
+                  <SelectTrigger className="onco-field-input bg-surface-card">
                     <SelectValue placeholder="Select Gender" />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-card">
@@ -294,12 +456,14 @@ export default function PatientRegisterPage() {
                   value={formValues.blood_group}
                   onValueChange={(val) => setValue('blood_group', val)}
                 >
-                  <SelectTrigger className="bg-surface-card">
+                  <SelectTrigger className="onco-field-input bg-surface-card">
                     <SelectValue placeholder="Select Blood Group" />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-card">
                     {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
-                      <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                      <SelectItem key={bg} value={bg}>
+                        {bg}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -316,104 +480,253 @@ export default function PatientRegisterPage() {
                     onChange={field.onChange}
                     error={errors.admission_date?.message}
                     maxDate={new Date()}
+                    className="onco-field-input"
                   />
                 )}
               />
 
               {/* Photo Upload with Camera + Crop */}
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-ink-primary">Profile Photo</Label>
+              <div className="space-y-1.5">
+                <Label className="text-ink-primary text-sm font-semibold block">
+                  Profile Photo
+                </Label>
                 <PhotoSelector
                   value={formValues.photo_url}
                   onChange={(url) => setValue('photo_url', url)}
+                  customTrigger={({ openModal }) => (
+                    <div className="onco-photo-tile">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-xl bg-surface-card border border-surface-border overflow-hidden flex items-center justify-center text-[11px] text-ink-disabled font-semibold shrink-0 shadow-2xs">
+                          {formValues.photo_url ? (
+                            <img
+                              src={formValues.photo_url}
+                              alt="Patient preview"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <RiCameraLine size={20} className="text-brand-blue dark:text-sky-400 opacity-75" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-ink-primary truncate">
+                            {formValues.photo_url ? 'Biometric Photo Attached' : 'No Photo Attached'}
+                          </p>
+                          <p className="text-[11px] text-ink-secondary truncate">
+                            Capture via webcam or upload JPG/PNG
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={openModal}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-card hover:bg-surface-hover text-brand-blue dark:text-sky-300 border border-brand-blue/25 transition-colors shrink-0 cursor-pointer shadow-2xs"
+                      >
+                        {formValues.photo_url ? 'Change Photo' : 'Attach Photo'}
+                      </button>
+                    </div>
+                  )}
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 2: Contact */}
+        {/* ══════════════════════════════════════════════════════════════════
+            STEP 2: CONTACT & EMERGENCY NEXT-OF-KIN
+        ══════════════════════════════════════════════════════════════════ */}
         {activeStep === 2 && (
-          <div className="space-y-5 animate-fade-in">
-            <h3 className="text-sm font-semibold text-brand-navy uppercase tracking-wider">Contact details</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="onco-step-panel space-y-6">
+            {/* Primary Contact Section Header */}
+            <div className="flex items-center gap-3 pb-4 border-b border-surface-border/70">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500/15 to-cyan-500/10 border border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-300 shrink-0">
+                <RiContactsBook2Line size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-brand-navy dark:text-sky-300 uppercase tracking-wider">
+                  Contact Details
+                </h3>
+                <p className="text-xs text-ink-secondary">
+                  Direct patient mobile number, digital correspondence, and residential address
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField label="Phone Number" error={errors.phone?.message} required>
-                <Input
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={10}
-                  placeholder="9876543210"
-                  {...register('phone', {
-                    onChange: (e) => {
-                      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)
-                    },
-                  })}
-                />
+                <div className="onco-input-wrap">
+                  <RiPhoneLine size={16} className="onco-input-icon" />
+                  <Input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="9876543210"
+                    className="onco-field-input pl-9 font-mono"
+                    {...register('phone', {
+                      onChange: (e) => {
+                        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                      },
+                    })}
+                  />
+                </div>
               </FormField>
 
               <FormField label="Email Address" error={errors.email?.message}>
-                <Input type="email" placeholder="patient@gmail.com" {...register('email')} />
+                <div className="onco-input-wrap">
+                  <RiMailLine size={16} className="onco-input-icon" />
+                  <Input
+                    type="email"
+                    placeholder="patient@gmail.com"
+                    className="onco-field-input pl-9"
+                    {...register('email')}
+                  />
+                </div>
               </FormField>
 
               <div className="md:col-span-2">
                 <FormField label="Residential Address" error={errors.address?.message} required>
-                  <Textarea placeholder="123 Hospital St" rows={2} {...register('address')} />
+                  <div className="relative">
+                    <RiMapPinLine
+                      size={16}
+                      className="absolute left-3.5 top-3 text-ink-secondary pointer-events-none"
+                    />
+                    <Textarea
+                      placeholder="123 Hospital St"
+                      rows={2}
+                      className="pl-9 rounded-xl bg-surface-base/55 dark:bg-slate-900/55 border-surface-border focus-visible:border-brand-blue focus-visible:ring-2 focus-visible:ring-brand-blue/15 text-sm"
+                      {...register('address')}
+                    />
+                  </div>
                 </FormField>
               </div>
             </div>
 
-            <div className="h-px bg-surface-border my-4" />
-            <h3 className="text-sm font-semibold text-brand-navy uppercase tracking-wider">Emergency Contact</h3>
+            {/* Emergency Contact Divider & Sub-panel */}
+            <div className="pt-2">
+              <div className="flex items-center gap-3 pb-4 mb-4 border-b border-surface-border/70">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                  <RiShieldUserLine size={17} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-extrabold text-brand-navy dark:text-sky-300 uppercase tracking-wider">
+                    Emergency Contact
+                  </h3>
+                  <p className="text-[11px] text-ink-secondary">
+                    Designated next-of-kin or primary caregiver for urgent clinical communication
+                  </p>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField label="Contact Name" error={errors.emergency_contact_name?.message}>
-                <Input placeholder="Samant Mishra" {...register('emergency_contact_name')} />
-              </FormField>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField label="Contact Name" error={errors.emergency_contact_name?.message}>
+                  <Input
+                    placeholder="Samant Mishra"
+                    className="onco-field-input"
+                    {...register('emergency_contact_name')}
+                  />
+                </FormField>
 
-              <FormField label="Contact Phone" error={errors.emergency_contact_phone?.message}>
-                <Input
-                  placeholder="9876543210"
-                  maxLength={10}
-                  {...register('emergency_contact_phone')}
-                  onChange={(e) => {
-                    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)
-                    register('emergency_contact_phone').onChange(e)
-                  }}
-                />
-              </FormField>
+                <FormField label="Contact Phone" error={errors.emergency_contact_phone?.message}>
+                  <Input
+                    placeholder="9876543210"
+                    maxLength={10}
+                    className="onco-field-input font-mono"
+                    {...register('emergency_contact_phone')}
+                    onChange={(e) => {
+                      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                      register('emergency_contact_phone').onChange(e)
+                    }}
+                  />
+                </FormField>
 
-              <FormField label="Relationship" error={errors.emergency_contact_relationship?.message}>
-                <Input placeholder="Spouse" {...register('emergency_contact_relationship')} />
-              </FormField>
+                <FormField label="Relationship" error={errors.emergency_contact_relationship?.message}>
+                  <Input
+                    placeholder="Spouse"
+                    className="onco-field-input"
+                    {...register('emergency_contact_relationship')}
+                  />
+                </FormField>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Step 3: Clinical — stays mounted until user clicks "Register Record" */}
+        {/* ══════════════════════════════════════════════════════════════════
+            STEP 3: ONCOLOGY DIAGNOSIS & CLINICAL PROTOCOL
+        ══════════════════════════════════════════════════════════════════ */}
         {activeStep === 3 && (
-          <div className="space-y-5 animate-fade-in">
-            <h3 className="text-sm font-semibold text-brand-navy uppercase tracking-wider">Diagnosis &amp; Clinical Info</h3>
+          <div className="onco-step-panel space-y-6">
+            {/* Clinical Diagnostic Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-surface-border/70">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <RiMicroscopeLine size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-brand-navy dark:text-sky-300 uppercase tracking-wider">
+                    Diagnosis &amp; Clinical Info
+                  </h3>
+                  <p className="text-xs text-ink-secondary">
+                    Oncology department assignment, tumor classification hierarchy, and staging status
+                  </p>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {formValues.treatment_status && (
+                <div className="self-start sm:self-center">
+                  <StatusBadge status={formValues.treatment_status} />
+                </div>
+              )}
+            </div>
+
+            {/* Live Oncology Diagnostic Telemetry Bar */}
+            <div className="onco-diag-strip flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <RiFlaskLine size={16} className="text-brand-blue dark:text-sky-400 shrink-0" />
+                <span className="text-xs font-bold text-ink-primary">
+                  Diagnostic Telemetry Preview:
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+                <span className="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-ink-primary font-semibold">
+                  Dept: {formValues.department || 'Unassigned'}
+                </span>
+                <span className="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-ink-primary font-semibold">
+                  Site: {formValues.cancer_category || 'Pending'}
+                </span>
+                <span className="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold">
+                  Stage: {formValues.cancer_stage || 'Pending'}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField label="Clinical Department" error={errors.department?.message}>
                 <Select
                   value={formValues.department}
                   onValueChange={(val) => setValue('department', val)}
                 >
-                  <SelectTrigger className="bg-surface-card">
+                  <SelectTrigger className="onco-field-input bg-surface-card">
                     <SelectValue placeholder="Select Department" />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-card">
                     {['Oncology', 'Hematology', 'Radiology', 'Pathology', 'Clinical Trials'].map((dept) => (
-                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      <SelectItem key={dept} value={dept}>
+                        {dept}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </FormField>
 
               <FormField label="Assigned Doctor" error={errors.assigned_doctor?.message}>
-                <Input placeholder="Dr. James Okafor (Optional)" {...register('assigned_doctor')} />
+                <div className="onco-input-wrap">
+                  <RiStethoscopeLine size={16} className="onco-input-icon" />
+                  <Input
+                    placeholder="Dr. James Okafor (Optional)"
+                    className="onco-field-input pl-9"
+                    {...register('assigned_doctor')}
+                  />
+                </div>
               </FormField>
 
               <FormField label="Cancer Category" error={errors.cancer_category?.message}>
@@ -424,12 +737,19 @@ export default function PatientRegisterPage() {
                     setValue('cancer_type', '') // Reset cancer type on category change
                   }}
                 >
-                  <SelectTrigger className="bg-surface-card">
+                  <SelectTrigger className="onco-field-input bg-surface-card">
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
-                  <SelectContent position="popper" side="bottom" sideOffset={4} className="bg-surface-card max-h-[250px] overflow-y-auto">
+                  <SelectContent
+                    position="popper"
+                    side="bottom"
+                    sideOffset={4}
+                    className="bg-surface-card max-h-[250px] overflow-y-auto"
+                  >
                     {cancerCategories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -441,13 +761,25 @@ export default function PatientRegisterPage() {
                   onValueChange={(val) => setValue('cancer_type', val)}
                   disabled={!formValues.cancer_category}
                 >
-                  <SelectTrigger className="bg-surface-card">
-                    <SelectValue placeholder={formValues.cancer_category ? "Select Cancer Type" : "Choose Category First"} />
+                  <SelectTrigger className="onco-field-input bg-surface-card">
+                    <SelectValue
+                      placeholder={
+                        formValues.cancer_category ? 'Select Cancer Type' : 'Choose Category First'
+                      }
+                    />
                   </SelectTrigger>
-                  <SelectContent position="popper" side="bottom" sideOffset={4} className="bg-surface-card max-h-[250px] overflow-y-auto">
-                    {formValues.cancer_category && cancerHierarchy[formValues.cancer_category]?.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
+                  <SelectContent
+                    position="popper"
+                    side="bottom"
+                    sideOffset={4}
+                    className="bg-surface-card max-h-[250px] overflow-y-auto"
+                  >
+                    {formValues.cancer_category &&
+                      cancerHierarchy[formValues.cancer_category]?.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </FormField>
@@ -457,12 +789,19 @@ export default function PatientRegisterPage() {
                   value={formValues.cancer_stage}
                   onValueChange={(val) => setValue('cancer_stage', val)}
                 >
-                  <SelectTrigger className="bg-surface-card">
+                  <SelectTrigger className="onco-field-input bg-surface-card">
                     <SelectValue placeholder="Select Stage" />
                   </SelectTrigger>
-                  <SelectContent position="popper" side="bottom" sideOffset={4} className="bg-surface-card">
+                  <SelectContent
+                    position="popper"
+                    side="bottom"
+                    sideOffset={4}
+                    className="bg-surface-card"
+                  >
                     {['Stage 0', 'Stage I', 'Stage II', 'Stage III', 'Stage IV'].map((stg) => (
-                      <SelectItem key={stg} value={stg}>{stg}</SelectItem>
+                      <SelectItem key={stg} value={stg}>
+                        {stg}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -473,12 +812,20 @@ export default function PatientRegisterPage() {
                   value={formValues.treatment_status}
                   onValueChange={(val) => setValue('treatment_status', val)}
                 >
-                  <SelectTrigger className="bg-surface-card">
+                  <SelectTrigger className="onco-field-input bg-surface-card">
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-card">
-                    {['Newly Diagnosed', 'Under Treatment', 'In Remission', 'Palliative', 'Discharged'].map((st) => (
-                      <SelectItem key={st} value={st}>{st}</SelectItem>
+                    {[
+                      'Newly Diagnosed',
+                      'Under Treatment',
+                      'In Remission',
+                      'Palliative',
+                      'Discharged',
+                    ].map((st) => (
+                      <SelectItem key={st} value={st}>
+                        {st}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -487,23 +834,23 @@ export default function PatientRegisterPage() {
           </div>
         )}
 
-        {/* Form Wizard Navigation Footer */}
-        <div className="flex items-center justify-between border-t border-surface-border pt-4">
-          <Button
+        {/* ── Form Wizard Navigation Footer ──────────────────────────────── */}
+        <div className="flex items-center justify-between border-t border-surface-border/80 pt-5">
+          <button
             type="button"
-            variant="outline"
-            className="border-surface-border text-ink-primary hover:bg-surface-hover"
+            className="onco-wiz-btn-back"
             onClick={prevStep}
             disabled={activeStep === 1}
           >
-            Back
-          </Button>
+            <RiArrowLeftLine size={15} />
+            <span>Back</span>
+          </button>
 
           {activeStep < 3 ? (
-            <Button
+            <button
               type="button"
               disabled={isValidatingStep}
-              className="bg-brand-blue hover:bg-brand-blue-dark text-ink-inverse flex items-center justify-center gap-2"
+              className="onco-wiz-btn-primary"
               onClick={nextStep}
             >
               {isValidatingStep ? (
@@ -512,16 +859,19 @@ export default function PatientRegisterPage() {
                   <span>Validating…</span>
                 </>
               ) : (
-                'Continue'
+                <>
+                  <span>Continue</span>
+                  <RiArrowRightLine size={16} />
+                </>
               )}
-            </Button>
+            </button>
           ) : (
             /* Final submit button — calls handleFinalSubmit() programmatically.
                type="button" ensures the HTML form element is NEVER involved. */
-            <Button
+            <button
               type="button"
               disabled={isSubmitting}
-              className="bg-brand-blue hover:bg-brand-blue-dark text-ink-inverse flex items-center justify-center gap-2"
+              className="onco-wiz-btn-primary"
               onClick={handleFinalSubmit}
             >
               {isSubmitting ? (
@@ -530,9 +880,12 @@ export default function PatientRegisterPage() {
                   <span>Registering…</span>
                 </>
               ) : (
-                'Register Record'
+                <>
+                  <RiShieldCheckLine size={16} />
+                  <span>Register Record</span>
+                </>
               )}
-            </Button>
+            </button>
           )}
         </div>
       </form>
