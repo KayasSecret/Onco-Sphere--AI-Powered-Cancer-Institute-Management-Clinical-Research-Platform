@@ -290,47 +290,52 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header & Stats Card */}
-      <Card className="bg-surface-card border-surface-border">
-        <CardHeader className="pb-3 border-b border-surface-border/50">
+      <Card className="onco-prof-card border-0">
+        <CardHeader className="pb-3 border-b border-surface-border/70">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-sm font-semibold text-brand-navy uppercase tracking-wider flex items-center gap-2">
-                <RiCalendarLine size={16} /> Clinical Visits &amp; Consultations
-              </CardTitle>
-              <p className="text-xs text-ink-secondary mt-0.5">
-                Record and manage clinical visits, prescriptions, and follow-up care for {patient?.full_name}.
-              </p>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-brand-blue/10 dark:bg-sky-500/15 flex items-center justify-center text-brand-blue dark:text-sky-400 shrink-0">
+                <RiCalendarLine size={17} />
+              </div>
+              <div>
+                <CardTitle className="text-sm font-bold text-ink-primary uppercase tracking-wider">
+                  Clinical Visits &amp; Consultations
+                </CardTitle>
+                <p className="text-xs text-ink-secondary mt-0.5">
+                  Record and manage clinical visits, prescriptions, and follow-up care for {patient?.full_name}.
+                </p>
+              </div>
             </div>
             {isWritable && (
               <Button
                 size="sm"
                 onClick={() => setLogModalOpen(true)}
-                className="bg-brand-blue hover:bg-brand-blue-dark text-white text-xs flex items-center gap-1.5 h-9 shrink-0"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 h-9 px-4 rounded-lg shadow-sm shrink-0 cursor-pointer"
               >
-                <RiAddLine size={16} />Schedule Visit
+                <RiAddLine size={16} /> Schedule Visit
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 bg-surface-base rounded-lg border border-surface-border">
-              <p className="text-[10px] uppercase font-semibold text-ink-disabled">Total Visits</p>
-              <p className="text-xl font-bold text-ink-primary mt-0.5">{totalVisits}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            <div className="onco-data-tile border-t-2 border-t-indigo-500">
+              <p className="text-[10px] uppercase font-bold tracking-wider text-ink-secondary">Total Visits</p>
+              <p className="text-2xl font-extrabold text-ink-primary tabular-nums mt-1">{totalVisits}</p>
             </div>
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/40">
-              <p className="text-[10px] uppercase font-semibold text-blue-700 dark:text-blue-400">Scheduled / Active</p>
-              <p className="text-xl font-bold text-blue-700 dark:text-blue-300 mt-0.5">{upcomingCount}</p>
+            <div className="onco-data-tile border-t-2 border-t-blue-500">
+              <p className="text-[10px] uppercase font-bold tracking-wider text-blue-700 dark:text-blue-400">Scheduled / Active</p>
+              <p className="text-2xl font-extrabold text-blue-700 dark:text-blue-300 tabular-nums mt-1">{upcomingCount}</p>
             </div>
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/40">
-              <p className="text-[10px] uppercase font-semibold text-green-700 dark:text-green-400">Completed</p>
-              <p className="text-xl font-bold text-green-700 dark:text-green-300 mt-0.5">{completedCount}</p>
+            <div className="onco-data-tile border-t-2 border-t-emerald-500">
+              <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 dark:text-emerald-400">Completed</p>
+              <p className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-300 tabular-nums mt-1">{completedCount}</p>
             </div>
-            <div className="p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800/40">
-              <p className="text-[10px] uppercase font-semibold text-cyan-700 dark:text-cyan-400">Today&apos;s Visit</p>
-              <p className="text-xl font-bold text-cyan-700 dark:text-cyan-300 mt-0.5">
+            <div className="onco-data-tile border-t-2 border-t-cyan-500">
+              <p className="text-[10px] uppercase font-bold tracking-wider text-cyan-700 dark:text-cyan-400">Today&apos;s Visit</p>
+              <p className="text-2xl font-extrabold text-cyan-700 dark:text-cyan-300 tabular-nums mt-1">
                 {todayVisits.length > 0 ? `${todayVisits.length} Active` : 'None'}
               </p>
             </div>
@@ -340,18 +345,18 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
 
       {/* Active or Next Visit Spotlight */}
       {spotlightVisit && (
-        <Card className={`border-2 ${isToday || spotlightVisit.status === 'Checked In' || spotlightVisit.status === 'In Consultation' ? 'border-cyan-400/50 bg-cyan-50/20 dark:bg-cyan-900/10' : 'border-brand-blue/30 bg-surface-card'}`}>
-          <CardContent className="p-4 space-y-3">
+        <Card className={`onco-prof-card border ${isToday || spotlightVisit.status === 'Checked In' || spotlightVisit.status === 'In Consultation' ? 'border-cyan-400/50 bg-cyan-50/20 dark:bg-cyan-900/10' : 'border-brand-blue/30'}`}>
+          <CardContent className="p-4 sm:p-5 space-y-3.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className={`p-1.5 rounded-md ${isToday ? 'bg-cyan-500 text-white' : 'bg-brand-blue text-white'}`}>
-                  <RiCalendarCheckLine size={16} />
+              <div className="flex items-center gap-2.5">
+                <span className={`p-2 rounded-lg shadow-xs ${isToday ? 'bg-cyan-500 text-white' : 'bg-brand-blue text-white'}`}>
+                  <RiCalendarCheckLine size={17} />
                 </span>
                 <div>
-                  <h4 className="text-xs font-bold text-ink-primary uppercase tracking-wider">
+                  <h4 className="text-xs font-extrabold text-ink-primary uppercase tracking-wider">
                     {isToday ? "Today's Appointment" : spotlightVisit.status === 'Checked In' ? 'Checked In — Awaiting Doctor' : spotlightVisit.status === 'In Consultation' ? 'Currently In Consultation' : 'Upcoming Scheduled Visit'}
                   </h4>
-                  <p className="text-xs text-ink-secondary">
+                  <p className="text-xs text-ink-secondary font-medium">
                     {new Date(spotlightVisit.scheduled_at).toLocaleString('en-IN', {
                       weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                     })}
@@ -364,24 +369,24 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs bg-surface-card rounded-lg p-3 border border-surface-border">
-              <div>
-                <span className="text-[10px] text-ink-disabled block">Doctor</span>
-                <span className="font-semibold text-ink-primary">{spotlightVisit.doctor_name || 'Unassigned'}</span>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="onco-data-tile">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-secondary block">Doctor</span>
+                <span className="font-bold text-ink-primary">{spotlightVisit.doctor_name || 'Unassigned'}</span>
               </div>
-              <div>
-                <span className="text-[10px] text-ink-disabled block">Department</span>
-                <span className="font-semibold text-ink-primary">{spotlightVisit.department}</span>
+              <div className="onco-data-tile">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-secondary block">Department</span>
+                <span className="font-bold text-ink-primary">{spotlightVisit.department}</span>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-surface-border/50">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-surface-border/60">
               <div className="flex items-center gap-2">
                 {spotlightVisit.status === 'Scheduled' && isWritable && (
                   <Button
                     size="sm"
                     onClick={() => handleCheckIn(spotlightVisit.id)}
-                    className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs h-8 flex items-center gap-1"
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs h-8 flex items-center gap-1 rounded-lg cursor-pointer"
                   >
                     <RiCheckboxCircleLine size={14} /> Check In Patient
                   </Button>
@@ -390,7 +395,7 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
                   <Button
                     size="sm"
                     onClick={() => handleUpdateStatus(spotlightVisit.id, 'In Consultation')}
-                    className="bg-amber-600 hover:bg-amber-700 text-white text-xs h-8 flex items-center gap-1"
+                    className="bg-amber-600 hover:bg-amber-700 text-white text-xs h-8 flex items-center gap-1 rounded-lg cursor-pointer"
                   >
                     <RiStethoscopeLine size={14} /> Start Consultation
                   </Button>
@@ -399,7 +404,7 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
                   <Button
                     size="sm"
                     onClick={() => handleUpdateStatus(spotlightVisit.id, 'Completed')}
-                    className="bg-green-600 hover:bg-green-700 text-white text-xs h-8 flex items-center gap-1"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 flex items-center gap-1 rounded-lg cursor-pointer"
                   >
                     <RiCheckLine size={14} /> Mark Completed
                   </Button>
@@ -409,7 +414,7 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
                 size="sm"
                 variant="outline"
                 onClick={() => openVisitDetails(spotlightVisit)}
-                className="text-xs h-8 border-surface-border text-brand-blue hover:text-brand-blue-dark flex items-center gap-1"
+                className="text-xs h-8 rounded-lg border-surface-border text-brand-blue hover:text-brand-blue-dark flex items-center gap-1 cursor-pointer"
               >
                 View / Edit Clinical Details <RiArrowRightLine size={13} />
               </Button>
@@ -419,11 +424,14 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
       )}
 
       {/* Visits History Section */}
-      <Card className="bg-surface-card border-surface-border">
-        <CardHeader className="pb-3 border-b border-surface-border/50">
+      <Card className="onco-prof-card border-0">
+        <CardHeader className="pb-3 border-b border-surface-border/70">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold text-ink-primary flex items-center gap-1.5">
-              <RiTimeLine size={15} /> Visit History ({filteredVisits.length})
+            <h3 className="text-sm font-bold text-ink-primary uppercase tracking-wider flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <RiTimeLine size={15} />
+              </div>
+              <span>Visit History ({filteredVisits.length})</span>
             </h3>
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <div className="relative w-full sm:w-44 md:w-56">
@@ -432,11 +440,11 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
                   placeholder="Filter by type, doctor…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 text-xs h-8"
+                  className="pl-8 text-xs h-8 rounded-lg bg-surface-base/60"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32 text-xs h-8">
+                <SelectTrigger className="w-32 text-xs h-8 rounded-lg">
                   <SelectValue placeholder="All status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -451,7 +459,7 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
                 variant="ghost"
                 size="sm"
                 onClick={loadVisits}
-                className="p-2 h-8 text-ink-secondary hover:text-brand-blue"
+                className="p-2 h-8 text-ink-secondary hover:text-brand-blue rounded-lg cursor-pointer"
                 title="Refresh visits"
               >
                 <RiRefreshLine size={14} />
@@ -464,7 +472,7 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full rounded-lg" />
+                <Skeleton key={i} className="h-20 w-full rounded-xl" />
               ))}
             </div>
           ) : error ? (
@@ -476,14 +484,14 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
               </Button>
             </div>
           ) : filteredVisits.length === 0 ? (
-            <div className="text-center py-10 border border-dashed border-surface-border rounded-lg bg-surface-base/30">
-              <RiCalendarLine size={32} className="mx-auto text-ink-disabled mb-2 opacity-50" />
+            <div className="text-center py-12 border border-dashed border-surface-border rounded-xl bg-surface-base/30">
+              <RiCalendarLine size={34} className="mx-auto text-ink-disabled mb-2 opacity-50" />
               <p className="text-sm font-semibold text-ink-secondary">
                 {visits.length === 0 ? 'No clinical visits recorded for this patient yet.' : 'No visits match your filter.'}
               </p>
               <p className="text-xs text-ink-disabled mt-1">
                 {isWritable
-                  ? "Click '+ Log / Schedule Visit' above to record a new visit."
+                  ? "Click 'Schedule Visit' above to record a new visit."
                   : 'Visits recorded by clinical staff will appear here.'}
               </p>
             </div>
@@ -494,7 +502,7 @@ export default function PatientVisitsSection({ patient, patientId: propPatientId
                 return (
                   <div
                     key={visit.id}
-                    className="p-3.5 bg-surface-base rounded-lg border border-surface-border hover:border-brand-blue/30 transition-all space-y-2.5"
+                    className="onco-data-tile p-4 space-y-2.5"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">

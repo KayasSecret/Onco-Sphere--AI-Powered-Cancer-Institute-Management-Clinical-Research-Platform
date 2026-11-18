@@ -1,0 +1,259 @@
+/* ==========================================================================
+   ONCO SPHERE — Patient Profile & Clinical Workspace (/patients/:id) Styles
+   Next-generation oncology clinical intelligence & diagnostic chart UI.
+   Supports both Light Mode (clinical white/navy/blue) and Dark Mode.
+   ========================================================================== */
+
+@keyframes oncoProfFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onco-prof-root {
+  position: relative;
+  min-height: calc(100vh - 96px);
+  border-radius: 1rem;
+  background-image:
+    radial-gradient(rgba(61, 107, 197, 0.065) 1px, transparent 1px),
+    radial-gradient(ellipse at 92% 0%, rgba(56, 189, 248, 0.075) 0%, transparent 55%),
+    radial-gradient(ellipse at 8% 100%, rgba(79, 70, 229, 0.055) 0%, transparent 50%);
+  background-size: 24px 24px, 100% 100%, 100% 100%;
+}
+
+.dark .onco-prof-root {
+  background-image:
+    radial-gradient(rgba(56, 189, 248, 0.065) 1px, transparent 1px),
+    radial-gradient(ellipse at 92% 0%, rgba(37, 99, 235, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 8% 100%, rgba(79, 70, 229, 0.11) 0%, transparent 50%);
+}
+
+.onco-prof-anim {
+  animation: oncoProfFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Deep Navy Clinical Hero Patient Banner ───────────────────────────── */
+.onco-prof-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.1rem;
+  padding: 1.5rem 1.65rem;
+  background: linear-gradient(135deg, #0D173A 0%, #17255A 52%, #1E3A8A 100%);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow:
+    0 14px 34px -10px rgba(13, 23, 58, 0.35),
+    0 4px 12px rgba(13, 23, 58, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+}
+
+.onco-prof-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.onco-prof-avatar {
+  position: relative;
+  width: 5.25rem;
+  height: 5.25rem;
+  border-radius: 1.1rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(37, 99, 235, 0.35) 100%);
+  border: 2px solid rgba(125, 211, 252, 0.55);
+  box-shadow:
+    0 0 24px rgba(56, 189, 248, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.onco-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.5rem;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #E2E8F0;
+  background: rgba(15, 23, 42, 0.38);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  backdrop-filter: blur(8px);
+}
+
+/* ── Longitudinal Navigation Tabs Bar ─────────────────────────────────── */
+.onco-prof-tabs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFE 100%);
+  border: 1px solid rgba(221, 227, 238, 0.95);
+  box-shadow: 0 4px 16px -4px rgba(26, 31, 54, 0.05);
+}
+
+.dark .onco-prof-tabs-list {
+  background: linear-gradient(180deg, #1E293B 0%, #162032 100%);
+  border-color: rgba(51, 65, 85, 0.85);
+  box-shadow: 0 6px 20px -6px rgba(2, 6, 23, 0.45);
+}
+
+.onco-prof-tab-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem !important;
+  border-radius: 0.65rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  color: var(--ink-secondary);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer;
+}
+
+.onco-prof-tab-trigger:hover {
+  color: var(--ink-primary);
+  background: rgba(61, 107, 197, 0.06);
+}
+
+.onco-prof-tab-trigger[data-state='active'] {
+  color: #FFFFFF !important;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 55%, #252D7E 100%) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
+}
+
+/* ── Elevated Clinical Cards & Data Tiles ─────────────────────────────── */
+.onco-prof-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FBFDFF 100%);
+  border: 1px solid rgba(221, 227, 238, 0.95);
+  box-shadow:
+    0 8px 26px -6px rgba(26, 31, 54, 0.055),
+    0 2px 6px rgba(26, 31, 54, 0.025);
+}
+
+.dark .onco-prof-card {
+  background: linear-gradient(180deg, #1E293B 0%, #162032 100%);
+  border-color: rgba(51, 65, 85, 0.85);
+  box-shadow: 0 10px 30px -8px rgba(2, 6, 23, 0.5);
+}
+
+.onco-data-tile {
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(244, 247, 251, 0.6);
+  border: 1px solid rgba(221, 227, 238, 0.75);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.onco-data-tile:hover {
+  background: #FFFFFF;
+  border-color: rgba(61, 107, 197, 0.3);
+  transform: translateY(-1px);
+}
+
+.dark .onco-data-tile {
+  background: rgba(15, 23, 42, 0.45);
+  border-color: rgba(51, 65, 85, 0.75);
+}
+
+.dark .onco-data-tile:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+/* ── Report Archive Rows ──────────────────────────────────────────────── */
+.onco-report-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.8rem;
+  background: rgba(244, 247, 251, 0.5);
+  border: 1px solid rgba(221, 227, 238, 0.85);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease;
+}
+
+.onco-report-item:hover {
+  background: #FFFFFF;
+  border-color: rgba(37, 99, 235, 0.32);
+  transform: translateX(3px);
+  box-shadow: 0 4px 14px -3px rgba(37, 45, 126, 0.08);
+}
+
+.dark .onco-report-item {
+  background: rgba(15, 23, 42, 0.45);
+  border-color: rgba(51, 65, 85, 0.8);
+}
+
+.dark .onco-report-item:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.38);
+}
+
+/* ── Diagnostic Imaging Scan Cards ────────────────────────────────────── */
+.onco-scan-card {
+  position: relative;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  background: var(--surface-card);
+  border: 1px solid rgba(221, 227, 238, 0.95);
+  box-shadow: 0 4px 14px -3px rgba(26, 31, 54, 0.05);
+  transition:
+    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.onco-scan-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.4);
+  box-shadow: 0 12px 26px -6px rgba(37, 99, 235, 0.15);
+}
+
+.dark .onco-scan-card {
+  border-color: rgba(51, 65, 85, 0.85);
+}
+
+.dark .onco-scan-card:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 12px 28px -6px rgba(2, 6, 23, 0.65);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onco-prof-anim {
+    animation: none !important;
+  }
+  .onco-data-tile,
+  .onco-report-item,
+  .onco-scan-card {
+    transition: none !important;
+  }
+}
