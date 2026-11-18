@@ -1,0 +1,286 @@
+/* ==========================================================================
+   ONCO SPHERE — Onco Access & Super Admin Application Review Modal Styles
+   Enterprise medical access verification & clinical governance workspace.
+   Supports both Light Mode (clinical white/navy/blue) and Dark Mode.
+   ========================================================================== */
+
+@keyframes oncoAccessFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes oncoStatusPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.38);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+  }
+}
+
+.onco-access-root {
+  position: relative;
+  min-height: calc(100vh - 96px);
+  border-radius: 1rem;
+  background-image:
+    radial-gradient(rgba(61, 107, 197, 0.065) 1px, transparent 1px),
+    radial-gradient(ellipse at 90% 0%, rgba(56, 189, 248, 0.075) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 100%, rgba(79, 70, 229, 0.055) 0%, transparent 50%);
+  background-size: 24px 24px, 100% 100%, 100% 100%;
+}
+
+.dark .onco-access-root {
+  background-image:
+    radial-gradient(rgba(56, 189, 248, 0.065) 1px, transparent 1px),
+    radial-gradient(ellipse at 90% 0%, rgba(37, 99, 235, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 100%, rgba(79, 70, 229, 0.11) 0%, transparent 50%);
+}
+
+.onco-access-anim {
+  animation: oncoAccessFadeUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Page Header Banner ───────────────────────────────────────────────── */
+.onco-access-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 1.35rem 1.5rem;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F5F9FF 55%, #EEF5FF 100%);
+  border: 1px solid rgba(61, 107, 197, 0.18);
+  box-shadow:
+    0 10px 28px -10px rgba(27, 34, 96, 0.065),
+    0 2px 6px -1px rgba(27, 34, 96, 0.035),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark .onco-access-banner {
+  background: linear-gradient(135deg, #1E293B 0%, #152238 55%, #0F1C34 100%);
+  border-color: rgba(56, 189, 248, 0.22);
+  box-shadow:
+    0 12px 32px -10px rgba(2, 6, 23, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ── Super Admin Application Review Modal Shell ───────────────────────── */
+.onco-review-dialog {
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 1.15rem !important;
+  border: 1px solid rgba(56, 189, 248, 0.28) !important;
+  box-shadow:
+    0 24px 60px -12px rgba(10, 18, 46, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Deep Navy Clinical Modal Header */
+.onco-review-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 1.4rem 1.65rem;
+  background: linear-gradient(135deg, #0B1536 0%, #152458 52%, #1D3888 100%);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.24);
+  color: #FFFFFF;
+}
+
+.onco-review-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.onco-review-avatar {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 0.95rem;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.24) 0%, rgba(37, 99, 235, 0.4) 100%);
+  border: 1.5px solid rgba(125, 211, 252, 0.55);
+  box-shadow:
+    0 0 20px rgba(56, 189, 248, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.onco-status-pill-pending {
+  animation: oncoStatusPulse 2.4s infinite;
+}
+
+/* ── Modal Body & Dossier Panels ──────────────────────────────────────── */
+.onco-review-body {
+  padding: 1.4rem 1.65rem;
+  background-color: var(--surface-base);
+  background-image: radial-gradient(rgba(61, 107, 197, 0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.dark .onco-review-body {
+  background-color: #0F172A;
+  background-image: radial-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px);
+}
+
+.onco-dossier-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.95rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAFDFE 100%);
+  border: 1px solid rgba(215, 223, 237, 0.95);
+  box-shadow:
+    0 6px 20px -6px rgba(26, 31, 54, 0.055),
+    0 1px 3px rgba(26, 31, 54, 0.025);
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.onco-dossier-panel:hover {
+  border-color: rgba(61, 107, 197, 0.35);
+  box-shadow: 0 10px 26px -6px rgba(37, 99, 235, 0.1);
+}
+
+.dark .onco-dossier-panel {
+  background: linear-gradient(180deg, #1E293B 0%, #162033 100%);
+  border-color: rgba(51, 65, 85, 0.9);
+  box-shadow: 0 8px 24px -6px rgba(2, 6, 23, 0.5);
+}
+
+.dark .onco-dossier-panel:hover {
+  border-color: rgba(56, 189, 248, 0.38);
+}
+
+.onco-dossier-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  background: rgba(244, 247, 251, 0.7);
+  border-bottom: 1px solid rgba(221, 227, 238, 0.8);
+}
+
+.dark .onco-dossier-header {
+  background: rgba(15, 23, 42, 0.55);
+  border-bottom-color: rgba(51, 65, 85, 0.8);
+}
+
+.onco-dossier-field {
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.6rem;
+  background: rgba(244, 247, 251, 0.55);
+  border: 1px solid rgba(225, 231, 242, 0.8);
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.onco-dossier-field:hover {
+  background: #FFFFFF;
+  border-color: rgba(61, 107, 197, 0.28);
+}
+
+.dark .onco-dossier-field {
+  background: rgba(15, 23, 42, 0.45);
+  border-color: rgba(51, 65, 85, 0.75);
+}
+
+.dark .onco-dossier-field:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+/* ── Verification Document Item Card ──────────────────────────────────── */
+.onco-doc-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.65rem;
+  background: rgba(244, 247, 251, 0.65);
+  border: 1px solid rgba(215, 223, 237, 0.9);
+  transition: all 0.18s ease;
+}
+
+.onco-doc-card:hover {
+  background: #FFFFFF;
+  border-color: rgba(37, 99, 235, 0.38);
+  transform: translateX(2px);
+  box-shadow: 0 3px 10px -2px rgba(37, 99, 235, 0.1);
+}
+
+.onco-doc-card.is-verified {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dark .onco-doc-card {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(51, 65, 85, 0.85);
+}
+
+.dark .onco-doc-card:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.dark .onco-doc-card.is-verified {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+/* ── Access Request Objective Callout ─────────────────────────────────── */
+.onco-objective-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  padding: 1rem 1.2rem 1rem 1.35rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.055) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.22);
+}
+
+.onco-objective-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #2563EB 0%, #06B6D4 100%);
+}
+
+.dark .onco-objective-banner {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(8, 47, 73, 0.25) 100%);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+/* ── Modal Footer Bar ─────────────────────────────────────────────────── */
+.onco-review-footer {
+  padding: 1rem 1.65rem;
+  background: var(--surface-card);
+  border-top: 1px solid var(--surface-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onco-access-anim,
+  .onco-status-pill-pending {
+    animation: none !important;
+  }
+  .onco-dossier-panel,
+  .onco-doc-card {
+    transition: none !important;
+  }
+}

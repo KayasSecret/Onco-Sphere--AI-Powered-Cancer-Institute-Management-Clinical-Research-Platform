@@ -1,7 +1,6 @@
-// Admin list page
-
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -16,7 +15,6 @@ import {
   selectAdminStatus,
 } from '../../redux/slices/adminSlice'
 import { selectUser } from '../../redux/slices/authSlice'
-import PageHeader from '../../components/PageHeader'
 import DataTable from '../../components/DataTable'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import FormField from '../../components/FormField'
@@ -33,22 +31,16 @@ import {
   RiDeleteBin7Line,
   RiCheckLine,
   RiCloseLine,
-  RiBookOpenLine,
-  RiCalendarLine,
-  RiPhoneLine,
-  RiLinkedinBoxLine,
-  RiAttachmentLine,
   RiProfileLine,
-  RiMapPinUserLine,
-  RiInformationLine,
-  RiFolderInfoLine,
   RiEyeLine,
-  RiEyeOffLine
+  RiEyeOffLine,
 } from 'react-icons/ri'
 import { Badge } from '../../components/ui/badge'
 import { toast } from 'sonner'
 import adminService from '../../services/adminService'
-import { phoneRegex, emailRegex, passwordRegex } from '../../lib/validation'
+import { emailRegex, passwordRegex } from '../../lib/validation'
+import ApplicationReviewModal from './ApplicationReviewModal'
+import './AdminListPage.css'
 
 const createSchema = yup.object({
   full_name: yup.string().min(2, 'Name must be at least 2 characters').required('Name is required'),
@@ -73,9 +65,6 @@ const editSchema = yup.object({
   role: yup.string().required('Role is required'),
 })
 
-
-// Profile view models are now rendered inside the gorgeous landscape viewer Dialog.
-
 export default function AdminListPage() {
   const dispatch = useDispatch()
   const admins = useSelector(selectAdmins)
@@ -89,7 +78,7 @@ export default function AdminListPage() {
 
   // Modal Dialogs
   const [formOpen, setFormOpen] = useState(false)
-  const [editUser, setEditUser] = useState(null) // null = Create Mode, object = Edit Mode
+  const [editUser, setEditUser] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [targetUser, setTargetUser] = useState(null)
@@ -193,6 +182,36 @@ export default function AdminListPage() {
     }
   }
 
+  const handleModalApprove = async (applicant) => {
+    if (processingApproval || !applicant) return
+    setProcessingApproval('APPROVE')
+    try {
+      await dispatch(updateApprovalThunk({ id: applicant.id, action: 'APPROVE' })).unwrap()
+      toast.success(`${applicant.full_name}'s registration request APPROVED.`)
+      setViewingApplicationUser(null)
+      dispatch(fetchAdminsThunk({ page, limit, search }))
+    } catch (err) {
+      toast.error(err || 'Failed to approve request.')
+    } finally {
+      setProcessingApproval(null)
+    }
+  }
+
+  const handleModalReject = async (applicant) => {
+    if (processingApproval || !applicant) return
+    setProcessingApproval('REJECT')
+    try {
+      await dispatch(updateApprovalThunk({ id: applicant.id, action: 'REJECT' })).unwrap()
+      toast.success(`${applicant.full_name}'s registration request REJECTED.`)
+      setViewingApplicationUser(null)
+      dispatch(fetchAdminsThunk({ page, limit, search }))
+    } catch (err) {
+      toast.error(err || 'Failed to reject request.')
+    } finally {
+      setProcessingApproval(null)
+    }
+  }
+
   const columns = [
     {
       header: 'Full Name',
@@ -200,13 +219,14 @@ export default function AdminListPage() {
       cell: (row) => (
         <div className="space-y-1.5 max-w-xs">
           <div>
-            <p className="font-semibold text-ink-primary">{row.full_name}</p>
+            <p className="font-bold text-ink-primary">{row.full_name}</p>
             <p className="text-[11px] text-ink-secondary">{row.email}</p>
           </div>
           {row.is_approved === 'PENDING' && (
             <button
+              type="button"
               onClick={() => setViewingApplicationUser(row)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-600 border border-blue-500/20 rounded-lg transition-all mt-1.5 shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-brand-blue dark:text-sky-300 hover:text-white bg-brand-blue/10 hover:bg-brand-blue border border-brand-blue/25 rounded-lg transition-all mt-1 shadow-2xs cursor-pointer"
             >
               <RiProfileLine size={12} />
               View Full Application
@@ -226,12 +246,12 @@ export default function AdminListPage() {
           <Badge
             variant="secondary"
             className={[
-              'text-xs font-semibold px-2 py-0.5 rounded-md border',
+              'text-xs font-semibold px-2.5 py-0.5 rounded-md border',
               isSuper
-                ? 'bg-brand-navy/10 text-brand-navy border-brand-navy/20'
+                ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25'
                 : row.role === 'ADMIN'
-                ? 'bg-brand-blue/10 text-brand-blue border-brand-blue/20'
-                : 'bg-brand-light/20 text-brand-navy border-brand-light/30',
+                ? 'bg-brand-blue/10 text-brand-blue dark:text-sky-300 border-brand-blue/25'
+                : 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/25',
             ].join(' ')}
           >
             {row.role.replace('_', ' ')}
@@ -245,18 +265,18 @@ export default function AdminListPage() {
       headerClassName: 'hidden md:table-cell',
       cellClassName: 'hidden md:table-cell',
       cell: (row) => {
-        const status = row.is_approved || 'APPROVED'
+        const approvalState = row.is_approved || 'APPROVED'
         let badgeClass = ''
-        if (status === 'PENDING') {
-          badgeClass = 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-        } else if (status === 'APPROVED') {
-          badgeClass = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+        if (approvalState === 'PENDING') {
+          badgeClass = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'
+        } else if (approvalState === 'APPROVED') {
+          badgeClass = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
         } else {
-          badgeClass = 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+          badgeClass = 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25'
         }
         return (
-          <Badge variant="outline" className={`${badgeClass} text-xs font-semibold px-2 py-0.5 rounded-md`}>
-            {status}
+          <Badge variant="outline" className={`${badgeClass} text-xs font-semibold px-2.5 py-0.5 rounded-md`}>
+            {approvalState}
           </Badge>
         )
       },
@@ -271,14 +291,14 @@ export default function AdminListPage() {
           className={[
             'inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full border',
             row.is_active
-              ? 'bg-status-active-bg text-status-active border-status-active/20'
-              : 'bg-status-inactive-bg text-status-inactive border-status-inactive/20',
+              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
+              : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/25',
           ].join(' ')}
         >
           <span
             className={[
               'w-1.5 h-1.5 rounded-full',
-              row.is_active ? 'bg-status-active' : 'bg-status-inactive',
+              row.is_active ? 'bg-emerald-500' : 'bg-slate-400',
             ].join(' ')}
           />
           {row.is_active ? 'Active' : 'Inactive'}
@@ -288,7 +308,6 @@ export default function AdminListPage() {
     {
       header: 'Actions',
       cell: (row) => {
-        // Super Admins cannot deactivate themselves
         const isSelf = row.email === JSON.parse(localStorage.getItem('helix_user'))?.email
 
         const handleApprove = async () => {
@@ -313,13 +332,12 @@ export default function AdminListPage() {
 
         return (
           <div className="flex items-center gap-1">
-            {/* View profile button (available for all user rows) */}
             <Button
               variant="ghost"
               size="icon"
-              className="w-7 h-7 text-ink-secondary hover:text-brand-blue hover:bg-brand-blue/10 rounded-md"
+              className="w-7 h-7 text-ink-secondary hover:text-brand-blue hover:bg-brand-blue/10 rounded-md cursor-pointer"
               onClick={() => setViewingApplicationUser(row)}
-              title="View Profile Details"
+              title="View Profile & Application Details"
             >
               <RiEyeLine size={16} />
             </Button>
@@ -329,7 +347,7 @@ export default function AdminListPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-7 h-7 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10 rounded-md"
+                  className="w-7 h-7 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10 rounded-md cursor-pointer"
                   onClick={handleApprove}
                   title="Approve Access Request"
                 >
@@ -338,7 +356,7 @@ export default function AdminListPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-7 h-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-md"
+                  className="w-7 h-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-md cursor-pointer"
                   onClick={handleReject}
                   title="Reject Access Request"
                 >
@@ -353,7 +371,7 @@ export default function AdminListPage() {
                       variant="ghost"
                       size="icon"
                       className={[
-                        'w-7 h-7',
+                        'w-7 h-7 cursor-pointer',
                         row.is_active
                           ? 'text-ink-secondary hover:text-status-critical'
                           : 'text-ink-secondary hover:text-status-active',
@@ -371,7 +389,7 @@ export default function AdminListPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="w-7 h-7 text-ink-secondary hover:text-status-critical"
+                        className="w-7 h-7 text-ink-secondary hover:text-status-critical cursor-pointer"
                         onClick={() => {
                           setDeleteId(row.id)
                           setDeleteTargetName(row.full_name)
@@ -393,23 +411,53 @@ export default function AdminListPage() {
   ]
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Onco Access"
-        breadcrumbs={[{ label: 'Dashboard', to: '/dashboard' }, { label: 'Onco Access' }]}
-        action={
-          <Button
-            className="w-full sm:w-auto bg-brand-blue hover:bg-brand-blue-dark text-ink-inverse text-xs px-4 py-2 font-semibold flex items-center justify-center gap-1.5 rounded-md"
+    <div className="onco-access-root space-y-5 pb-6">
+      {/* ── Clinical Governance & Access Header Banner ───────────────────── */}
+      <div className="onco-access-banner onco-access-anim">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <nav
+              aria-label="Breadcrumb"
+              className="flex items-center gap-1.5 text-xs text-ink-secondary"
+            >
+              <Link
+                to="/dashboard"
+                className="font-semibold text-brand-blue dark:text-sky-400 hover:underline"
+              >
+                Dashboard
+              </Link>
+              <span className="opacity-40">/</span>
+              <span className="text-ink-secondary font-medium">Onco Access</span>
+            </nav>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-primary tracking-tight">
+                Onco Access
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.14em] bg-brand-blue/10 dark:bg-sky-500/15 text-brand-navy dark:text-sky-300 border border-brand-blue/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Institutional Access Governance
+              </span>
+            </div>
+
+            <p className="text-xs sm:text-sm text-ink-secondary max-w-xl">
+              Review researcher credential applications, manage clinical administrator accounts, and control system access permissions.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-sm transition-all cursor-pointer self-start sm:self-center shrink-0"
             onClick={() => {
               setEditUser(null)
               setFormOpen(true)
             }}
           >
-            <RiUserAddLine size={15} />
-            Add Account
-          </Button>
-        }
-      />
+            <RiUserAddLine size={16} />
+            <span>Add Account</span>
+          </button>
+        </div>
+      </div>
 
       {status === 'loading' && admins.length === 0 ? (
         <SkeletonTable rows={5} cols={4} />
@@ -504,8 +552,10 @@ export default function AdminListPage() {
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     <span>{editUser ? 'Saving Details…' : 'Creating Account…'}</span>
                   </>
+                ) : editUser ? (
+                  'Save Details'
                 ) : (
-                  editUser ? 'Save Details' : 'Create Account'
+                  'Create Account'
                 )}
               </Button>
             </DialogFooter>
@@ -537,278 +587,17 @@ export default function AdminListPage() {
         isDestructive
       />
 
-      {/* Landscape Full Researcher Application Viewer Modal */}
-      <Dialog open={!!viewingApplicationUser} onOpenChange={() => setViewingApplicationUser(null)}>
-        <DialogContent className="max-w-4xl w-[95vw] bg-slate-900 border border-white/10 text-white rounded-2xl overflow-hidden p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-          {viewingApplicationUser && (
-            <div className="space-y-6 animate-fade-in text-left">
-              
-              {/* Header Info */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <RiProfileLine className="text-blue-400" />
-                    Researcher Access Application
-                  </h2>
-                  <p className="text-slate-400 text-xs mt-0.5">Submitted by {viewingApplicationUser.full_name} ({viewingApplicationUser.email})</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status:</span>
-                  <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xs font-semibold px-2.5 py-0.5 rounded-md">
-                    {viewingApplicationUser.is_approved || 'PENDING'}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Landscape Widescreen Columns Grid */}
-              {viewingApplicationUser.researcher_profile ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  
-                  {/* Column 1: Academic Background */}
-                  <div className="space-y-3.5 bg-slate-950/40 border border-white/5 rounded-xl p-4">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                      <RiBookOpenLine className="text-blue-400" size={15} />
-                      <span className="text-[11px] font-bold tracking-wider text-slate-300 uppercase">Academic Details</span>
-                    </div>
-                    
-                    <div className="space-y-3 text-xs">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Current Institution</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.institution || 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Highest Qualification</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.qualification || 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Field of Specialization</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.specialization || 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Designated Role</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.researcher_role || 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Experience Level</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.experience_years || 'N/A'}</span>
-                      </div>
-                      {viewingApplicationUser.researcher_profile.linkedin_url && (
-                        <a
-                          href={viewingApplicationUser.researcher_profile.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 mt-1 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium hover:underline"
-                        >
-                          <RiLinkedinBoxLine size={15} /> Visit LinkedIn Profile
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Column 2: Research Intentions */}
-                  <div className="space-y-3.5 bg-slate-950/40 border border-white/5 rounded-xl p-4">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                      <RiMapPinUserLine className="text-cyan-400" size={15} />
-                      <span className="text-[11px] font-bold tracking-wider text-slate-300 uppercase">Research Focus</span>
-                    </div>
-
-                    <div className="space-y-3 text-xs">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Primary Area</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.research_area || 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Cancer Type of Interest</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.cancer_interest || 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Expected Duration</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.research_duration || 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold">Supervisor / Referral</span>
-                        <span className="text-xs text-slate-200 font-medium mt-0.5">{viewingApplicationUser.researcher_profile.supervisor_name || 'N/A'}</span>
-                      </div>
-                      {viewingApplicationUser.researcher_profile.prior_work_details && (
-                        <div className="flex flex-col">
-                          <span className="text-[9px] text-slate-500 uppercase font-semibold">Prior Work Details</span>
-                          <span className="text-xs text-slate-300 leading-relaxed font-light mt-1 bg-slate-900/60 p-2 rounded-lg border border-white/5 line-clamp-3">
-                            {viewingApplicationUser.researcher_profile.prior_work_details}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Column 3: Contact & Documents Attached */}
-                  <div className="space-y-3.5 bg-slate-950/40 border border-white/5 rounded-xl p-4">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                      <RiFolderInfoLine className="text-emerald-400" size={15} />
-                      <span className="text-[11px] font-bold tracking-wider text-slate-300 uppercase">Verification Documents</span>
-                    </div>
-
-                    <div className="space-y-3 text-xs">
-                      {/* Basic details */}
-                      <div className="flex items-center gap-2.5 text-slate-300 text-xs bg-slate-900/50 p-2 rounded-lg border border-white/5">
-                        <RiCalendarLine className="text-slate-500 shrink-0" size={14} />
-                        <div>
-                          <p className="text-[8px] text-slate-500 uppercase leading-none">DOB & Gender</p>
-                          <p className="font-semibold mt-1">{viewingApplicationUser.researcher_profile.date_of_birth || 'N/A'} ({viewingApplicationUser.researcher_profile.gender || 'N/A'})</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-slate-300 text-xs bg-slate-900/50 p-2 rounded-lg border border-white/5">
-                        <RiPhoneLine className="text-slate-500 shrink-0" size={14} />
-                        <div>
-                          <p className="text-[8px] text-slate-500 uppercase leading-none">Phone Contact</p>
-                          <p className="font-semibold mt-1">{viewingApplicationUser.researcher_profile.phone || 'N/A'}</p>
-                        </div>
-                      </div>
-
-                      {/* Document cards */}
-                      <div className="space-y-1.5 pt-2">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold block">Attached Files:</span>
-                        {[
-                          ['Government ID Proof', viewingApplicationUser.researcher_profile.id_proof_url],
-                          ['Institutional ID Card', viewingApplicationUser.researcher_profile.institutional_id_url],
-                          ['Letter of Intent', viewingApplicationUser.researcher_profile.letter_of_intent_url],
-                          ['Publications PDF', viewingApplicationUser.researcher_profile.publications_url]
-                        ].map(([lbl, url]) => url ? (
-                          <a
-                            key={lbl}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-between p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/5 hover:border-blue-500/30 text-xs transition-all group font-semibold"
-                          >
-                            <span className="text-slate-300 group-hover:text-blue-300 transition-colors truncate">{lbl}</span>
-                            <RiAttachmentLine className="text-slate-500 group-hover:text-blue-400 shrink-0" size={13} />
-                          </a>
-                        ) : null)}
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              ) : (
-                /* General Account Information for Admins or Super Admins */
-                <div className="bg-slate-950/40 border border-white/5 rounded-xl p-5 space-y-4">
-                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                    <RiProfileLine className="text-blue-400" size={15} />
-                    <span className="text-xs font-bold tracking-wider text-slate-300 uppercase">Account Specifications</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs text-left">
-                    <div className="bg-slate-900/50 p-3 rounded-lg border border-white/5 flex flex-col gap-1">
-                      <span className="text-[9px] text-slate-500 uppercase font-semibold">User Role</span>
-                      <span className="text-xs text-slate-200 font-semibold">{viewingApplicationUser.role}</span>
-                    </div>
-                    <div className="bg-slate-900/50 p-3 rounded-lg border border-white/5 flex flex-col gap-1">
-                      <span className="text-[9px] text-slate-500 uppercase font-semibold">Account Status</span>
-                      <span className="text-xs text-slate-200 font-semibold">{viewingApplicationUser.is_active ? 'ACTIVE' : 'INACTIVE'}</span>
-                    </div>
-                    <div className="bg-slate-900/50 p-3 rounded-lg border border-white/5 flex flex-col gap-1">
-                      <span className="text-[9px] text-slate-500 uppercase font-semibold">Email Registration</span>
-                      <span className="text-xs text-slate-200 font-semibold">VERIFIED</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Research Objective Statement — Full Width */}
-              {viewingApplicationUser.registration_reason && (
-                <div className="relative p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 overflow-hidden font-sans">
-                  <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500/40" />
-                  <span className="font-bold uppercase tracking-wider block text-[9px] text-amber-500 mb-1">Access Request Objective (Why Joining Onco Sphere):</span>
-                  <p className="italic text-sm text-slate-300 leading-relaxed font-light">
-                    "{viewingApplicationUser.registration_reason}"
-                  </p>
-                </div>
-              )}
-
-              {/* Action Buttons Footer */}
-              <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 border-t border-white/10 pt-4 mt-2">
-                <div className="text-xs text-slate-500 flex items-center gap-1.5">
-                  <RiInformationLine size={14} className="text-slate-400 shrink-0" />
-                  <span>Verify document legitimacy before deciding.</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
-                  <Button
-                    variant="outline"
-                    className="border-white/10 text-slate-300 hover:bg-white/5 text-xs font-semibold px-4"
-                    onClick={() => setViewingApplicationUser(null)}
-                  >
-                    Close Viewer
-                  </Button>
-                  
-                  {/* Approve/Reject actions only visible for PENDING requests */}
-                  {viewingApplicationUser.is_approved === 'PENDING' && (
-                    <>
-                      <button
-                        disabled={!!processingApproval}
-                        onClick={async () => {
-                          if (processingApproval) return
-                          setProcessingApproval('REJECT')
-                          try {
-                            await dispatch(updateApprovalThunk({ id: viewingApplicationUser.id, action: 'REJECT' })).unwrap()
-                            toast.success(`${viewingApplicationUser.full_name}'s registration request REJECTED.`)
-                            setViewingApplicationUser(null)
-                            dispatch(fetchAdminsThunk({ page, limit, search }))
-                          } catch (err) {
-                            toast.error(err || 'Failed to reject request.')
-                          } finally {
-                            setProcessingApproval(null)
-                          }
-                        }}
-                        className="px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-rose-600/10 border border-rose-500/20 disabled:opacity-60"
-                      >
-                        {processingApproval === 'REJECT' ? (
-                          <>
-                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            <span>Rejecting…</span>
-                          </>
-                        ) : (
-                          <>
-                            <RiCloseLine size={16} /> Reject Request
-                          </>
-                        )}
-                      </button>
-                      <button
-                        disabled={!!processingApproval}
-                        onClick={async () => {
-                          if (processingApproval) return
-                          setProcessingApproval('APPROVE')
-                          try {
-                            await dispatch(updateApprovalThunk({ id: viewingApplicationUser.id, action: 'APPROVE' })).unwrap()
-                            toast.success(`${viewingApplicationUser.full_name}'s registration request APPROVED.`)
-                            setViewingApplicationUser(null)
-                            dispatch(fetchAdminsThunk({ page, limit, search }))
-                          } catch (err) {
-                            toast.error(err || 'Failed to approve request.')
-                          } finally {
-                            setProcessingApproval(null)
-                          }
-                        }}
-                        className="px-5 py-2 rounded-md bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 disabled:opacity-60"
-                      >
-                        {processingApproval === 'APPROVE' ? (
-                          <>
-                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            <span>Approving…</span>
-                          </>
-                        ) : (
-                          <>
-                            <RiCheckLine size={16} /> Approve Access
-                          </>
-                        )}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Ultra-Premium Super Admin Application Review Workspace Modal */}
+      <ApplicationReviewModal
+        user={viewingApplicationUser}
+        open={!!viewingApplicationUser}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setViewingApplicationUser(null)
+        }}
+        onApprove={handleModalApprove}
+        onReject={handleModalReject}
+        processingApproval={processingApproval}
+      />
     </div>
   )
 }
