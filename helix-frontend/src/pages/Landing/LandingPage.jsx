@@ -872,10 +872,257 @@ export default function LandingPage() {
             box-shadow: none !important;
           }
         }
+
+        /* ══════════════════════════════════════════════════════════
+           MOBILE RESPONSIVENESS — 320px · 375px · 390px · 430px
+           All fixes are additive — no desktop rules are overridden
+           outside of the relevant breakpoints.
+        ══════════════════════════════════════════════════════════ */
+
+        /* Root — prevent any horizontal overflow */
+        .lp-root-wrap {
+          max-width: 100vw;
+          overflow-x: hidden;
+        }
+
+        /* ── Navbar responsive shell ──────────────────────────── */
+        .lp-navbar-inner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          height: 60px;
+          padding: 0 1rem;
+          box-sizing: border-box;
+          gap: 0.5rem;
+        }
+        @media (min-width: 480px) {
+          .lp-navbar-inner { height: 70px; padding: 0 1.5rem; gap: 0.75rem; }
+        }
+        @media (min-width: 1024px) {
+          .lp-navbar-inner { max-width: 80rem; margin: 0 auto; padding: 0 3rem; gap: 1rem; }
+        }
+
+        /* ── Brand block — shrinks gracefully on narrow screens ── */
+        .lp-brand {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          flex-shrink: 1;
+          min-width: 0;
+          cursor: default;
+        }
+        .lp-brand-logo {
+          width: 30px;
+          height: 30px;
+          object-fit: contain;
+          flex-shrink: 0;
+          background: transparent;
+        }
+        @media (min-width: 480px) {
+          .lp-brand { gap: 0.75rem; }
+          .lp-brand-logo { width: 34px; height: 34px; }
+        }
+        @media (min-width: 768px) {
+          .lp-brand-logo { width: 38px; height: 38px; }
+        }
+        .lp-brand-name {
+          font-weight: 800;
+          color: #FFFFFF;
+          letter-spacing: -0.025em;
+          line-height: 1.1;
+          white-space: nowrap;
+          text-shadow: 0 2px 10px rgba(0,0,0,0.6), 0 0 20px rgba(56,189,248,0.22);
+          /* fluid font: 1.05rem at 320px → 1.45rem at 768px+ */
+          font-size: clamp(1.0rem, 3.5vw, 1.45rem);
+        }
+        .lp-brand-sub {
+          font-weight: 600;
+          color: #38BDF8;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          margin-top: 2px;
+          opacity: 0.9;
+          white-space: nowrap;
+          /* fluid: 0.48rem at 320px → 0.58rem at 480px+ */
+          font-size: clamp(0.44rem, 1.4vw, 0.58rem);
+        }
+        /* Hide subtitle below 360px to save space */
+        @media (max-width: 359px) {
+          .lp-brand-sub { display: none; }
+        }
+
+        /* ── Nav auth buttons — mobile-compact ─────────────────── */
+        .lp-nav-buttons {
+          display: flex;
+          align-items: center;
+          flex-shrink: 0;
+          gap: 0.4rem;
+        }
+        @media (min-width: 480px) {
+          .lp-nav-buttons { gap: 0.75rem; }
+        }
+
+        /* Compact Sign In on mobile */
+        @media (max-width: 479px) {
+          .lp-nav-signin {
+            padding: 0.4rem 0.75rem !important;
+            height: 34px !important;
+            font-size: 0.78rem !important;
+            letter-spacing: 0 !important;
+          }
+          .lp-nav-signup {
+            padding: 0.4rem 0.85rem !important;
+            height: 34px !important;
+            font-size: 0.78rem !important;
+            letter-spacing: 0 !important;
+          }
+        }
+
+        /* ── Hero section — responsive padding & text ──────────── */
+        .lp-main {
+          flex: 1;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          text-align: center;
+          padding: 3.5rem 1.25rem;
+          box-sizing: border-box;
+        }
+        @media (min-width: 480px) {
+          .lp-main { padding: 4rem 1.5rem; }
+        }
+        @media (min-width: 768px) {
+          .lp-main { padding: 5rem 1.5rem; }
+        }
+        @media (min-width: 1024px) {
+          .lp-main { padding: 6rem 1.5rem; }
+        }
+
+        /* ── Hero heading — fluid type ─────────────────────────── */
+        .lp-h1 {
+          font-weight: 300;
+          tracking-tight: tight;
+          color: #FFFFFF;
+          line-height: 1.14;
+          margin-bottom: 1.25rem;
+          /* fluid: 1.9rem at 320px → 3.75rem at 1024px */
+          font-size: clamp(1.9rem, 7vw, 3.75rem);
+          letter-spacing: -0.02em;
+        }
+        @media (min-width: 640px) {
+          .lp-h1 { font-size: clamp(2.4rem, 6vw, 3.75rem); margin-bottom: 1.5rem; }
+        }
+
+        /* ── Hero description — mobile tightened ───────────────── */
+        .lp-desc {
+          color: #CBD5E1;
+          font-weight: 300;
+          line-height: 1.65;
+          margin-bottom: 2rem;
+          /* fluid: 0.9rem at 320px → 1.125rem at 640px+ */
+          font-size: clamp(0.9rem, 2.5vw, 1.125rem);
+          max-width: 90%;
+        }
+        @media (min-width: 480px) {
+          .lp-desc { max-width: 36rem; }
+        }
+
+        /* ── Hero CTA row — always vertical on mobile ──────────── */
+        .lp-cta-row {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.75rem;
+          width: 100%;
+          max-width: 320px;
+          margin: 0 auto;
+        }
+        @media (min-width: 480px) {
+          .lp-cta-row {
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            width: auto;
+            max-width: none;
+            gap: 1rem;
+          }
+        }
+
+        /* Hero primary button — full width on mobile */
+        @media (max-width: 479px) {
+          .lp-hero-primary {
+            width: 100% !important;
+            height: 48px !important;
+            font-size: 0.875rem !important;
+            padding: 0.75rem 1.5rem !important;
+            justify-content: center !important;
+          }
+          .lp-hero-secondary {
+            width: 100% !important;
+            height: 48px !important;
+            font-size: 0.875rem !important;
+            padding: 0.75rem 1.5rem !important;
+            justify-content: center !important;
+          }
+        }
+
+        /* ── Trust strip — wraps on tiny screens ───────────────── */
+        .lp-trust-strip {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          margin-top: 2rem;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .lp-trust-text {
+          font-weight: 500;
+          color: #94A3B8;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          line-height: 1.5;
+          text-align: center;
+          font-size: clamp(0.6rem, 1.8vw, 0.75rem);
+        }
+
+        /* ── Footer — tighter on mobile ────────────────────────── */
+        .lp-footer {
+          position: relative;
+          z-index: 10;
+          background: rgba(2,6,20,0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 1.5rem 1.25rem;
+          text-align: center;
+        }
+        .lp-footer-brand {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        /* Ambient spheres — clamp width on mobile to avoid overflow */
+        @media (max-width: 639px) {
+          .lp-ambient-top {
+            width: min(860px, 140vw) !important;
+            height: 400px !important;
+          }
+          .lp-ambient-bottom {
+            width: min(580px, 100vw) !important;
+            height: min(580px, 100vw) !important;
+          }
+        }
       `}</style>
 
       <div
-        className="min-h-screen flex flex-col relative select-none"
+        className="lp-root-wrap min-h-screen flex flex-col relative select-none"
         style={{
           background: 'linear-gradient(175deg, #030817 0%, #061129 40%, #040D21 75%, #020612 100%)',
           color: '#F8FAFC',
@@ -884,66 +1131,32 @@ export default function LandingPage() {
       >
         {/* ── Top Navigation Bar ────────────────────────────────────────── */}
         <header className="lp-navbar lp-anim-nav sticky top-0 z-50 w-full">
-          <div className="max-w-7xl mx-auto flex items-center justify-between h-[70px] px-6 lg:px-12">
-            
+          <div className="lp-navbar-inner">
+
             {/* Branding: ONCO SPHERE · CLINICAL INTELLIGENCE */}
-            <div className="flex items-center gap-3.5 shrink-0 cursor-default">
+            <div className="lp-brand">
               <img
                 src={ICSRLogo}
                 alt="Onco Sphere Logo"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  objectFit: 'contain',
-                  flexShrink: 0,
-                  background: 'transparent',
-                }}
+                className="lp-brand-logo"
               />
               <div className="flex flex-col justify-center leading-none">
-                <span
-                  style={{
-                    fontSize: '1.45rem',
-                    fontWeight: 800,
-                    color: '#FFFFFF',
-                    letterSpacing: '-0.025em',
-                    lineHeight: '1.1',
-                    whiteSpace: 'nowrap',
-                    textShadow: '0 2px 10px rgba(0,0,0,0.6), 0 0 20px rgba(56,189,248,0.22)',
-                  }}
-                >
-                  Onco Sphere
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.58rem',
-                    fontWeight: 600,
-                    color: '#38BDF8',
-                    letterSpacing: '0.22em',
-                    textTransform: 'uppercase',
-                    marginTop: '3px',
-                    opacity: 0.9,
-                  }}
-                >
-                  Clinical Intelligence
-                </span>
+                <span className="lp-brand-name">Onco Sphere</span>
+                <span className="lp-brand-sub">Clinical Intelligence</span>
               </div>
             </div>
 
             {/* Nav authentication controls */}
-            <div className="flex items-center gap-3">
+            <div className="lp-nav-buttons">
               {isAuthenticated ? (
                 <Link to="/dashboard" className="lp-nav-signup">
-                  <span>Open Dashboard</span>
-                  <RiArrowRightLine size={15} />
+                  <span>Dashboard</span>
+                  <RiArrowRightLine size={14} />
                 </Link>
               ) : (
                 <>
-                  <Link to="/login" className="lp-nav-signin">
-                    Sign In
-                  </Link>
-                  <Link to="/register/apply" className="lp-nav-signup">
-                    Sign Up
-                  </Link>
+                  <Link to="/login" className="lp-nav-signin">Sign In</Link>
+                  <Link to="/register/apply" className="lp-nav-signup">Sign Up</Link>
                 </>
               )}
             </div>
@@ -951,9 +1164,9 @@ export default function LandingPage() {
         </header>
 
         {/* ── Central Hero Section ──────────────────────────────────────── */}
-        <main className="flex-1 relative flex flex-col items-center justify-center overflow-hidden px-6 py-20 lg:py-24 text-center">
-          
-          {/* Subtle laboratory background textures */}
+        <main className="lp-main">
+
+          {/* Laboratory background textures */}
           <div className="lp-grid-bg absolute inset-0 pointer-events-none" aria-hidden="true" />
           <div className="lp-scanlines absolute inset-0 pointer-events-none" aria-hidden="true" />
           <div className="lp-ambient-top" aria-hidden="true" />
@@ -968,18 +1181,18 @@ export default function LandingPage() {
           <MolecularCanvas />
 
           {/* Hero Content Container */}
-          <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
-            
+          <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center w-full">
+
             {/* Clinical Intelligence Badge */}
-            <div className="lp-anim-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-sky-400/25 bg-sky-500/10 backdrop-blur-md mb-8 shadow-[0_0_24px_rgba(56,189,248,0.18)]">
-              <RiShieldCheckLine size={13} className="text-sky-400" />
-              <span className="text-[11px] font-bold tracking-[0.16em] uppercase text-sky-300">
+            <div className="lp-anim-badge inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-sky-400/25 bg-sky-500/10 backdrop-blur-md mb-6 shadow-[0_0_24px_rgba(56,189,248,0.18)]">
+              <RiShieldCheckLine size={12} className="text-sky-400 shrink-0" />
+              <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.14em] uppercase text-sky-300">
                 Clinical Intelligence Platform
               </span>
             </div>
 
-            {/* Refined Headline */}
-            <h1 className="lp-anim-h1 text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-white leading-[1.14] mb-6">
+            {/* Headline */}
+            <h1 className="lp-anim-h1 lp-h1 mb-5">
               Precision in Every Patient.
               <br />
               <span className="font-semibold bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-200 bg-clip-text text-transparent">
@@ -987,70 +1200,64 @@ export default function LandingPage() {
               </span>
             </h1>
 
-            {/* Concise Supporting Description */}
-            <p className="lp-anim-p text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-light leading-relaxed mb-10">
+            {/* Supporting Description */}
+            <p className="lp-anim-p lp-desc">
               One intelligent platform connecting oncology workflows, clinical research and patient records.
             </p>
 
             {/* CTA Buttons */}
-            <div className="lp-anim-cta flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+            <div className="lp-anim-cta lp-cta-row">
               <Link
                 to={isAuthenticated ? '/dashboard' : '/login'}
-                className="lp-hero-primary w-full sm:w-auto"
+                className="lp-hero-primary"
               >
                 <span>{isAuthenticated ? 'Open Dashboard' : 'Sign in to Onco Sphere'}</span>
-                <RiArrowRightLine size={18} className="lp-arrow" />
+                <RiArrowRightLine size={17} className="lp-arrow shrink-0" />
               </Link>
 
               {!isAuthenticated && (
-                <Link
-                  to="/register/apply"
-                  className="lp-hero-secondary w-full sm:w-auto"
-                >
+                <Link to="/register/apply" className="lp-hero-secondary">
                   Request Access
                 </Link>
               )}
             </div>
 
-            {/* Institutional Trust Indicator Strip */}
-            <div className="lp-anim-strip mt-12 flex items-center gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)] animate-pulse" />
-              <span className="text-[10px] sm:text-xs font-medium text-slate-400 tracking-[0.12em] uppercase">
-                HIPAA-aware Architecture &nbsp;·&nbsp; Continuous PHI Audit &nbsp;·&nbsp; Institutional Oncology Use
+            {/* Trust Indicator Strip */}
+            <div className="lp-anim-strip lp-trust-strip">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)] animate-pulse shrink-0 mt-0.5" />
+              <span className="lp-trust-text">
+                HIPAA-aware Architecture&nbsp;·&nbsp;Continuous PHI Audit&nbsp;·&nbsp;Institutional Oncology Use
               </span>
             </div>
           </div>
         </main>
 
-        {/* ── Modern Compact Footer ─────────────────────────────────────── */}
-        <footer className="relative z-10 bg-[#020614]/90 backdrop-blur-md px-6 py-8 text-center">
-          <div className="lp-divider-line max-w-5xl mx-auto mb-6" />
-          
-          <div className="max-w-4xl mx-auto flex flex-col items-center gap-2.5">
-            {/* Logo and Subtitle */}
-            <div className="flex items-center gap-2.5">
+        {/* ── Compact Footer ─────────────────────────────────────────────── */}
+        <footer className="lp-footer">
+          <div className="lp-divider-line max-w-5xl mx-auto mb-5" />
+
+          <div className="max-w-4xl mx-auto flex flex-col items-center gap-2">
+            <div className="lp-footer-brand">
               <img
                 src={ICSRLogo}
-                alt="Onco Sphere Logo"
+                alt=""
                 aria-hidden="true"
-                style={{ width: '22px', height: '22px', objectFit: 'contain', background: 'transparent' }}
+                style={{ width: '18px', height: '18px', objectFit: 'contain', background: 'transparent' }}
               />
               <span className="text-xs font-bold text-slate-300 tracking-[0.1em] uppercase">
                 Onco Sphere
               </span>
               <span className="text-slate-600 text-xs">·</span>
-              <span className="text-[11px] font-semibold text-sky-400/80 tracking-[0.14em] uppercase">
+              <span className="text-[11px] font-semibold text-sky-400/80 tracking-[0.12em] uppercase">
                 Clinical Intelligence
               </span>
             </div>
 
-            {/* Institutional Notice */}
-            <p className="text-[11px] font-normal text-slate-400 max-w-lg leading-relaxed">
+            <p className="text-[11px] font-normal text-slate-400 max-w-sm sm:max-w-lg leading-relaxed px-2">
               Institutional oncology research & clinical intelligence registry. Protected Health Information (PHI) access is strictly monitored and audited.
             </p>
 
-            {/* Minimal Copyright */}
-            <p className="text-[10px] font-normal text-slate-500 tracking-wider mt-1">
+            <p className="text-[10px] font-normal text-slate-500 tracking-wider">
               &copy; {new Date().getFullYear()} Onco Sphere — Oncology Intelligence. All rights reserved.
             </p>
           </div>
