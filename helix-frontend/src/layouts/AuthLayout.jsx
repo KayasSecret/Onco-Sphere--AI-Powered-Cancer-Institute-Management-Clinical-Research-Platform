@@ -54,14 +54,14 @@ export default function AuthLayout() {
       </div>
 
       {/* ── Right form panel ────────────────────────────────────────── */}
-      <div className="flex-1 flex items-center justify-center bg-slate-950 p-6 relative">
+      <div className="flex-1 flex items-center justify-center bg-slate-950 p-3.5 sm:p-6 relative overflow-x-hidden">
 
         {/* Subtle glow so mobile view (no left panel) still feels on-brand */}
-        <div className="lg:hidden absolute -top-32 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="lg:hidden absolute -top-32 left-1/2 -translate-x-1/2 w-[320px] sm:w-[400px] h-[320px] sm:h-[400px] bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="w-full max-w-md relative z-10">
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
+          <div className="lg:hidden flex items-center gap-2 mb-6 sm:mb-8 justify-center">
             <img src={ICSRLogo} alt="Onco Sphere Logo" className="h-10 w-auto object-contain bg-transparent" />
           </div>
 

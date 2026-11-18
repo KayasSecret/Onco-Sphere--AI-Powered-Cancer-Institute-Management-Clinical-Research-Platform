@@ -62,7 +62,7 @@ export default function LoginPage() {
   const isLoading = status === 'loading'
 
   return (
-    <div className="animate-fade-in bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+    <div className="animate-fade-in bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-8 shadow-2xl">
 
       {/* Back button to Home */}
       <div className="mb-6">
@@ -199,7 +199,7 @@ export default function LoginPage() {
       <p className="mt-6 text-center text-slate-400 text-sm">
         Don't have an account?{' '}
         <Link to="/register/apply" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
-          Request access
+          Register in Onco Sphere
         </Link>
       </p>
     </div>

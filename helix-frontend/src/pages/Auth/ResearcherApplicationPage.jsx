@@ -253,9 +253,9 @@ function FieldError({ msg }) {
 
 function SectionCard({ title, icon: Icon, children }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-4 backdrop-blur-sm">
-      <div className="flex items-center gap-2 mb-5">
-        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 mb-4 backdrop-blur-sm">
+      <div className="flex items-center gap-2 mb-4 sm:mb-5">
+        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
           <Icon className="text-blue-400" size={16} />
         </div>
         <h3 className="text-white font-semibold text-sm">{title}</h3>
@@ -1171,8 +1171,8 @@ export default function ResearcherApplicationPage() {
   // Step 5 — Review & Confirm
   // ─────────────────────────────────────────────────────────────────────────
   const ReviewRow = ({ label, value }) => value ? (
-    <div className="flex gap-3 py-2 border-b border-white/5 last:border-0">
-      <span className="text-slate-400 text-xs w-40 shrink-0">{label}</span>
+    <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3 py-2 border-b border-white/5 last:border-0">
+      <span className="text-slate-400 text-xs sm:w-40 shrink-0">{label}</span>
       <span className="text-white text-xs flex-1 break-words">{value}</span>
     </div>
   ) : null
@@ -1252,8 +1252,8 @@ export default function ResearcherApplicationPage() {
           ['Letter of Intent', docUrls.letter_of_intent_url],
           ['Publications', docUrls.publications_url],
         ].map(([label, url]) => url ? (
-          <div key={label} className="flex gap-3 py-2 border-b border-white/5 last:border-0 items-center">
-            <span className="text-slate-400 text-xs w-40 shrink-0">{label}</span>
+          <div key={label} className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 py-2 border-b border-white/5 last:border-0 items-center">
+            <span className="text-slate-400 text-xs sm:w-40 shrink-0">{label}</span>
             <a href={url} target="_blank" rel="noopener noreferrer"
               className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors">View Document</a>
             <span className="ml-auto text-emerald-400 text-[10px] flex items-center gap-1"><RiCheckLine size={10}/>Uploaded</span>

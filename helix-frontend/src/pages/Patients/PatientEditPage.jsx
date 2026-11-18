@@ -263,7 +263,7 @@ export default function PatientEditPage() {
       <form
         onSubmit={(e) => e.preventDefault()}
         noValidate
-        className="space-y-6 bg-surface-card p-6 rounded-lg border border-surface-border"
+        className="space-y-6 bg-surface-card p-4 sm:p-6 rounded-xl border border-surface-border"
         onKeyDown={(e) => {
           // Block Enter key on ALL steps to prevent any residual submission path
           if (e.key === 'Enter') {

@@ -112,7 +112,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="animate-fade-in bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+    <div className="animate-fade-in bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-8 shadow-2xl">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-white mb-1.5">Forgot Password</h1>

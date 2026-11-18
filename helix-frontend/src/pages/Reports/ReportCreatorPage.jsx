@@ -797,7 +797,7 @@ export default function ReportCreatorPage() {
                 </FormField>
 
                 {/* Editable Patient Fields for Live Report Synchronization */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <FormField label="Patient Name (On Report)">
                     <Input
                       value={patientDetails.name}
@@ -1323,12 +1323,12 @@ export default function ReportCreatorPage() {
         {/* ══════════════════════════════════════════════════════════════════
             RIGHT COLUMN: LIVE SYNCHRONIZED SINGLE-PAGE A4 REPORT PREVIEW
         ══════════════════════════════════════════════════════════════════ */}
-        <div className="flex-1 w-full onco-preview-shell p-4 sm:p-6 flex flex-col items-center overflow-x-auto">
-          <div className="w-full max-w-[794px] flex items-center justify-between mb-3 no-print">
+        <div className="flex-1 w-full min-w-0 onco-preview-shell p-3 sm:p-6 flex flex-col">
+          <div className="w-full max-w-[794px] mx-auto flex flex-wrap items-center justify-between gap-2 mb-3 no-print">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-xs font-bold text-ink-primary uppercase tracking-wider">
-                Live A4 Diagnostic Preview (1-Page Optimized)
+                Live A4 Diagnostic Preview (3-Page ICSR Standard)
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1349,31 +1349,35 @@ export default function ReportCreatorPage() {
             </div>
           </div>
 
-          <OxidativeReportDocument
-            ref={printAreaRef}
-            instSettings={instSettings}
-            signatureUrl={matchedSignatureUrl}
-            reportNumber={reportNumber}
-            version={version}
-            reportStatus={reportStatus}
-            patientName={patientDetails.name}
-            patientCode={patientDetails.patient_code || patientDetails.uhid}
-            patientAge={patientDetails.age}
-            patientGender={patientDetails.gender}
-            referenceBy={referenceBy}
-            doctorName={doctorName}
-            reportDate={reportDate}
-            collectionDate={collectionDate}
-            sampleType={sampleType}
-            labNumber={labNumber}
-            damageParams={damageParams}
-            defenceParams={defenceParams}
-            damageScore={damageScore}
-            defenceScore={defenceScore}
-            ratioScore={ratioScore}
-            overallSummary={overallSummary}
-            disclaimerText={disclaimerText}
-          />
+          <div className="w-full overflow-x-auto pb-2">
+            <div className="w-fit mx-auto">
+              <OxidativeReportDocument
+                ref={printAreaRef}
+                instSettings={instSettings}
+                signatureUrl={matchedSignatureUrl}
+                reportNumber={reportNumber}
+                version={version}
+                reportStatus={reportStatus}
+                patientName={patientDetails.name}
+                patientCode={patientDetails.patient_code || patientDetails.uhid}
+                patientAge={patientDetails.age}
+                patientGender={patientDetails.gender}
+                referenceBy={referenceBy}
+                doctorName={doctorName}
+                reportDate={reportDate}
+                collectionDate={collectionDate}
+                sampleType={sampleType}
+                labNumber={labNumber}
+                damageParams={damageParams}
+                defenceParams={defenceParams}
+                damageScore={damageScore}
+                defenceScore={defenceScore}
+                ratioScore={ratioScore}
+                overallSummary={overallSummary}
+                disclaimerText={disclaimerText}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

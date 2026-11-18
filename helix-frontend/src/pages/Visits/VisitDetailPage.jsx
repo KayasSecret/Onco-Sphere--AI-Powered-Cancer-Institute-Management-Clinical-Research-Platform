@@ -219,10 +219,10 @@ export default function VisitDetailPage() {
             <div className="space-y-4">
               {symptoms.map((s) => (
                 <div key={s.id} className="p-3 bg-surface-base rounded-lg border border-surface-border space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-ink-primary">{s.name}</p>
                     {s.severity_score !== null && s.severity_score !== undefined && (
-                      <div className="w-44"><SeverityBar score={s.severity_score} /></div>
+                      <div className="w-full sm:w-44"><SeverityBar score={s.severity_score} /></div>
                     )}
                   </div>
                   {s.patient_note && (
@@ -239,12 +239,12 @@ export default function VisitDetailPage() {
           <Section icon={RiFlaskLine} title="Investigations Ordered" empty={investigations.length === 0} emptyText="No investigations ordered for this visit.">
             <div className="space-y-2">
               {investigations.map((inv) => (
-                <div key={inv.id} className="flex items-center justify-between p-3 bg-surface-base rounded-lg border border-surface-border">
+                <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-surface-base rounded-lg border border-surface-border">
                   <div>
                     <p className="text-sm font-semibold text-ink-primary">{inv.name}</p>
                     <p className="text-xs text-ink-disabled mt-0.5">Ordered: {new Date(inv.ordered_at).toLocaleDateString("en-IN")}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 self-start sm:self-center">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
                       inv.status === "result_available" ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300" :
                       inv.status === "in_progress" ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300" :

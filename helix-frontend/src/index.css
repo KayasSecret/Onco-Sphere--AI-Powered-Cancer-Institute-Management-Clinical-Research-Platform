@@ -327,3 +327,64 @@ a:hover {
 .react-datepicker-wrapper {
   width: 100% !important;
 }
+
+/* ── Global Responsive & Mobile Viewport Refinements (320px – 768px) ─── */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+@media (max-width: 640px) {
+  .onco-header-banner,
+  .onco-reg-banner,
+  .onco-wiz-banner,
+  .onco-prof-hero,
+  .onco-rep-banner,
+  .onco-access-banner,
+  .onco-settings-hero,
+  .onco-receipt-hero {
+    padding: 1.1rem 1rem !important;
+    border-radius: 0.9rem !important;
+  }
+
+  .onco-settings-title,
+  .onco-receipt-title {
+    font-size: clamp(1.22rem, 5vw, 1.45rem) !important;
+  }
+
+  .onco-review-hero,
+  .onco-review-body,
+  .onco-review-footer,
+  .onco-modal-hero {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .onco-report-item {
+    flex-wrap: wrap;
+    gap: 0.75rem !important;
+  }
+
+  .onco-settings-telemetry-strip {
+    width: 100%;
+  }
+
+  .onco-settings-telemetry-pill {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 130px;
+  }
+}
+
+@media (max-width: 400px) {
+  .onco-settings-telemetry-pill {
+    flex: 1 1 100%;
+  }
+
+  .onco-hero-btn-primary,
+  .onco-hero-btn-glass,
+  .onco-btn-register {
+    width: 100%;
+    justify-content: center;
+  }
+}

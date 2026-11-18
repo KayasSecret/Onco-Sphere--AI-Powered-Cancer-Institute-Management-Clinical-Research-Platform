@@ -222,18 +222,18 @@ export default function PhotoSelector({ value, onChange, onUploadingChange, cust
       )}
 
       <Dialog open={isOpen} onOpenChange={(open) => { if (!open) closeModal() }}>
-        <DialogContent className={`bg-surface-card border border-surface-border ${mode === 'select' ? 'sm:max-w-md' : 'sm:max-w-2xl'}`}>
+        <DialogContent className={`w-[95vw] bg-surface-card border border-surface-border ${mode === 'select' ? 'sm:max-w-md' : 'sm:max-w-2xl'}`}>
           <DialogHeader>
             <DialogTitle className="text-ink-primary">Profile Photo</DialogTitle>
           </DialogHeader>
 
           {/* MODE: Select Camera or Upload */}
           {mode === 'select' && (
-            <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4 py-3 sm:py-4">
               <button
                 type="button"
                 onClick={handleStartCamera}
-                className="flex flex-col items-center justify-center p-6 border border-surface-border rounded-xl hover:bg-surface-hover hover:border-brand-blue group transition-all cursor-pointer"
+                className="flex flex-col items-center justify-center p-5 sm:p-6 border border-surface-border rounded-xl hover:bg-surface-hover hover:border-brand-blue group transition-all cursor-pointer"
               >
                 <div className="w-12 h-12 rounded-full bg-brand-navy/10 flex items-center justify-center text-brand-navy group-hover:bg-brand-blue group-hover:text-ink-inverse transition-colors mb-3">
                   <RiCameraLine size={24} />
@@ -242,7 +242,7 @@ export default function PhotoSelector({ value, onChange, onUploadingChange, cust
                 <span className="text-xs text-ink-secondary mt-1">Take a live photo</span>
               </button>
 
-              <label className="flex flex-col items-center justify-center p-6 border border-surface-border rounded-xl hover:bg-surface-hover hover:border-brand-blue group cursor-pointer transition-all">
+              <label className="flex flex-col items-center justify-center p-5 sm:p-6 border border-surface-border rounded-xl hover:bg-surface-hover hover:border-brand-blue group cursor-pointer transition-all">
                 <input
                   type="file"
                   accept="image/*"
@@ -355,10 +355,10 @@ export default function PhotoSelector({ value, onChange, onUploadingChange, cust
 
           {/* MODE: Drag, Zoom and Crop Image */}
           {mode === 'crop' && (
-            <div className="space-y-4 py-2 flex flex-col items-center">
+            <div className="space-y-4 py-2 flex flex-col items-center max-w-full overflow-hidden">
               {/* Crop Container */}
               <div
-                className="w-[300px] h-[300px] bg-surface-base rounded-lg overflow-hidden relative cursor-move border border-surface-border"
+                className="w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] bg-surface-base rounded-lg overflow-hidden relative cursor-move border border-surface-border shrink-0"
                 style={{ touchAction: 'none' }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}

@@ -169,30 +169,34 @@ export default function ReportPrintPage() {
       </div>
 
       {/* Shared Single-Page Optimized A4 Document */}
-      <OxidativeReportDocument
-        ref={printAreaRef}
-        instSettings={instSettings}
-        signatureUrl={matchedSignatureUrl}
-        reportNumber={report.report_number}
-        version={report.version}
-        reportStatus={report.status}
-        patientName={report.patient?.full_name}
-        patientCode={report.patient?.patient_code}
-        patientAge={calculateAge(report.patient?.date_of_birth)}
-        patientGender={report.patient?.gender}
-        referenceBy={report.reference_by}
-        doctorName={report.doctor_name}
-        reportDate={report.report_date}
-        collectionDate={report.collection_date}
-        sampleType={report.sample_type}
-        labNumber={report.lab_number}
-        damageParams={damageValues}
-        defenceParams={defenceValues}
-        damageScore={report.damage_score}
-        defenceScore={report.defence_score}
-        ratioScore={report.ratio_score}
-        overallSummary={report.overall_summary}
-      />
+      <div className="w-full overflow-x-auto pb-4 print:overflow-visible">
+        <div className="w-fit mx-auto">
+          <OxidativeReportDocument
+            ref={printAreaRef}
+            instSettings={instSettings}
+            signatureUrl={matchedSignatureUrl}
+            reportNumber={report.report_number}
+            version={report.version}
+            reportStatus={report.status}
+            patientName={report.patient?.full_name}
+            patientCode={report.patient?.patient_code}
+            patientAge={calculateAge(report.patient?.date_of_birth)}
+            patientGender={report.patient?.gender}
+            referenceBy={report.reference_by}
+            doctorName={report.doctor_name}
+            reportDate={report.report_date}
+            collectionDate={report.collection_date}
+            sampleType={report.sample_type}
+            labNumber={report.lab_number}
+            damageParams={damageValues}
+            defenceParams={defenceValues}
+            damageScore={report.damage_score}
+            defenceScore={report.defence_score}
+            ratioScore={report.ratio_score}
+            overallSummary={report.overall_summary}
+          />
+        </div>
+      </div>
     </div>
   )
 }
