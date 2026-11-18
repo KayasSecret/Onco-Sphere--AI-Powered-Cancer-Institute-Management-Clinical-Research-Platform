@@ -136,6 +136,28 @@ class DoctorSignatureCreate(BaseModel):
     signature_url: str
     is_active: Optional[bool] = True
 
+class DoctorSignatureUpdate(BaseModel):
+    doctor_name: str
+    signature_url: str
+    is_active: Optional[bool] = True
+
+class ReportParameterCreate(BaseModel):
+    template_id: Optional[int] = None
+    name: str
+    code: str
+    section: str
+    reference_range: str
+    default_interpretation: str
+    unit: Optional[str] = ""
+    display_order: Optional[int] = None
+
+class ReportParameterUpdate(BaseModel):
+    name: str
+    section: str
+    reference_range: str
+    default_interpretation: str
+    unit: Optional[str] = ""
+
 class InstituteInfoResponse(BaseModel):
     id: int
     name: str

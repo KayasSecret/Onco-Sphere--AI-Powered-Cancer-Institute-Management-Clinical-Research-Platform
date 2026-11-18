@@ -17,6 +17,9 @@ from app.models.report_generator import (
 )
 from app.schemas.report_generator import (
     ReportTemplateResponse,
+    ReportParameterResponse,
+    ReportParameterCreate,
+    ReportParameterUpdate,
     ReportCreateRequest,
     ReportResponse,
     ReportValueResponse,
@@ -26,6 +29,7 @@ from app.schemas.report_generator import (
     InstituteInfoUpdate,
     DoctorSignatureResponse,
     DoctorSignatureCreate,
+    DoctorSignatureUpdate,
     ReportAuditLogResponse,
     SettingsResponse,
 )
@@ -97,8 +101,8 @@ DEFAULT_OXIDATIVE_PARAMETERS = [
 ]
 
 
-def ensure_oxidative_stress_template(db: Session) -> None:
-    """Idempotently ensures the OXIDATIVE_STRESS template and its 5 PDF parameters match the official ICSR layout."""
+def ensure_oxidative_stress_template(db: Session, force_reset: bool = False) -> None:
+    """Idempotently ensures the OXIDATIVE_STRESS template and its 5 PDF parameters exist."""
     tpl = db.query(ReportTemplate).filter(ReportTemplate.code == "OXIDATIVE_STRESS").first()
     if not tpl:
         tpl = ReportTemplate(
@@ -110,23 +114,23 @@ def ensure_oxidative_stress_template(db: Session) -> None:
         db.add(tpl)
         db.commit()
         db.refresh(tpl)
-    else:
+    elif force_reset:
         tpl.description = DEFAULT_OXIDATIVE_SUMMARY
         tpl.default_disclaimer = DEFAULT_OXIDATIVE_DISCLAIMER
 
     existing_by_code = {p.code: p for p in tpl.parameters}
-    target_codes = {p["code"] for p in DEFAULT_OXIDATIVE_PARAMETERS}
 
     for p_def in DEFAULT_OXIDATIVE_PARAMETERS:
         code = p_def["code"]
         if code in existing_by_code:
-            p_obj = existing_by_code[code]
-            p_obj.name = p_def["name"]
-            p_obj.section = p_def["section"]
-            p_obj.reference_range = p_def["reference_range"]
-            p_obj.default_interpretation = p_def["default_interpretation"]
-            p_obj.unit = p_def["unit"]
-            p_obj.display_order = p_def["display_order"]
+            if force_reset:
+                p_obj = existing_by_code[code]
+                p_obj.name = p_def["name"]
+                p_obj.section = p_def["section"]
+                p_obj.reference_range = p_def["reference_range"]
+                p_obj.default_interpretation = p_def["default_interpretation"]
+                p_obj.unit = p_def["unit"]
+                p_obj.display_order = p_def["display_order"]
         else:
             db.add(
                 ReportParameter(
@@ -140,13 +144,6 @@ def ensure_oxidative_stress_template(db: Session) -> None:
                     display_order=p_def["display_order"],
                 )
             )
-
-    # Remove any extra unreferenced parameter (like standalone GSH if unused by reports)
-    for code, p_obj in list(existing_by_code.items()):
-        if code not in target_codes:
-            used_count = db.query(ReportValue).filter(ReportValue.parameter_id == p_obj.id).count()
-            if used_count == 0:
-                db.delete(p_obj)
 
     db.commit()
 
@@ -208,16 +205,138 @@ def add_signature(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Deactivate other signatures if required, or allow multiple active
     new_sig = DoctorSignature(
         doctor_name=payload.doctor_name,
         signature_url=payload.signature_url,
-        is_active=payload.is_active,
+        is_active=payload.is_active if payload.is_active is not None else True,
     )
     db.add(new_sig)
     db.commit()
     db.refresh(new_sig)
     return new_sig
+
+
+# 4b. Update Doctor Signature
+@router.put("/signature/{sig_id}", response_model=DoctorSignatureResponse)
+def update_signature(
+    sig_id: int,
+    payload: DoctorSignatureUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    sig = db.query(DoctorSignature).filter(DoctorSignature.id == sig_id).first()
+    if not sig:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Doctor signature not found.",
+        )
+    sig.doctor_name = payload.doctor_name
+    sig.signature_url = payload.signature_url
+    if payload.is_active is not None:
+        sig.is_active = payload.is_active
+    db.commit()
+    db.refresh(sig)
+    return sig
+
+
+# 4c. Delete Doctor Signature
+@router.delete("/signature/{sig_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_signature(
+    sig_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    sig = db.query(DoctorSignature).filter(DoctorSignature.id == sig_id).first()
+    if not sig:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Doctor signature not found.",
+        )
+    db.delete(sig)
+    db.commit()
+    return None
+
+
+# 4d. Create Master Parameter
+@router.post("/parameters", response_model=ReportParameterResponse)
+def create_parameter(
+    payload: ReportParameterCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ensure_oxidative_stress_template(db)
+    tpl = None
+    if payload.template_id:
+        tpl = db.query(ReportTemplate).filter(ReportTemplate.id == payload.template_id).first()
+    if not tpl:
+        tpl = db.query(ReportTemplate).filter(ReportTemplate.code == "OXIDATIVE_STRESS").first()
+    if not tpl:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Report template not found.",
+        )
+
+    code_upper = payload.code.strip().upper().replace(" ", "_")
+    existing = (
+        db.query(ReportParameter)
+        .filter(ReportParameter.template_id == tpl.id, ReportParameter.code == code_upper)
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Parameter with code '{code_upper}' already exists.",
+        )
+
+    max_order = len(tpl.parameters) + 1
+    new_param = ReportParameter(
+        template_id=tpl.id,
+        name=payload.name.strip(),
+        code=code_upper,
+        section=payload.section.strip(),
+        reference_range=payload.reference_range.strip(),
+        default_interpretation=payload.default_interpretation.strip(),
+        unit=(payload.unit or "").strip(),
+        display_order=payload.display_order or max_order,
+    )
+    db.add(new_param)
+    db.commit()
+    db.refresh(new_param)
+    return new_param
+
+
+# 4e. Update Master Parameter
+@router.put("/parameters/{param_id}", response_model=ReportParameterResponse)
+def update_parameter(
+    param_id: int,
+    payload: ReportParameterUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    param = db.query(ReportParameter).filter(ReportParameter.id == param_id).first()
+    if not param:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parameter not found.",
+        )
+    param.name = payload.name.strip()
+    param.section = payload.section.strip()
+    param.reference_range = payload.reference_range.strip()
+    param.default_interpretation = payload.default_interpretation.strip()
+    param.unit = (payload.unit or "").strip()
+    db.commit()
+    db.refresh(param)
+    return param
+
+
+# 4f. Reset Standard Parameters to ICSR Defaults
+@router.post("/parameters/reset", response_model=List[ReportTemplateResponse])
+def reset_parameters_to_default(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ensure_oxidative_stress_template(db, force_reset=True)
+    return db.query(ReportTemplate).all()
 
 # Helper to generate unique report number
 def generate_report_number(db: Session) -> str:

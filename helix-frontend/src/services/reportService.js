@@ -13,6 +13,21 @@ const reportService = {
   addSignature: (data) =>
     api.post('/api/v1/reports/signature', data),
 
+  updateSignature: (sigId, data) =>
+    api.put(`/api/v1/reports/signature/${sigId}`, data),
+
+  deleteSignature: (sigId) =>
+    api.delete(`/api/v1/reports/signature/${sigId}`),
+
+  createParameter: (data) =>
+    api.post('/api/v1/reports/parameters', data),
+
+  updateParameter: (paramId, data) =>
+    api.put(`/api/v1/reports/parameters/${paramId}`, data),
+
+  resetParameters: () =>
+    api.post('/api/v1/reports/parameters/reset'),
+
   createReport: (data, existingReportNumber = null) => {
     const url = existingReportNumber
       ? `/api/v1/reports?existing_report_number=${encodeURIComponent(existingReportNumber)}`
