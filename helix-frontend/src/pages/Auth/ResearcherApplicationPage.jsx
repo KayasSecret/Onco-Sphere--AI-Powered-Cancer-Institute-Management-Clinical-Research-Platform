@@ -23,6 +23,7 @@
  */
 
 import { phoneRegex, emailRegex, passwordRegex} from '../../lib/validation'
+import { calculateAge as calcAgeUtil } from '../../lib/utils'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -57,18 +58,7 @@ const ALLOWED_TYPES    = ['application/pdf', 'image/jpeg', 'image/png']
 const ALLOWED_EXT_LABEL = 'PDF, JPG, PNG'
 const AUTO_SAVE_MS     = 60_000
 
-const calculateAge = (dobString) => {
-  if (!dobString) return null
-  const dob = new Date(dobString)
-  if (isNaN(dob.getTime())) return null
-  const today = new Date()
-  let age = today.getFullYear() - dob.getFullYear()
-  const m = today.getMonth() - dob.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-    age--
-  }
-  return age
-}
+const calculateAge = (dobString) => calcAgeUtil(dobString, { asNumber: true })
 
 const step1Schema = yup.object({
   full_name:         yup.string().min(2, 'At least 2 characters').required('Full name is required'),

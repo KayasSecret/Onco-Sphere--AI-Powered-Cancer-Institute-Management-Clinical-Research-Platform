@@ -54,6 +54,7 @@ import {
 import authService from '../../services/authService'
 import PhotoSelector from '../../components/PhotoSelector'
 import { passwordRegex } from '../../lib/validation'
+import { formatBytes } from '../../lib/utils'
 import ICSRLogo from '../../assets/ICSR-LOGO.png'
 import './SettingsPage.css'
 
@@ -229,8 +230,7 @@ export default function SettingsPage() {
       .then((res) => {
         setStorageStats(res.data)
       })
-      .catch((err) => {
-        console.error('Failed to load storage stats:', err)
+      .catch(() => {
         toast.error('Unable to refresh storage telemetry.')
       })
       .finally(() => {
@@ -260,14 +260,6 @@ export default function SettingsPage() {
         })
     }
   }, [isSuperAdmin])
-
-  const formatBytes = (bytes) => {
-    if (bytes === undefined || bytes === null || bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
 
   const handleCopyText = (text, label) => {
     if (!text) return

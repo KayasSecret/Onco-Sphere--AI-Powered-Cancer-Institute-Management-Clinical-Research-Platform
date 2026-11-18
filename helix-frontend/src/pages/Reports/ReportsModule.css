@@ -153,52 +153,6 @@
   box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
-/* ── Compact Printable A4 Sheet (Single-Page High-Density Layout) ────── */
-.onco-a4-sheet {
-  width: 794px;
-  min-width: 794px;
-  max-width: 794px;
-  background: #FFFFFF !important;
-  color: #111827 !important;
-  padding: 26px 32px;
-  box-sizing: border-box;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  box-shadow: 0 12px 36px -8px rgba(15, 23, 42, 0.22);
-  border: 1px solid #E2E8F0;
-}
-
-.onco-a4-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-}
-
-.onco-a4-table th {
-  background-color: #F8FAFC !important;
-  color: #6B1D1D !important;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 10px;
-  padding: 6px 8px;
-  border: 1px solid #CBD5E1 !important;
-}
-
-.onco-a4-table td {
-  padding: 6px 8px;
-  border: 1px solid #CBD5E1 !important;
-  color: #1E293B !important;
-  vertical-align: middle;
-}
-
-.onco-score-box {
-  border: 1px solid #CBD5E1;
-  border-radius: 6px;
-  padding: 8px 10px;
-  background: #FAFBFD;
-  break-inside: avoid;
-}
-
 /* ── Print Media Query Optimization ───────────────────────────────────── */
 @media print {
   body, html {
@@ -215,16 +169,6 @@
   aside,
   .topbar {
     display: none !important;
-  }
-
-  .onco-a4-sheet {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 8mm 10mm !important;
-    margin: 0 !important;
   }
 
   @page {

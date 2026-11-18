@@ -23,6 +23,7 @@ import {
   RiFilter3Line,
 } from 'react-icons/ri'
 import { toast } from 'sonner'
+import { calculateAge } from '../../lib/utils'
 import './PatientListPage.css'
 
 export default function PatientListPage() {
@@ -325,13 +326,4 @@ export default function PatientListPage() {
       />
     </div>
   )
-}
-
-// Age calculator helper
-function calculateAge(dobString) {
-  if (!dobString) return ''
-  const dob = new Date(dobString)
-  const diffMs = Date.now() - dob.getTime()
-  const ageDate = new Date(diffMs)
-  return Math.abs(ageDate.getUTCFullYear() - 1970)
 }

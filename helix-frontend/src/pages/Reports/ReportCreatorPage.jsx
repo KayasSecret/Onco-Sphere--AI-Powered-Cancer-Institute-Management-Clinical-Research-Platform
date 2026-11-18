@@ -9,6 +9,7 @@ import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import reportService from '../../services/reportService'
 import patientService from '../../services/patientService'
+import { calculateAge } from '../../lib/utils'
 import DatePicker from '../../components/DatePicker'
 import OxidativeReportDocument from './OxidativeReportDocument'
 import {
@@ -93,19 +94,6 @@ const SAMPLE_CLINICAL_PRESET = {
   GRIESS: { result: '40', interpretation: 'Inflammatory Stage' },
   DNPH: { result: '1.3', interpretation: 'Protein Damage Stage' },
   TAC: { result: '782', interpretation: 'Defense System Marker' },
-}
-
-// Helper age calculator
-const calculateAge = (dobString) => {
-  if (!dobString) return ''
-  const today = new Date()
-  const birthDate = new Date(dobString)
-  let age = today.getFullYear() - birthDate.getFullYear()
-  const m = today.getMonth() - birthDate.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--
-  }
-  return age.toString()
 }
 
 // Evaluate whether a numeric result is within or outside the reference range (informational only; never blocks submission)

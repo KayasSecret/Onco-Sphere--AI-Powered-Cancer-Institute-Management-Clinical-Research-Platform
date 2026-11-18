@@ -19,7 +19,6 @@ import {
   RiCheckLine,
   RiCloseLine,
   RiRefreshLine,
-  RiShieldCheckLine,
   RiFlaskLine,
   RiGlobalLine,
   RiMailLine,

@@ -272,8 +272,8 @@ export default function DashboardPage() {
             if (isMounted) setBarsReady(true)
           })
         }
-      } catch (err) {
-        console.error('Failed to load stats:', err)
+      } catch {
+        if (isMounted) setLoading(false)
       }
     }
     fetchStats()

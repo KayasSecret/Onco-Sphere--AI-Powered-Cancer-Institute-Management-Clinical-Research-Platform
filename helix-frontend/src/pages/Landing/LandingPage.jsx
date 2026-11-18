@@ -201,7 +201,11 @@ function MolecularCanvas() {
       for (let k = 0; k < 6; k++) {
         const a = (k / 6) * Math.PI * 2
         const px = Math.cos(a) * r, py = Math.sin(a) * r
-        k === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+        if (k === 0) {
+          ctx.moveTo(px, py)
+        } else {
+          ctx.lineTo(px, py)
+        }
       }
       ctx.closePath()
       ctx.strokeStyle = `rgba(56,189,248,${alpha})`
@@ -221,7 +225,6 @@ function MolecularCanvas() {
 
     function drawFlask({ x, y, w, h, hue, bubbles, liquidPhase }) {
       const neckW = w * 0.28
-      const neckH = h * 0.28
       const bodyBottom = y + h
 
       // ── Glass body outline (Erlenmeyer-ish) ─────────────────────────────

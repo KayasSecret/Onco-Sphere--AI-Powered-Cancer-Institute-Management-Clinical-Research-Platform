@@ -46,6 +46,7 @@ import {
 } from 'react-icons/ri'
 import { toast } from 'sonner'
 import patientService from '../../services/patientService'
+import { calculateAge } from '../../lib/utils'
 import PhotoSelector from '../../components/PhotoSelector'
 import DatePicker from '../../components/DatePicker'
 import PatientVisitsSection from '../../components/visits/PatientVisitsSection'
@@ -136,8 +137,8 @@ export default function PatientProfilePage() {
     try {
       const res = await patientService.getPatientReports(id)
       setReports(res.data)
-    } catch (err) {
-      console.error('Failed to load patient reports:', err)
+    } catch {
+      // handled silently on initial fetch
     }
   }, [id])
 
@@ -145,8 +146,8 @@ export default function PatientProfilePage() {
     try {
       const res = await patientService.getPatientCancerImages(id)
       setCancerImages(res.data)
-    } catch (err) {
-      console.error('Failed to load patient cancer images:', err)
+    } catch {
+      // handled silently on initial fetch
     }
   }, [id])
 
@@ -247,7 +248,6 @@ export default function PatientProfilePage() {
       window.open(blobUrl, '_blank', 'noopener,noreferrer')
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
     } catch (err) {
-      console.error('Failed to view report:', err)
       if (report.file_url) {
         window.open(report.file_url, '_blank', 'noopener,noreferrer')
       } else {
@@ -271,7 +271,7 @@ export default function PatientProfilePage() {
 
       const link = document.createElement('a')
       link.href = blobUrl
-      const safeTitle = (report.title || 'report').replace(/[^\w\s\.-]/g, '_').trim()
+      const safeTitle = (report.title || 'report').replace(/[^\w\s.-]/g, '_').trim()
       link.download = safeTitle.toLowerCase().endsWith(`.${ext}`) ? safeTitle : `${safeTitle}.${ext}`
       document.body.appendChild(link)
       link.click()
@@ -279,7 +279,6 @@ export default function PatientProfilePage() {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
       toast.success('Report downloaded.')
     } catch (err) {
-      console.error('Failed to download report:', err)
       if (report.file_url) {
         const link = document.createElement('a')
         link.href = report.file_url
@@ -307,7 +306,7 @@ export default function PatientProfilePage() {
       let ext = 'jpg'
       const match = (img.image_url || '').match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/)
       if (match) ext = match[1].toLowerCase()
-      const safeTitle = (img.title || 'cancer_scan').replace(/[^\w\s\.-]/g, '_').trim()
+      const safeTitle = (img.title || 'cancer_scan').replace(/[^\w\s.-]/g, '_').trim()
       link.download = safeTitle.toLowerCase().endsWith(`.${ext}`) ? safeTitle : `${safeTitle}.${ext}`
       document.body.appendChild(link)
       link.click()
@@ -315,7 +314,6 @@ export default function PatientProfilePage() {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
       toast.success('Scan image downloaded.')
     } catch (err) {
-      console.error('Failed to download cancer image:', err)
       if (img.image_url) {
         window.open(img.image_url, '_blank', 'noopener,noreferrer')
       } else {
@@ -1584,13 +1582,4 @@ export default function PatientProfilePage() {
       />
     </div>
   )
-}
-
-// Age calculator helper
-function calculateAge(dobString) {
-  if (!dobString) return ''
-  const dob = new Date(dobString)
-  const diffMs = Date.now() - dob.getTime()
-  const ageDate = new Date(diffMs)
-  return Math.abs(ageDate.getUTCFullYear() - 1970)
 }

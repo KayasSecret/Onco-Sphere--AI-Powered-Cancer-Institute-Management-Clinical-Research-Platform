@@ -1,7 +1,14 @@
+import random
+import string
 import bcrypt
 
 # Standard bcrypt cost factor balancing security and clinical response latency
 BCRYPT_ROUNDS = 12
+
+
+def generate_otp(length: int = 6) -> str:
+    """Generate a numeric one-time verification code of the specified length."""
+    return "".join(random.choices(string.digits, k=length))
 
 
 def hash_password(plain_password: str) -> str:

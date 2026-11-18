@@ -10,8 +10,6 @@ Endpoints:
   POST   /api/v1/researcher/verify-otp      — Verify OTP → return draft data if valid
 """
 import json
-import random
-import string
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
@@ -27,15 +25,11 @@ from app.schemas.researcher import (
     OTPVerifyRequest,
 )
 from app.services import email_service
+from app.utils.password import generate_otp
 
 router = APIRouter(prefix="/researcher", tags=["Researcher Application"])
 
 OTP_EXPIRY_MINUTES = 10
-
-
-def _generate_otp(length: int = 6) -> str:
-    """Generate a cryptographically simple numeric OTP."""
-    return "".join(random.choices(string.digits, k=length))
 
 
 def _serialize_draft(draft: ResearcherDraft) -> DraftResponse:
@@ -145,7 +139,7 @@ def request_otp(
     if draft.status == "submitted":
         return {"message": "This application has already been submitted."}
 
-    otp = _generate_otp()
+    otp = generate_otp()
     draft.otp_code = otp
     draft.otp_expires_at = datetime.utcnow() + timedelta(minutes=OTP_EXPIRY_MINUTES)
     db.commit()

@@ -5,7 +5,6 @@ from sqlalchemy import or_
 
 from app.database.db import get_db
 from app.models.user import User, UserRole
-from app.schemas.auth import UserResponse
 from app.middleware.auth import require_roles, get_current_user
 from app.utils.password import hash_password, verify_password
 from app.schemas.auth import UserResponse, ChangePasswordRequest
@@ -272,13 +271,6 @@ def delete_admin(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Super Admin accounts cannot be deleted."
-        )
-
-    # Prevent regular ADMIN from deleting a SUPER_ADMIN account
-    if current_user.role != UserRole.SUPER_ADMIN and user.role == UserRole.SUPER_ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admins cannot delete Super Admin accounts.",
         )
 
     db.delete(user)

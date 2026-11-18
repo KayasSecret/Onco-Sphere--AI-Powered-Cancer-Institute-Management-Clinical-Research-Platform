@@ -1,5 +1,3 @@
-import random
-import string
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, BackgroundTasks
@@ -17,14 +15,9 @@ from app.schemas.auth import (
     VerifyResetOTPRequest,
     ResetPasswordRequest,
 )
-from app.utils.password import hash_password, verify_password
+from app.utils.password import hash_password, verify_password, generate_otp
 from app.utils.jwt import create_access_token, create_refresh_token, decode_token, create_reset_token
 from app.services import email_service
-
-
-def _generate_otp(length: int = 6) -> str:
-    """Generate a cryptographically simple numeric OTP."""
-    return "".join(random.choices(string.digits, k=length))
 
 
 def login_user(payload: LoginRequest, db: Session) -> TokenResponse:
@@ -195,7 +188,7 @@ def forgot_password_service(payload: ForgotPasswordRequest, background_tasks: Ba
             detail="No registered user account found with this email address.",
         )
 
-    otp = _generate_otp(6)
+    otp = generate_otp(6)
     user.reset_otp = otp
     user.reset_otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
     db.commit()
