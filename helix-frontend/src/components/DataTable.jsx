@@ -9,7 +9,13 @@ import {
 } from './ui/table'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import { RiSearchLine, RiArrowLeftSLine, RiArrowRightSLine } from 'react-icons/ri'
+import {
+  RiSearchLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
+  RiCloseCircleLine,
+  RiDatabase2Line,
+} from 'react-icons/ri'
 import EmptyState from './EmptyState'
 
 /**
@@ -53,130 +59,155 @@ export default function DataTable({
   }
 
   const totalPages = Math.ceil(total / limit) || 1
+  const startRecord = total === 0 ? 0 : (page - 1) * limit + 1
+  const endRecord = Math.min(page * limit, total)
 
   return (
     <div className="space-y-4">
-      {/* Search Input Bar */}
+      {/* ── Search & Registry Control Bar ────────────────────────────────── */}
       {onSearchChange && (
-        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full sm:max-w-sm">
-          <div className="relative flex-1">
-            <RiSearchLine
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-secondary"
-            />
-            <Input
-              type="text"
-              placeholder={searchPlaceholder}
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-9 pr-8 h-9 bg-surface-card border-surface-border text-ink-primary placeholder:text-ink-disabled text-xs rounded-md"
-            />
-            {searchValue && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-ink-disabled hover:text-ink-primary font-medium"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          <Button
-            type="submit"
-            className="h-9 px-4 bg-brand-blue hover:bg-brand-blue-dark text-ink-inverse text-xs rounded-md font-medium"
+        <div className="onco-search-toolbar flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-surface-card border border-surface-border shadow-xs">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center gap-2.5 w-full sm:max-w-md"
           >
-            Search
-          </Button>
-        </form>
-      )}
-
-      {/* Styled Grid/Table */}
-      <div className="border border-surface-border rounded-lg bg-surface-card overflow-hidden shadow-xs overflow-x-auto">
-        <Table>
-          <TableHeader className="bg-surface-base border-b border-surface-border">
-            <TableRow>
-              {columns.map((col, idx) => (
-                <TableHead
-                  key={idx}
-                  className={`text-brand-navy font-semibold text-xs py-3 px-4 uppercase tracking-wider text-left${col.headerClassName ? ` ${col.headerClassName}` : ''}`}
+            <div className="relative flex-1 group">
+              <RiSearchLine
+                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-secondary group-focus-within:text-brand-blue dark:group-focus-within:text-sky-400 transition-colors pointer-events-none"
+              />
+              <Input
+                type="text"
+                placeholder={searchPlaceholder}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="pl-10 pr-9 h-10 bg-surface-base/70 dark:bg-slate-900/60 border-surface-border focus-visible:border-brand-blue focus-visible:ring-2 focus-visible:ring-brand-blue/20 text-ink-primary placeholder:text-ink-disabled text-xs sm:text-sm rounded-lg transition-all"
+              />
+              {searchValue && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  title="Clear search"
+                  aria-label="Clear search"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-disabled hover:text-ink-primary transition-colors p-0.5 cursor-pointer"
                 >
-                  {col.header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody className="divide-y divide-surface-border">
-            {items.length > 0 ? (
-              items.map((row, rowIdx) => (
-                <TableRow
-                  key={row.id || rowIdx}
-                  className="hover:bg-surface-hover/50 transition-colors duration-fast"
-                >
-                  {columns.map((col, colIdx) => {
-                    let val = ''
-                    if (typeof col.accessor === 'function') {
-                      val = col.accessor(row)
-                    } else if (col.accessor) {
-                      val = row[col.accessor]
-                    }
-
-                    return (
-                      <TableCell
-                        key={colIdx}
-                        className={`py-3.5 px-4 text-sm text-ink-primary align-middle${col.cellClassName ? ` ${col.cellClassName}` : ''}`}
-                      >
-                        {col.cell ? col.cell(row, val) : val}
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="p-8">
-                  <EmptyState message={emptyMessage} />
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Server-Side Pagination Bar */}
-      {onPageChange && totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-2 pt-2 text-xs text-ink-secondary font-medium">
-          <div>
-            Showing <span className="text-ink-primary font-semibold">{(page - 1) * limit + 1}</span> to{' '}
-            <span className="text-ink-primary font-semibold">
-              {Math.min(page * limit, total)}
-            </span>{' '}
-            of <span className="text-ink-primary font-semibold">{total}</span> records
-          </div>
-          <div className="flex items-center gap-1.5">
+                  <RiCloseCircleLine size={16} />
+                </button>
+              )}
+            </div>
             <Button
-              variant="outline"
-              size="icon"
-              className="w-8 h-8 border-surface-border hover:bg-surface-hover"
-              disabled={page <= 1}
-              onClick={() => onPageChange(page - 1)}
+              type="submit"
+              className="onco-btn-search h-10 px-5 text-white text-xs font-semibold rounded-lg shrink-0 cursor-pointer"
             >
-              <RiArrowLeftSLine size={16} />
+              Search
             </Button>
-            <span className="px-2">
-              Page <span className="text-ink-primary font-semibold">{page}</span> of {totalPages}
+          </form>
+
+          {/* Registry Telemetry Counter */}
+          <div className="hidden md:flex items-center gap-2 text-xs text-ink-secondary bg-surface-base/80 dark:bg-slate-900/50 border border-surface-border/80 px-3 py-1.5 rounded-lg shrink-0">
+            <RiDatabase2Line size={14} className="text-brand-blue dark:text-sky-400" />
+            <span>
+              Registry Volume:{' '}
+              <strong className="font-mono font-bold text-ink-primary">{total}</strong>{' '}
+              {total === 1 ? 'record' : 'records'}
             </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="w-8 h-8 border-surface-border hover:bg-surface-hover"
-              disabled={page >= totalPages}
-              onClick={() => onPageChange(page + 1)}
-            >
-              <RiArrowRightSLine size={16} />
-            </Button>
           </div>
         </div>
       )}
+
+      {/* ── Enterprise Clinical Data Table ───────────────────────────────── */}
+      <div className="onco-table-shell border border-surface-border rounded-xl bg-surface-card overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="onco-table-header border-b border-surface-border">
+              <TableRow className="hover:bg-transparent">
+                {columns.map((col, idx) => (
+                  <TableHead
+                    key={idx}
+                    className={`text-brand-navy dark:text-slate-300 font-bold text-[11px] py-3.5 px-4 uppercase tracking-[0.09em] text-left whitespace-nowrap${
+                      col.headerClassName ? ` ${col.headerClassName}` : ''
+                    }`}
+                  >
+                    {col.header}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-surface-border/70">
+              {items.length > 0 ? (
+                items.map((row, rowIdx) => (
+                  <TableRow
+                    key={row.id || rowIdx}
+                    className="onco-table-row group transition-colors duration-150"
+                  >
+                    {columns.map((col, colIdx) => {
+                      let val = ''
+                      if (typeof col.accessor === 'function') {
+                        val = col.accessor(row)
+                      } else if (col.accessor) {
+                        val = row[col.accessor]
+                      }
+
+                      return (
+                        <TableCell
+                          key={colIdx}
+                          className={`py-4 px-4 text-sm text-ink-primary align-middle${
+                            col.cellClassName ? ` ${col.cellClassName}` : ''
+                          }`}
+                        >
+                          {col.cell ? col.cell(row, val) : val}
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="p-10">
+                    <EmptyState message={emptyMessage} />
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* ── Server-Side Pagination Footer ──────────────────────────────── */}
+        {onPageChange && totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-surface-base/50 dark:bg-slate-900/40 border-t border-surface-border text-xs text-ink-secondary font-medium">
+            <div>
+              Showing <span className="text-ink-primary font-bold font-mono">{startRecord}</span> to{' '}
+              <span className="text-ink-primary font-bold font-mono">{endRecord}</span> of{' '}
+              <span className="text-ink-primary font-bold font-mono">{total}</span> clinical records
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-8 h-8 rounded-lg border-surface-border bg-surface-card hover:bg-surface-hover cursor-pointer"
+                disabled={page <= 1}
+                onClick={() => onPageChange(page - 1)}
+                aria-label="Previous page"
+              >
+                <RiArrowLeftSLine size={16} />
+              </Button>
+              <span className="px-2.5 py-1 rounded-md bg-surface-card border border-surface-border font-mono text-[11px]">
+                Page <span className="text-ink-primary font-bold">{page}</span> / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-8 h-8 rounded-lg border-surface-border bg-surface-card hover:bg-surface-hover cursor-pointer"
+                disabled={page >= totalPages}
+                onClick={() => onPageChange(page + 1)}
+                aria-label="Next page"
+              >
+                <RiArrowRightSLine size={16} />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
