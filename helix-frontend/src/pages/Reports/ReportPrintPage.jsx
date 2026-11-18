@@ -69,46 +69,29 @@ export default function ReportPrintPage() {
   }, [loadPrintData])
 
   const handleDownloadPDF = async () => {
-    const element = printAreaRef.current
-    if (!element) return
+    const container = printAreaRef.current
+    if (!container) return
 
-    const toastId = toast.loading('Generating compact high-resolution A4 PDF...')
+    const pageNodes = container.querySelectorAll('[data-pdf-page]')
+    const targets = pageNodes.length > 0 ? Array.from(pageNodes) : [container]
+
+    const toastId = toast.loading('Generating 3-page ICSR Oxidative Stress PDF...')
     try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      })
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.98)
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       })
 
-      const pageWidth = 210
-      const pageHeight = 297
-      const imgWidth = pageWidth
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-
-      if (imgHeight <= pageHeight * 1.15) {
-        const scaleFactor = Math.min(1, pageHeight / imgHeight)
-        const finalW = imgWidth * scaleFactor
-        const finalH = imgHeight * scaleFactor
-        const offsetX = (pageWidth - finalW) / 2
-        pdf.addImage(imgData, 'JPEG', offsetX, 0, finalW, finalH)
-      } else {
-        let heightLeft = imgHeight
-        let position = 0
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-        heightLeft -= pageHeight
-        while (heightLeft > 5) {
-          position = heightLeft - imgHeight
-          pdf.addPage()
-          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-          heightLeft -= pageHeight
-        }
+      for (let i = 0; i < targets.length; i++) {
+        const canvas = await html2canvas(targets[i], {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        })
+        const imgData = canvas.toDataURL('image/jpeg', 0.98)
+        if (i > 0) pdf.addPage()
+        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297)
       }
 
       pdf.save(`${report?.report_number || 'REPORT'}.pdf`)

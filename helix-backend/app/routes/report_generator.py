@@ -36,82 +36,73 @@ router = APIRouter(prefix="/reports", tags=["Report Generator"])
 DEFAULT_OXIDATIVE_SUMMARY = (
     "The Damage vs. Defense Ratio (DDR) summarizes the body's oxidative stress by comparing total "
     "oxidative damage to antioxidant capacity. It is calculated as (MDA + FOX-2 + Protein Carbonyl + "
-    "Nitric Oxide) / (GSH + TAC). A low DDR indicates that antioxidants effectively counteract oxidative "
-    "damage; a moderate DDR suggests that oxidative stress is present and defenses are partially "
-    "overwhelmed; and a high DDR indicates that damage exceeds the body's protective capacity, reflecting "
+    "Nitric Oxide) ÷ GSH. A low DDR indicates that antioxidants effectively counteract oxidative "
+    "damage, a moderate DDR suggests that oxidative stress is present and defenses are partially "
+    "overwhelmed, and a high DDR indicates that damage exceeds the body's protective capacity, reflecting "
     "severe oxidative stress and higher risk for cellular dysfunction or disease."
 )
 
 DEFAULT_OXIDATIVE_DISCLAIMER = (
     "The information provided by this panel reflects biochemical markers of oxidative balance and is "
-    "intended for clinical research or monitoring purposes. It should be considered alongside comprehensive "
-    "oncology clinical evaluation and not as a standalone diagnostic tool."
+    "intended for research or monitoring purposes. It should be considered alongside clinical "
+    "evaluation and not as a standalone diagnostic tool."
 )
 
 DEFAULT_OXIDATIVE_PARAMETERS = [
     {
-        "name": "Lipid Peroxidation — MDA (TBARS)",
-        "code": "MDA",
+        "name": "Total Lipid Hydroperoxidise (FOX 2)",
+        "code": "FOX2",
         "section": "Oxidative Damage",
-        "reference_range": "0.5 - 2.0 µmol/L",
-        "default_interpretation": "Normal lipid peroxidation level",
-        "unit": "µmol/L",
+        "reference_range": "2.0 - 10",
+        "default_interpretation": "Early Stage Lipid Damage",
+        "unit": "",
         "display_order": 1,
     },
     {
-        "name": "Lipid Hydroperoxides — FOX-2 Assay",
-        "code": "FOX2",
+        "name": "Lipid Peroxidation (MDA)",
+        "code": "MDA",
         "section": "Oxidative Damage",
-        "reference_range": "2.0 - 10.0 µmol/L",
-        "default_interpretation": "Within physiological hydroperoxide range",
-        "unit": "µmol/L",
+        "reference_range": "0.5 - 2.0",
+        "default_interpretation": "Late Stage Lipid Damage",
+        "unit": "",
         "display_order": 2,
     },
     {
-        "name": "Protein Carbonyl Content (DNPH)",
-        "code": "DNPH",
+        "name": "Reactive Nitrogen Species (Griess)",
+        "code": "GRIESS",
         "section": "Oxidative Damage",
-        "reference_range": "0.5 - 2.5 nmol/mg",
-        "default_interpretation": "Normal protein oxidative modification",
-        "unit": "nmol/mg",
+        "reference_range": "20 - 40",
+        "default_interpretation": "Inflammatory Stage",
+        "unit": "",
         "display_order": 3,
     },
     {
-        "name": "Nitric Oxide Metabolites (Griess Assay)",
-        "code": "GRIESS",
+        "name": "Protein Oxidation (DNPH)",
+        "code": "DNPH",
         "section": "Oxidative Damage",
-        "reference_range": "20.0 - 40.0 µmol/L",
-        "default_interpretation": "Normal nitrosative stress marker",
-        "unit": "µmol/L",
+        "reference_range": "0.5 - 2.5",
+        "default_interpretation": "Protein Damage Stage",
+        "unit": "",
         "display_order": 4,
     },
     {
-        "name": "Reduced Glutathione (GSH)",
-        "code": "GSH",
-        "section": "Antioxidant Defence",
-        "reference_range": "650 - 1100 µmol/L",
-        "default_interpretation": "Adequate intracellular glutathione reserve",
-        "unit": "µmol/L",
-        "display_order": 5,
-    },
-    {
-        "name": "Total Antioxidant Capacity (TAC)",
+        "name": "Total Antioxidant Capacity (GSH+ TAC+ SOD+ Catalase+ FRAP+ ABTS)",
         "code": "TAC",
         "section": "Antioxidant Defence",
-        "reference_range": "600 - 1200 µmol/L",
-        "default_interpretation": "Optimal plasma antioxidant capacity",
-        "unit": "µmol/L",
-        "display_order": 6,
+        "reference_range": "600 - 1200",
+        "default_interpretation": "Defense System Marker",
+        "unit": "",
+        "display_order": 5,
     },
 ]
 
 
 def ensure_oxidative_stress_template(db: Session) -> None:
-    """Idempotently ensures the OXIDATIVE_STRESS template and all 6 parameters exist."""
+    """Idempotently ensures the OXIDATIVE_STRESS template and its 5 PDF parameters match the official ICSR layout."""
     tpl = db.query(ReportTemplate).filter(ReportTemplate.code == "OXIDATIVE_STRESS").first()
     if not tpl:
         tpl = ReportTemplate(
-            name="Oxidative Stress & Antioxidant Defence Panel",
+            name="Oxidative Stress Report",
             code="OXIDATIVE_STRESS",
             description=DEFAULT_OXIDATIVE_SUMMARY,
             default_disclaimer=DEFAULT_OXIDATIVE_DISCLAIMER,
@@ -119,11 +110,24 @@ def ensure_oxidative_stress_template(db: Session) -> None:
         db.add(tpl)
         db.commit()
         db.refresh(tpl)
+    else:
+        tpl.description = DEFAULT_OXIDATIVE_SUMMARY
+        tpl.default_disclaimer = DEFAULT_OXIDATIVE_DISCLAIMER
 
-    existing_codes = {p.code for p in tpl.parameters}
-    added_any = False
+    existing_by_code = {p.code: p for p in tpl.parameters}
+    target_codes = {p["code"] for p in DEFAULT_OXIDATIVE_PARAMETERS}
+
     for p_def in DEFAULT_OXIDATIVE_PARAMETERS:
-        if p_def["code"] not in existing_codes:
+        code = p_def["code"]
+        if code in existing_by_code:
+            p_obj = existing_by_code[code]
+            p_obj.name = p_def["name"]
+            p_obj.section = p_def["section"]
+            p_obj.reference_range = p_def["reference_range"]
+            p_obj.default_interpretation = p_def["default_interpretation"]
+            p_obj.unit = p_def["unit"]
+            p_obj.display_order = p_def["display_order"]
+        else:
             db.add(
                 ReportParameter(
                     template_id=tpl.id,
@@ -136,9 +140,15 @@ def ensure_oxidative_stress_template(db: Session) -> None:
                     display_order=p_def["display_order"],
                 )
             )
-            added_any = True
-    if added_any:
-        db.commit()
+
+    # Remove any extra unreferenced parameter (like standalone GSH if unused by reports)
+    for code, p_obj in list(existing_by_code.items()):
+        if code not in target_codes:
+            used_count = db.query(ReportValue).filter(ReportValue.parameter_id == p_obj.id).count()
+            if used_count == 0:
+                db.delete(p_obj)
+
+    db.commit()
 
 
 # 1. Get Templates and Parameters
