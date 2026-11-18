@@ -1,9 +1,16 @@
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated } from '../../redux/slices/authSlice'
-import { RiArrowRightLine, RiShieldCheckLine } from 'react-icons/ri'
+import {
+  RiArrowRightLine,
+  RiShieldCheckLine,
+  RiArrowUpLine,
+  RiMailLine,
+  RiGithubFill,
+  RiCloseLine,
+} from 'react-icons/ri'
 import ICSRLogo from '../../assets/ICSR-LOGO.png'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /* ─────────────────────────────────────────────────────────────────────────────
    ScientificLabCanvas — Immersive oncology research laboratory animation
@@ -494,10 +501,79 @@ function MolecularCanvas() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   Institutional Footer Info Content — authentic, concise reference modals
+   for informational links that do not have standalone route pages.
+───────────────────────────────────────────────────────────────────────────── */
+const FOOTER_INFO_DOCS = {
+  about: {
+    title: 'About Onco Sphere',
+    category: 'Institutional Overview',
+    body: 'Onco Sphere is an oncology clinical intelligence and research management platform engineered for cancer institutes, multidisciplinary care teams, and clinical investigators. It unifies longitudinal patient records, visit histories, and research protocol workflows within a role-governed environment.',
+  },
+  mission: {
+    title: 'Our Mission',
+    category: 'Clinical Vision',
+    body: 'Clinical Intelligence for Better Oncology Outcomes. Our mission is to eliminate fragmented oncology data by providing clinicians, care coordinators, and researchers with a single, high-precision line of sight across every patient journey and research protocol.',
+  },
+  contact: {
+    title: 'Contact & Institutional Inquiries',
+    category: 'Clinical & Research Desk',
+    body: 'For institutional onboarding, researcher credentialing, or clinical registry inquiries, please contact your institute administrator or reach our coordination desk at clinical-support@oncosphere.org. Prospective researchers may also submit credentials directly via the Researcher Application portal.',
+  },
+  help: {
+    title: 'Help Center',
+    category: 'Platform Guidance',
+    body: 'Access role-based guidance for Super Administrators, Clinical Administrators, and Credentialed Researchers. Authorised personnel can manage account security, institutional report templates, and patient longitudinal records directly from the authenticated dashboard.',
+  },
+  faqs: {
+    title: 'Frequently Asked Questions',
+    category: 'Resources & Support',
+    body: 'How do researchers request access? Submit a 5-step credential application via the Sign Up / Register portal for administrator review. How are patient records protected? Access is strictly role-gated with continuous audit logging and encrypted session tokens.',
+  },
+  docs: {
+    title: 'Platform Documentation',
+    category: 'Technical & Clinical Reference',
+    body: 'Onco Sphere provides structured workflows for patient registration, oncology staging & visit tracking, clinical receipt generation, and researcher application review. Full API and clinical schema specifications are available to authorised institutional administrators.',
+  },
+  support: {
+    title: 'Technical Support',
+    category: 'System Operations',
+    body: 'For authentication assistance, password recovery, or session troubleshooting, use the Forgot Password workflow on the Sign In screen or contact your institution’s Super Administrator.',
+  },
+  privacy: {
+    title: 'Privacy Policy',
+    category: 'Legal & Data Governance',
+    body: 'Onco Sphere processes clinical and research data strictly for authorised institutional healthcare and oncology research operations. Personal and patient health records are governed by role-based access controls, encrypted transport, and institutional audit policies.',
+  },
+  terms: {
+    title: 'Terms of Service',
+    category: 'Institutional Use Agreement',
+    body: 'Access to Onco Sphere is restricted to credentialed healthcare professionals, authorised administrators, and approved clinical researchers. Users must maintain credential confidentiality and comply with institutional data governance standards.',
+  },
+  disclaimer: {
+    title: 'Medical Disclaimer',
+    category: 'Clinical Notice',
+    body: 'Onco Sphere is a clinical intelligence and research documentation platform designed to support qualified oncology professionals. It does not substitute for independent clinical judgment, diagnostic evaluation, or direct physician oversight.',
+  },
+  accessibility: {
+    title: 'Accessibility Statement',
+    category: 'Inclusive Clinical Design',
+    body: 'Onco Sphere is committed to high-contrast typography, keyboard-navigable controls, visible focus indicators, and reduced-motion support (prefers-reduced-motion) to ensure usability across clinical workstations and assistive technologies.',
+  },
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    LandingPage — Onco Sphere Clinical Intelligence Platform
 ───────────────────────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
+  const [activeInfoKey, setActiveInfoKey] = useState(null)
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const activeInfo = activeInfoKey ? FOOTER_INFO_DOCS[activeInfoKey] : null
 
   return (
     <>
@@ -1089,23 +1165,196 @@ export default function LandingPage() {
           font-size: clamp(0.6rem, 1.8vw, 0.75rem);
         }
 
-        /* ── Footer — tighter on mobile ────────────────────────── */
+        /* ── Institutional Multi-Column Footer ───────────────────── */
         .lp-footer {
           position: relative;
           z-index: 10;
-          background: rgba(2,6,20,0.9);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          padding: 1.5rem 1.25rem;
-          text-align: center;
+          background: linear-gradient(180deg, rgba(3, 9, 25, 0.94) 0%, rgba(2, 5, 16, 0.98) 100%);
+          border-top: 1px solid rgba(56, 189, 248, 0.14);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          padding: 2.5rem 1.25rem 1.5rem;
+          color: #94A3B8;
         }
-        .lp-footer-brand {
+        @media (min-width: 640px) {
+          .lp-footer { padding: 3rem 2rem 1.75rem; }
+        }
+        @media (min-width: 1024px) {
+          .lp-footer { padding: 3.25rem 3rem 1.75rem; }
+        }
+
+        .lp-footer-inner {
+          max-width: 80rem;
+          margin: 0 auto;
+        }
+
+        .lp-footer-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+        @media (min-width: 640px) {
+          .lp-footer-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 2rem 1.75rem;
+          }
+          .lp-footer-brand-col {
+            grid-column: span 2 / span 2;
+          }
+        }
+        @media (min-width: 1024px) {
+          .lp-footer-grid {
+            grid-template-columns: 1.55fr repeat(4, minmax(0, 1fr));
+            gap: 2.25rem;
+          }
+          .lp-footer-brand-col {
+            grid-column: span 1 / span 1;
+          }
+        }
+
+        .lp-footer-col-title {
+          font-size: 0.72rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          color: #E2E8F0;
+          margin-bottom: 0.85rem;
           display: flex;
-          flex-wrap: wrap;
+          align-items: center;
+          gap: 0.45rem;
+        }
+        .lp-footer-col-title::before {
+          content: '';
+          display: inline-block;
+          width: 3px;
+          height: 11px;
+          border-radius: 2px;
+          background: linear-gradient(180deg, #38BDF8 0%, #2563EB 100%);
+        }
+
+        .lp-footer-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+        }
+
+        /* Explicit color lock to prevent global a:hover rule from darkening links */
+        .lp-footer-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          font-size: 0.82rem;
+          font-weight: 400;
+          color: #94A3B8 !important;
+          text-decoration: none !important;
+          background: transparent;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          text-align: left;
+          line-height: 1.4;
+          transition: color 0.18s ease, transform 0.18s ease;
+        }
+        .lp-footer-link:hover,
+        .lp-footer-link:focus-visible {
+          color: #38BDF8 !important;
+          transform: translateX(2px);
+          text-decoration: none !important;
+          outline: none;
+        }
+        .lp-footer-link:focus-visible {
+          outline: 1px solid rgba(56, 189, 248, 0.55);
+          outline-offset: 3px;
+          border-radius: 3px;
+        }
+
+        .lp-footer-contact-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          font-size: 0.76rem;
+          font-weight: 500;
+          color: #CBD5E1 !important;
+          background: rgba(8, 21, 47, 0.65);
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          border-radius: 0.5rem;
+          padding: 0.38rem 0.7rem;
+          text-decoration: none !important;
+          transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+        .lp-footer-contact-pill:hover,
+        .lp-footer-contact-pill:focus-visible {
+          color: #FFFFFF !important;
+          border-color: rgba(56, 189, 248, 0.5);
+          background: rgba(15, 38, 82, 0.75);
+        }
+
+        .lp-footer-icon-btn {
+          display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 0.5rem;
-          margin-bottom: 0.5rem;
+          width: 32px;
+          height: 32px;
+          border-radius: 0.5rem;
+          color: #94A3B8 !important;
+          background: rgba(8, 21, 47, 0.65);
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          text-decoration: none !important;
+          transition: border-color 0.2s ease, color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+        }
+        .lp-footer-icon-btn:hover,
+        .lp-footer-icon-btn:focus-visible {
+          color: #FFFFFF !important;
+          border-color: rgba(56, 189, 248, 0.55);
+          box-shadow: 0 0 14px rgba(56, 189, 248, 0.22);
+          transform: translateY(-1px);
+        }
+
+        .lp-footer-bottom {
+          margin-top: 2rem;
+          padding-top: 1.25rem;
+          border-top: 1px solid rgba(56, 189, 248, 0.12);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+        }
+        @media (min-width: 768px) {
+          .lp-footer-bottom {
+            flex-direction: row;
+            text-align: left;
+          }
+        }
+
+        .lp-back-to-top {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.74rem;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: #E2E8F0 !important;
+          background: rgba(8, 21, 47, 0.75);
+          border: 1px solid rgba(56, 189, 248, 0.26);
+          border-radius: 0.5rem;
+          padding: 0.42rem 0.85rem;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.2s ease, border-color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+        }
+        .lp-back-to-top:hover,
+        .lp-back-to-top:focus-visible {
+          color: #FFFFFF !important;
+          background: rgba(18, 45, 98, 0.85);
+          border-color: rgba(56, 189, 248, 0.6);
+          box-shadow: 0 0 16px rgba(56, 189, 248, 0.24);
+          transform: translateY(-1.5px);
+          outline: none;
         }
 
         /* Ambient spheres — clamp width on mobile to avoid overflow */
@@ -1217,7 +1466,7 @@ export default function LandingPage() {
 
               {!isAuthenticated && (
                 <Link to="/register/apply" className="lp-hero-secondary">
-                  Request Access
+                  Register in Onco Sphere
                 </Link>
               )}
             </div>
@@ -1232,36 +1481,257 @@ export default function LandingPage() {
           </div>
         </main>
 
-        {/* ── Compact Footer ─────────────────────────────────────────────── */}
-        <footer className="lp-footer">
-          <div className="lp-divider-line max-w-5xl mx-auto mb-5" />
+        {/* ── Institutional Healthcare & Clinical Research Footer ────────── */}
+        <footer className="lp-footer" role="contentinfo" aria-label="Onco Sphere Institutional Footer">
+          <div className="lp-footer-inner">
+            <div className="lp-footer-grid">
 
-          <div className="max-w-4xl mx-auto flex flex-col items-center gap-2">
-            <div className="lp-footer-brand">
-              <img
-                src={ICSRLogo}
-                alt=""
-                aria-hidden="true"
-                style={{ width: '18px', height: '18px', objectFit: 'contain', background: 'transparent' }}
-              />
-              <span className="text-xs font-bold text-slate-300 tracking-[0.1em] uppercase">
-                Onco Sphere
-              </span>
-              <span className="text-slate-600 text-xs">·</span>
-              <span className="text-[11px] font-semibold text-sky-400/80 tracking-[0.12em] uppercase">
-                Clinical Intelligence
-              </span>
+              {/* Brand & Institutional Identity Column */}
+              <div className="lp-footer-brand-col flex flex-col items-start text-left">
+                <div className="flex items-center gap-3 mb-3">
+                  <img
+                    src={ICSRLogo}
+                    alt="Onco Sphere Logo"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      objectFit: 'contain',
+                      flexShrink: 0,
+                      background: 'transparent',
+                    }}
+                  />
+                  <div className="flex flex-col leading-none">
+                    <span className="text-base font-extrabold text-white tracking-tight">
+                      Onco Sphere
+                    </span>
+                    <span className="text-[9px] font-semibold text-sky-400 tracking-[0.2em] uppercase mt-1">
+                      Clinical Intelligence
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tagline */}
+                <p className="text-xs font-semibold bg-gradient-to-r from-sky-300 via-blue-300 to-cyan-200 bg-clip-text text-transparent mb-2.5 tracking-wide">
+                  Clinical Intelligence for Better Oncology Outcomes
+                </p>
+
+                {/* Short Platform Description */}
+                <p className="text-xs text-slate-400 leading-relaxed max-w-sm mb-4">
+                  An integrated oncology research and clinical intelligence platform connecting longitudinal patient records, multidisciplinary care workflows, and protocol oversight.
+                </p>
+
+                {/* Contact & Official Repository */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <a
+                    href="mailto:clinical-support@oncosphere.org"
+                    className="lp-footer-contact-pill"
+                    aria-label="Email Onco Sphere Clinical Coordination Desk"
+                  >
+                    <RiMailLine size={13} className="text-sky-400 shrink-0" />
+                    <span>clinical-support@oncosphere.org</span>
+                  </a>
+                  <a
+                    href="https://github.com/KayasSecret/Onco-Sphere--AI-Powered-Cancer-Institute-Management-Clinical-Research-Platform"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lp-footer-icon-btn"
+                    aria-label="Official Onco Sphere GitHub Repository"
+                    title="Official GitHub Repository"
+                  >
+                    <RiGithubFill size={16} />
+                  </a>
+                </div>
+              </div>
+
+              {/* Column 1: Platform */}
+              <nav aria-label="Platform Navigation" className="text-left">
+                <h2 className="lp-footer-col-title">Platform</h2>
+                <ul className="lp-footer-list">
+                  <li>
+                    <Link to={isAuthenticated ? '/dashboard' : '/login'} className="lp-footer-link">
+                      Clinical Intelligence
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to={isAuthenticated ? '/patients' : '/login'} className="lp-footer-link">
+                      Patient Records
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register/apply" className="lp-footer-link">
+                      Clinical Research
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register/apply" className="lp-footer-link">
+                      Clinical Trials
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+
+              {/* Column 2: Explore */}
+              <nav aria-label="Explore Onco Sphere" className="text-left">
+                <h2 className="lp-footer-col-title">Explore</h2>
+                <ul className="lp-footer-list">
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('about')} className="lp-footer-link">
+                      About Onco Sphere
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('mission')} className="lp-footer-link">
+                      Our Mission
+                    </button>
+                  </li>
+                  <li>
+                    <Link to="/register/apply" className="lp-footer-link">
+                      Research &amp; Innovation
+                    </Link>
+                  </li>
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('contact')} className="lp-footer-link">
+                      Contact Us
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+
+              {/* Column 3: Resources & Support */}
+              <nav aria-label="Resources and Support" className="text-left">
+                <h2 className="lp-footer-col-title">Resources &amp; Support</h2>
+                <ul className="lp-footer-list">
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('help')} className="lp-footer-link">
+                      Help Center
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('faqs')} className="lp-footer-link">
+                      FAQs
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('docs')} className="lp-footer-link">
+                      Documentation
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('support')} className="lp-footer-link">
+                      Technical Support
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+
+              {/* Column 4: Legal & Privacy */}
+              <nav aria-label="Legal and Privacy" className="text-left">
+                <h2 className="lp-footer-col-title">Legal &amp; Privacy</h2>
+                <ul className="lp-footer-list">
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('privacy')} className="lp-footer-link">
+                      Privacy Policy
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('terms')} className="lp-footer-link">
+                      Terms of Service
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('disclaimer')} className="lp-footer-link">
+                      Medical Disclaimer
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" onClick={() => setActiveInfoKey('accessibility')} className="lp-footer-link">
+                      Accessibility
+                    </button>
+                  </li>
+                </ul>
+              </nav>
             </div>
 
-            <p className="text-[11px] font-normal text-slate-400 max-w-sm sm:max-w-lg leading-relaxed px-2">
-              Institutional oncology research & clinical intelligence registry. Protected Health Information (PHI) access is strictly monitored and audited.
-            </p>
+            {/* Bottom Section: Divider, Copyright, Security Statement & Back to Top */}
+            <div className="lp-footer-bottom">
+              <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4 text-center md:text-left">
+                <span className="text-xs font-medium text-slate-300 whitespace-nowrap">
+                  &copy; 2026 Onco Sphere. All rights reserved.
+                </span>
+                <span className="hidden md:inline text-slate-700">|</span>
+                <span className="text-[11px] text-slate-400 leading-relaxed">
+                  Protected Health Information (PHI) access is strictly role-governed, encrypted, and audited for authorized clinical and research use.
+                </span>
+              </div>
 
-            <p className="text-[10px] font-normal text-slate-500 tracking-wider">
-              &copy; {new Date().getFullYear()} Onco Sphere — Oncology Intelligence. All rights reserved.
-            </p>
+              <button
+                type="button"
+                onClick={scrollToTop}
+                className="lp-back-to-top"
+                aria-label="Scroll back to top"
+              >
+                <span>Back to Top</span>
+                <RiArrowUpLine size={14} />
+              </button>
+            </div>
           </div>
         </footer>
+
+        {/* ── Lightweight Institutional Reference Modal ─────────────────── */}
+        {activeInfo && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lp-footer-modal-title"
+            onClick={() => setActiveInfoKey(null)}
+          >
+            <div
+              className="relative w-full max-w-md rounded-xl border border-sky-400/25 bg-[#050E24] p-6 text-left shadow-[0_0_40px_rgba(3,8,23,0.9)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-400 block mb-1">
+                    {activeInfo.category}
+                  </span>
+                  <h3 id="lp-footer-modal-title" className="text-lg font-bold text-white">
+                    {activeInfo.title}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveInfoKey(null)}
+                  aria-label="Close dialog"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <RiCloseLine size={18} />
+                </button>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5">
+                {activeInfo.body}
+              </p>
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+                <Link
+                  to="/register/apply"
+                  onClick={() => setActiveInfoKey(null)}
+                  className="lp-nav-signin"
+                  style={{ height: '34px', fontSize: '0.76rem', padding: '0.35rem 0.9rem' }}
+                >
+                  Researcher Portal
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setActiveInfoKey(null)}
+                  className="lp-nav-signup cursor-pointer"
+                  style={{ height: '34px', fontSize: '0.76rem', padding: '0.35rem 1rem' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )
