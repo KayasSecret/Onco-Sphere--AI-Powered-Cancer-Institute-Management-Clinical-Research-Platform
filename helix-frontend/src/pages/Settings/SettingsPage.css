@@ -1,0 +1,700 @@
+/* ============================================================================
+   ONCO SPHERE — SYSTEM SETTINGS & CLINICAL PREFERENCES WORKSPACE
+   Deep Navy, Royal Blue, Cyan Accents, Glassmorphism & Full Dark Mode Support
+   ============================================================================ */
+
+.onco-settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  padding-bottom: 2.5rem;
+  animation: oncoSettingsFadeIn 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes oncoSettingsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced Motion Global Support */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* ── 1. Top Clinical Settings Hero Header ────────────────────────────────── */
+.onco-settings-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  padding: 1.5rem 1.85rem;
+  background: linear-gradient(135deg, #0b1536 0%, #152458 55%, #1d3888 100%);
+  color: #ffffff;
+  box-shadow:
+    0 18px 40px -14px rgba(11, 21, 54, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.onco-settings-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 86% 18%, rgba(56, 189, 248, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 12% 85%, rgba(99, 102, 241, 0.18) 0%, transparent 40%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+  pointer-events: none;
+}
+
+.onco-settings-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.onco-settings-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(186, 230, 253, 0.85);
+  margin-bottom: 0.5rem;
+}
+
+.onco-settings-breadcrumb a {
+  color: rgba(186, 230, 253, 0.85) !important;
+  transition: color 150ms ease;
+}
+
+.onco-settings-breadcrumb a:hover {
+  color: #ffffff !important;
+}
+
+.onco-settings-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  color: #7dd3fc;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+}
+
+.onco-settings-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+}
+
+.onco-settings-subtitle {
+  font-size: 0.82rem;
+  color: rgba(226, 232, 240, 0.86);
+  margin-top: 0.3rem;
+  max-width: 600px;
+  line-height: 1.48;
+}
+
+.onco-settings-telemetry-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.onco-settings-telemetry-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 13px;
+  background: rgba(15, 23, 42, 0.46);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  backdrop-filter: blur(10px);
+}
+
+.onco-settings-telemetry-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(186, 230, 253, 0.8);
+}
+
+.onco-settings-telemetry-val {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-top: 1px;
+}
+
+/* ── 2. Main Split Workspace Container ───────────────────────────────────── */
+.onco-settings-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.35rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .onco-settings-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 3. Left Navigation Dock ─────────────────────────────────────────────── */
+.onco-settings-dock {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: 0 8px 26px -10px rgba(15, 23, 42, 0.07);
+  position: sticky;
+  top: 1rem;
+}
+
+.onco-dock-operator-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(37, 45, 126, 0.06) 0%, rgba(61, 107, 197, 0.1) 100%);
+  border: 1px solid rgba(61, 107, 197, 0.18);
+  margin-bottom: 0.9rem;
+}
+
+.dark .onco-dock-operator-card {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.28) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.onco-dock-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1d3888 0%, var(--color-blue) 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+}
+
+.onco-dock-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+@media (max-width: 960px) {
+  .onco-dock-nav-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+}
+
+.onco-dock-nav-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border-radius: 13px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 960px) {
+  .onco-dock-nav-btn {
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+
+.onco-dock-nav-btn:hover {
+  background: var(--surface-hover);
+  color: var(--ink-primary);
+  transform: translateX(2px);
+}
+
+.onco-dock-nav-btn.active {
+  background: linear-gradient(135deg, #152458 0%, var(--color-blue) 100%);
+  color: #ffffff !important;
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 10px 22px -6px rgba(37, 99, 235, 0.42);
+}
+
+.onco-dock-nav-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-base);
+  color: var(--color-blue);
+  flex-shrink: 0;
+  transition: all 180ms ease;
+}
+
+.onco-dock-nav-btn.active .onco-dock-nav-icon {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.onco-dock-nav-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.onco-dock-nav-desc {
+  font-size: 0.66rem;
+  opacity: 0.78;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+/* ── 4. Right Content Panel & Section Animation ──────────────────────────── */
+.onco-settings-content {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 20px;
+  padding: 1.65rem 1.85rem;
+  box-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.07);
+  min-height: 560px;
+}
+
+@media (max-width: 640px) {
+  .onco-settings-content {
+    padding: 1.15rem;
+  }
+}
+
+.onco-section-pane {
+  animation: oncoPaneSlideIn 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+@keyframes oncoPaneSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onco-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.onco-section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-blue);
+  background: rgba(61, 107, 197, 0.1);
+  border: 1px solid rgba(61, 107, 197, 0.22);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  margin-bottom: 0.4rem;
+}
+
+.onco-section-title {
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: var(--ink-primary);
+  letter-spacing: -0.015em;
+}
+
+.onco-section-desc {
+  font-size: 0.78rem;
+  color: var(--ink-secondary);
+  margin-top: 0.25rem;
+  line-height: 1.45;
+}
+
+/* ── 5. Account Overview Identity Card & Dossier Grid ────────────────────── */
+.onco-identity-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 1.4rem 1.5rem;
+  background: linear-gradient(135deg, #0d1b42 0%, #172b69 60%, #23449a 100%);
+  color: #ffffff;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 14px 32px -12px rgba(13, 27, 66, 0.35);
+}
+
+.onco-identity-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 90% 20%, rgba(56, 189, 248, 0.22), transparent 50%);
+  pointer-events: none;
+}
+
+.onco-identity-banner-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.onco-avatar-trigger {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font-size: 1.85rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 10px 24px rgba(6, 182, 212, 0.3);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.onco-avatar-trigger:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 28px rgba(56, 189, 248, 0.45);
+}
+
+.onco-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 21, 54, 0.72);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  color: #ffffff;
+}
+
+.onco-avatar-trigger:hover .onco-avatar-overlay {
+  opacity: 1;
+}
+
+.onco-settings-card {
+  background: var(--surface-base);
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  padding: 1.2rem 1.3rem;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.dark .onco-settings-card {
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.onco-settings-card:hover {
+  border-color: rgba(61, 107, 197, 0.35);
+}
+
+.onco-dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .onco-dossier-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.onco-field-tile {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  padding: 0.95rem 1.1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: all 180ms ease;
+}
+
+.onco-field-tile:hover {
+  border-color: rgba(61, 107, 197, 0.4);
+  box-shadow: 0 6px 16px -8px rgba(15, 23, 42, 0.08);
+}
+
+.onco-field-label {
+  font-size: 0.67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-secondary);
+}
+
+.onco-field-val {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin-top: 0.25rem;
+  word-break: break-word;
+}
+
+/* ── 6. Appearance Theme & Calibration Cards ─────────────────────────────── */
+.onco-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .onco-theme-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.onco-theme-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.15rem;
+  border-radius: 16px;
+  background: var(--surface-card);
+  border: 2px solid var(--surface-border);
+  cursor: pointer;
+  text-align: left;
+  transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.onco-theme-card:hover {
+  border-color: rgba(61, 107, 197, 0.5);
+  transform: translateY(-2px);
+}
+
+.onco-theme-card.selected {
+  border-color: var(--color-blue);
+  box-shadow:
+    0 0 0 4px rgba(61, 107, 197, 0.14),
+    0 12px 26px -10px rgba(37, 99, 235, 0.25);
+}
+
+.onco-accent-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .onco-accent-swatch-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.onco-accent-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--surface-border);
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: all 180ms ease;
+  text-align: left;
+}
+
+.onco-accent-btn:hover {
+  border-color: var(--color-blue);
+}
+
+.onco-accent-btn.selected {
+  border-color: var(--color-blue);
+  background: rgba(61, 107, 197, 0.08);
+  box-shadow: 0 0 0 3px rgba(61, 107, 197, 0.12);
+}
+
+/* Custom Clinical Toggle Switch */
+.onco-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--surface-border);
+  border: none;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+  flex-shrink: 0;
+  padding: 2px;
+}
+
+.onco-switch.checked {
+  background: linear-gradient(135deg, #1d3888 0%, var(--color-blue) 100%);
+}
+
+.onco-switch-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateX(0);
+}
+
+.onco-switch.checked .onco-switch-thumb {
+  transform: translateX(20px);
+}
+
+/* ── 7. Storage Telemetry & Analytics ────────────────────────────────────── */
+.onco-storage-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 1.35rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .onco-storage-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.onco-storage-cat-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  padding: 0.9rem 1.05rem;
+  transition: all 180ms ease;
+  cursor: pointer;
+}
+
+.onco-storage-cat-card:hover,
+.onco-storage-cat-card.highlighted {
+  border-color: var(--color-blue);
+  box-shadow: 0 8px 20px -10px rgba(37, 99, 235, 0.22);
+  transform: translateY(-1px);
+}
+
+/* ── 8. Security Complexity & Checklist ──────────────────────────────────── */
+.onco-strength-bar-track {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.onco-strength-segment {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--surface-border);
+  transition: background-color 220ms ease;
+}
+
+/* ── 9. Buttons & Action Controls ────────────────────────────────────────── */
+.onco-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.15rem;
+  border-radius: 11px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1d3888 0%, var(--color-blue) 100%);
+  color: #ffffff !important;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 8px 18px -6px rgba(37, 99, 235, 0.45);
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.onco-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px -6px rgba(37, 99, 235, 0.6);
+  filter: brightness(1.06);
+}
+
+.onco-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.onco-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border-radius: 11px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: var(--surface-card);
+  color: var(--ink-primary) !important;
+  border: 1px solid var(--surface-border);
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.onco-btn-secondary:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: rgba(61, 107, 197, 0.4);
+}
