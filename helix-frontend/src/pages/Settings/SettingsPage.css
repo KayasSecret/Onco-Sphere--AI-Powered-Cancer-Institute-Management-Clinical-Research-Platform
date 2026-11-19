@@ -8,6 +8,8 @@
   flex-direction: column;
   gap: 1.35rem;
   padding-bottom: 2.5rem;
+  min-width: 0;
+  max-width: 100%;
   animation: oncoSettingsFadeIn 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -36,7 +38,7 @@ html.reduce-motion *::after {
   position: relative;
   overflow: hidden;
   border-radius: 20px;
-  padding: 1.5rem 1.85rem;
+  padding: 1.4rem 1.75rem;
   background: linear-gradient(135deg, #0b1536 0%, #152458 55%, #1d3888 100%);
   color: #ffffff;
   box-shadow:
@@ -65,17 +67,18 @@ html.reduce-motion *::after {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1.25rem;
+  gap: 1.15rem;
 }
 
 .onco-settings-breadcrumb {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
   font-size: 0.72rem;
   font-weight: 600;
   color: rgba(186, 230, 253, 0.85);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .onco-settings-breadcrumb a {
@@ -87,24 +90,8 @@ html.reduce-motion *::after {
   color: #ffffff !important;
 }
 
-.onco-settings-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.25rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(56, 189, 248, 0.14);
-  border: 1px solid rgba(56, 189, 248, 0.32);
-  color: #7dd3fc;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 0.45rem;
-}
-
 .onco-settings-title {
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   font-weight: 800;
   color: #ffffff !important;
   letter-spacing: -0.025em;
@@ -112,25 +99,25 @@ html.reduce-motion *::after {
 }
 
 .onco-settings-subtitle {
-  font-size: 0.82rem;
+  font-size: 0.81rem;
   color: rgba(226, 232, 240, 0.86);
   margin-top: 0.3rem;
-  max-width: 600px;
-  line-height: 1.48;
+  max-width: 580px;
+  line-height: 1.46;
 }
 
 .onco-settings-telemetry-strip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.6rem;
 }
 
 .onco-settings-telemetry-pill {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.5rem 0.9rem;
+  padding: 0.48rem 0.85rem;
   border-radius: 13px;
   background: rgba(15, 23, 42, 0.46);
   border: 1px solid rgba(148, 163, 184, 0.24);
@@ -138,15 +125,15 @@ html.reduce-motion *::after {
 }
 
 .onco-settings-telemetry-label {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(186, 230, 253, 0.8);
+  color: rgba(186, 230, 253, 0.82);
 }
 
 .onco-settings-telemetry-val {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 800;
   color: #ffffff;
   margin-top: 1px;
@@ -155,19 +142,11 @@ html.reduce-motion *::after {
 /* ── 2. Main Split Workspace Container ───────────────────────────────────── */
 .onco-settings-shell {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 276px minmax(0, 1fr);
   gap: 1.35rem;
   align-items: start;
-}
-
-@media (max-width: 960px) {
-  .onco-settings-shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .onco-settings-dock {
-    position: static;
-  }
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ── 3. Left Navigation Dock ─────────────────────────────────────────────── */
@@ -218,24 +197,17 @@ html.reduce-motion *::after {
 .onco-dock-nav-list {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-}
-
-@media (max-width: 960px) {
-  .onco-dock-nav-list {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
-  }
+  gap: 0.4rem;
 }
 
 .onco-dock-nav-btn {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  justify-content: space-between;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.75rem 0.9rem;
+  padding: 0.72rem 0.9rem;
   border-radius: 13px;
   border: 1px solid transparent;
   background: transparent;
@@ -245,24 +217,16 @@ html.reduce-motion *::after {
   color: var(--ink-secondary);
 }
 
-@media (max-width: 960px) {
-  .onco-dock-nav-btn {
-    width: auto;
-    flex-shrink: 0;
-  }
-}
-
 .onco-dock-nav-btn:hover {
   background: var(--surface-hover);
   color: var(--ink-primary);
-  transform: translateX(2px);
 }
 
 .onco-dock-nav-btn.active {
   background: linear-gradient(135deg, #152458 0%, var(--color-blue) 100%);
   color: #ffffff !important;
   border-color: rgba(56, 189, 248, 0.35);
-  box-shadow: 0 10px 22px -6px rgba(37, 99, 235, 0.42);
+  box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.42);
 }
 
 .onco-dock-nav-icon {
@@ -292,7 +256,7 @@ html.reduce-motion *::after {
 
 .onco-dock-nav-desc {
   font-size: 0.66rem;
-  opacity: 0.78;
+  opacity: 0.8;
   margin-top: 2px;
   line-height: 1.2;
 }
@@ -302,22 +266,19 @@ html.reduce-motion *::after {
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
   border-radius: 20px;
-  padding: 1.65rem 1.85rem;
+  padding: 1.6rem 1.8rem;
   box-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.07);
-  min-height: 560px;
-}
-
-@media (max-width: 640px) {
-  .onco-settings-content {
-    padding: 1.15rem;
-  }
+  min-height: 540px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .onco-section-pane {
-  animation: oncoPaneSlideIn 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: oncoPaneSlideIn 240ms cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
-  gap: 1.35rem;
+  gap: 1.25rem;
+  min-width: 0;
 }
 
 @keyframes oncoPaneSlideIn {
@@ -336,8 +297,8 @@ html.reduce-motion *::after {
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 1.1rem;
+  gap: 0.85rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--surface-border);
 }
 
@@ -345,10 +306,10 @@ html.reduce-motion *::after {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.65rem;
+  font-size: 0.64rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
   color: var(--color-blue);
   background: rgba(61, 107, 197, 0.1);
   border: 1px solid rgba(61, 107, 197, 0.22);
@@ -358,7 +319,7 @@ html.reduce-motion *::after {
 }
 
 .onco-section-title {
-  font-size: 1.22rem;
+  font-size: 1.18rem;
   font-weight: 800;
   color: var(--ink-primary);
   letter-spacing: -0.015em;
@@ -367,7 +328,7 @@ html.reduce-motion *::after {
 .onco-section-desc {
   font-size: 0.78rem;
   color: var(--ink-secondary);
-  margin-top: 0.25rem;
+  margin-top: 0.22rem;
   line-height: 1.45;
 }
 
@@ -376,7 +337,7 @@ html.reduce-motion *::after {
   position: relative;
   overflow: hidden;
   border-radius: 18px;
-  padding: 1.4rem 1.5rem;
+  padding: 1.3rem 1.45rem;
   background: linear-gradient(135deg, #0d1b42 0%, #172b69 60%, #23449a 100%);
   color: #ffffff;
   border: 1px solid rgba(56, 189, 248, 0.25);
@@ -398,18 +359,18 @@ html.reduce-motion *::after {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1.25rem;
+  gap: 1.1rem;
 }
 
 .onco-avatar-trigger {
   position: relative;
-  width: 78px;
-  height: 78px;
-  border-radius: 20px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
   background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
   border: 2px solid rgba(255, 255, 255, 0.35);
   color: #ffffff;
-  font-size: 1.85rem;
+  font-size: 1.75rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -447,7 +408,8 @@ html.reduce-motion *::after {
   background: var(--surface-base);
   border: 1px solid var(--surface-border);
   border-radius: 16px;
-  padding: 1.2rem 1.3rem;
+  padding: 1.15rem 1.25rem;
+  min-width: 0;
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
@@ -462,24 +424,19 @@ html.reduce-motion *::after {
 .onco-dossier-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
-}
-
-@media (max-width: 640px) {
-  .onco-dossier-grid {
-    grid-template-columns: 1fr;
-  }
+  gap: 0.85rem;
 }
 
 .onco-field-tile {
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
   border-radius: 14px;
-  padding: 0.95rem 1.1rem;
+  padding: 0.9rem 1.05rem;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.65rem;
+  min-width: 0;
   transition: all 180ms ease;
 }
 
@@ -489,7 +446,7 @@ html.reduce-motion *::after {
 }
 
 .onco-field-label {
-  font-size: 0.67rem;
+  font-size: 0.66rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -497,11 +454,12 @@ html.reduce-motion *::after {
 }
 
 .onco-field-val {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--ink-primary);
-  margin-top: 0.25rem;
+  margin-top: 0.22rem;
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* ── 6. Appearance Theme & Calibration Cards ─────────────────────────────── */
@@ -511,18 +469,12 @@ html.reduce-motion *::after {
   gap: 1rem;
 }
 
-@media (max-width: 640px) {
-  .onco-theme-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .onco-theme-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  padding: 1.15rem;
+  gap: 0.8rem;
+  padding: 1.05rem;
   border-radius: 16px;
   background: var(--surface-card);
   border: 2px solid var(--surface-border);
@@ -546,26 +498,21 @@ html.reduce-motion *::after {
 .onco-accent-swatch-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-@media (max-width: 640px) {
-  .onco-accent-swatch-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  gap: 0.7rem;
 }
 
 .onco-accent-btn {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.7rem 0.85rem;
+  gap: 0.6rem;
+  padding: 0.65rem 0.8rem;
   border-radius: 12px;
   border: 1.5px solid var(--surface-border);
   background: var(--surface-card);
   cursor: pointer;
   transition: all 180ms ease;
   text-align: left;
+  min-width: 0;
 }
 
 .onco-accent-btn:hover {
@@ -613,22 +560,16 @@ html.reduce-motion *::after {
 /* ── 7. Storage Telemetry & Analytics ────────────────────────────────────── */
 .onco-storage-layout {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  gap: 1.35rem;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 1.25rem;
   align-items: center;
-}
-
-@media (max-width: 768px) {
-  .onco-storage-layout {
-    grid-template-columns: 1fr;
-  }
 }
 
 .onco-storage-cat-card {
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
   border-radius: 14px;
-  padding: 0.9rem 1.05rem;
+  padding: 0.85rem 1rem;
   transition: all 180ms ease;
   cursor: pointer;
 }
@@ -637,7 +578,6 @@ html.reduce-motion *::after {
 .onco-storage-cat-card.highlighted {
   border-color: var(--color-blue);
   box-shadow: 0 8px 20px -10px rgba(37, 99, 235, 0.22);
-  transform: translateY(-1px);
 }
 
 /* ── 8. Security Complexity & Checklist ──────────────────────────────────── */
@@ -703,4 +643,113 @@ html.reduce-motion *::after {
 .onco-btn-secondary:hover:not(:disabled) {
   background: var(--surface-hover);
   border-color: rgba(61, 107, 197, 0.4);
+}
+
+/* ============================================================================
+   RESPONSIVE BREAKPOINTS (Placed AFTER base rules for clean cascade order)
+   ============================================================================ */
+
+/* Tablet & Below (<= 960px): Single-column layout, non-sticky dock */
+@media (max-width: 960px) {
+  .onco-settings-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .onco-settings-dock {
+    position: static;
+    top: auto;
+    padding: 0.75rem;
+    border-radius: 16px;
+  }
+}
+
+/* Tablet Horizontal Tab Strip (768px – 960px) */
+@media (min-width: 768px) and (max-width: 960px) {
+  .onco-dock-nav-list {
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .onco-dock-nav-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .onco-dock-nav-btn {
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+
+/* Mobile (<= 767px): Vertical stacked navigation, compact cards, zero overflow */
+@media (max-width: 767px) {
+  .onco-settings-page {
+    gap: 0.95rem;
+  }
+
+  .onco-settings-dock {
+    padding: 0.7rem;
+    border-radius: 15px;
+  }
+
+  .onco-dock-nav-list {
+    flex-direction: column;
+    overflow-x: visible;
+    gap: 0.4rem;
+  }
+
+  .onco-dock-nav-btn {
+    width: 100%;
+    padding: 0.68rem 0.8rem;
+    border-color: var(--surface-border);
+    background: var(--surface-base);
+  }
+
+  .onco-dock-nav-btn.active {
+    border-color: rgba(56, 189, 248, 0.38);
+  }
+
+  .onco-settings-content {
+    padding: 1rem;
+    border-radius: 16px;
+    min-height: 0;
+  }
+
+  .onco-identity-banner {
+    padding: 1.05rem;
+    border-radius: 15px;
+  }
+
+  .onco-settings-card {
+    padding: 0.95rem;
+    border-radius: 14px;
+  }
+
+  .onco-storage-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .onco-dossier-grid,
+  .onco-theme-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .onco-accent-swatch-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Small Phones (<= 375px): Extra-clean single-column fit */
+@media (max-width: 375px) {
+  .onco-accent-swatch-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .onco-avatar-trigger {
+    width: 60px;
+    height: 60px;
+    font-size: 1.45rem;
+  }
 }

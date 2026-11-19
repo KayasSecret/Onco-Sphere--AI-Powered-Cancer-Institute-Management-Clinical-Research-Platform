@@ -38,7 +38,6 @@ import {
   RiFileCopyLine,
   RiLockPasswordLine,
   RiLogoutBoxRLine,
-  RiSparklingLine,
   RiLayoutLeftLine,
   RiFontSize,
   RiContrastDrop2Line,
@@ -496,25 +495,21 @@ export default function SettingsPage() {
       {/* ── Top Clinical Control Center Hero Banner ───────────────────────── */}
       <section className="onco-settings-hero">
         <div className="onco-settings-hero-inner">
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="onco-settings-breadcrumb">
               <Link to="/dashboard">Dashboard</Link>
               <span>/</span>
               <span className="text-white">System Settings</span>
             </div>
-            <div className="onco-settings-eyebrow">
-              <RiSparklingLine size={12} />
-              <span>Clinical Control Center · Preferences & Telemetry</span>
-            </div>
-            <h1 className="onco-settings-title">Settings & Platform Configuration</h1>
+            <h1 className="onco-settings-title">Settings &amp; Platform Configuration</h1>
             <p className="onco-settings-subtitle">
-              Calibrate your clinical operator profile, visual laboratory interface, encrypted storage
-              allocation, authentication credentials, and system specifications.
+              Manage your clinical operator profile, interface theme, storage analytics, security
+              credentials and platform details.
             </p>
           </div>
 
-          {/* Right Live Telemetry Strip */}
-          <div className="onco-settings-telemetry-strip">
+          {/* Right Live Telemetry Strip (Desktop & Tablet) */}
+          <div className="!hidden md:!flex onco-settings-telemetry-strip">
             <div className="onco-settings-telemetry-pill">
               <div className="w-8 h-8 rounded-lg bg-cyan-400/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300">
                 <RiShieldCheckLine size={17} />
@@ -554,8 +549,8 @@ export default function SettingsPage() {
       <div className="onco-settings-shell">
         {/* Left Sub-Navigation Dock */}
         <aside className="onco-settings-dock">
-          {/* Operator Mini Summary Card */}
-          <div className="onco-dock-operator-card">
+          {/* Operator Mini Summary Card (Desktop sidebar only — avoids duplicating Account Overview hero on mobile) */}
+          <div className="!hidden lg:!flex onco-dock-operator-card">
             <div className="onco-dock-avatar">
               {user?.photo_url ? (
                 <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover" />
@@ -575,6 +570,12 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          <div className="lg:hidden px-1.5 pb-2 mb-1.5 border-b border-surface-border">
+            <p className="text-[10px] font-extrabold uppercase tracking-widest text-brand-blue">
+              Settings Sections
+            </p>
+          </div>
+
           {/* Section Navigation Buttons */}
           <nav className="onco-dock-nav-list" aria-label="Settings Sections">
             {navTabs.map((tab) => {
@@ -587,13 +588,20 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`onco-dock-nav-btn ${isActive ? 'active' : ''}`}
                 >
-                  <div className="onco-dock-nav-icon">
-                    <IconComponent size={17} />
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="onco-dock-nav-icon">
+                      <IconComponent size={17} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="onco-dock-nav-title truncate">{tab.label}</div>
+                      <div className="onco-dock-nav-desc block md:hidden lg:block truncate">
+                        {tab.desc}
+                      </div>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="onco-dock-nav-title">{tab.label}</div>
-                    <div className="onco-dock-nav-desc hidden md:block">{tab.desc}</div>
-                  </div>
+                  {isActive && (
+                    <span className="w-2 h-2 rounded-full bg-cyan-300 shrink-0 md:hidden" />
+                  )}
                 </button>
               )
             })}
@@ -623,7 +631,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setIsEditingProfile(true)}
-                    className="onco-btn-primary"
+                    className="onco-btn-primary w-full sm:w-auto"
                   >
                     <RiEditLine size={15} />
                     <span>Edit Profile Details</span>
@@ -675,7 +683,7 @@ export default function SettingsPage() {
                         </span>
                       </div>
 
-                      <p className="text-xs text-sky-100/85 font-medium truncate">{user?.email}</p>
+                      <p className="text-xs text-sky-100/85 font-medium break-all">{user?.email}</p>
 
                       <div className="flex flex-wrap items-center gap-2 pt-0.5">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/12 text-sky-200 border border-white/15">
