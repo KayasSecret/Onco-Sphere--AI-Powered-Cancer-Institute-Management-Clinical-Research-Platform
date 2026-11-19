@@ -130,8 +130,21 @@ export default function ReportCreatorPage() {
   const isPrintTriggered = searchParams.get('print') === 'true'
 
   const printAreaRef = useRef(null)
-  const previewSectionRef = useRef(null)
-  const formSectionRef = useRef(null)
+
+  // Responsive preview state: render live A4 preview only at >= 768px (md+)
+  const [isDesktopPreview, setIsDesktopPreview] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : true
+  )
+  // On-demand offscreen render flag for mobile Print / Download PDF
+  const [mobileExportRender, setMobileExportRender] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const onChange = (e) => setIsDesktopPreview(e.matches)
+    setIsDesktopPreview(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   // 1. Loading & System Configuration
   const [loading, setLoading] = useState(false)
@@ -563,14 +576,27 @@ export default function ReportCreatorPage() {
 
   // Direct high-resolution 3-page A4 PDF download (captures each [data-pdf-page] onto its own A4 page)
   const handleDownloadPDF = async () => {
-    const container = printAreaRef.current
-    if (!container) return
-
-    const pageNodes = container.querySelectorAll('[data-pdf-page]')
-    const targets = pageNodes.length > 0 ? Array.from(pageNodes) : [container]
-
     const toastId = toast.loading('Generating 3-page ICSR Oxidative Stress PDF…')
+    let mountedForMobile = false
     try {
+      // On mobile (< 768px), mount the A4 document offscreen on demand so PDF output is identical without live-render overhead
+      if (!isDesktopPreview && !printAreaRef.current) {
+        mountedForMobile = true
+        setMobileExportRender(true)
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 120)))
+        )
+      }
+
+      const container = printAreaRef.current
+      if (!container) {
+        toast.error('Unable to initialize PDF layout.', { id: toastId })
+        return
+      }
+
+      const pageNodes = container.querySelectorAll('[data-pdf-page]')
+      const targets = pageNodes.length > 0 ? Array.from(pageNodes) : [container]
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -601,16 +627,40 @@ export default function ReportCreatorPage() {
       toast.success('PDF downloaded successfully.', { id: toastId })
     } catch {
       toast.error('Failed to generate PDF file.', { id: toastId })
+    } finally {
+      if (mountedForMobile) {
+        setMobileExportRender(false)
+      }
     }
   }
 
   const triggerSystemPrint = async () => {
+    let mountedForMobile = false
+    if (!isDesktopPreview && !printAreaRef.current) {
+      mountedForMobile = true
+      setMobileExportRender(true)
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 120)))
+      )
+    }
+
     if (id) {
       try {
         await reportService.logPrint(id)
       } catch {}
     }
-    window.print()
+
+    if (mountedForMobile) {
+      const cleanup = () => {
+        setMobileExportRender(false)
+        window.removeEventListener('afterprint', cleanup)
+      }
+      window.addEventListener('afterprint', cleanup)
+      window.print()
+      setTimeout(cleanup, 1500)
+    } else {
+      window.print()
+    }
   }
 
   const damageParams = paramValues.filter((p) => p.section === 'Oxidative Damage')
@@ -651,7 +701,7 @@ export default function ReportCreatorPage() {
               <h1 className="text-xl sm:text-3xl font-extrabold text-ink-primary tracking-tight break-words">
                 {id ? `Report Creator (${reportNumber} · v${version})` : 'New Oxidative Stress Report'}
               </h1>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.14em] bg-brand-blue/10 dark:bg-sky-500/15 text-brand-navy dark:text-sky-300 border border-brand-blue/20">
+              <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.14em] bg-brand-blue/10 dark:bg-sky-500/15 text-brand-navy dark:text-sky-300 border border-brand-blue/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live A4 Synchronized
               </span>
@@ -723,32 +773,12 @@ export default function ReportCreatorPage() {
         </div>
       </div>
 
-      {/* ── Mobile Quick-Jump Bar (Visible below xl) ─────────────────────── */}
-      <div className="xl:hidden flex items-center gap-2 p-1.5 rounded-xl bg-surface-card border border-surface-border shadow-2xs no-print">
-        <button
-          type="button"
-          onClick={() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className="flex-1 py-2 px-3 rounded-lg bg-brand-blue/10 text-brand-blue text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          <RiFlaskLine size={14} />
-          <span>Clinical Form (6)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => previewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className="flex-1 py-2 px-3 rounded-lg bg-surface-base hover:bg-surface-hover text-ink-primary border border-surface-border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          <RiFileTextLine size={14} className="text-brand-blue" />
-          <span>Live A4 Preview</span>
-        </button>
-      </div>
-
-      {/* ── Split-Screen Workspace: Left Form + Right Live A4 Preview ───── */}
+      {/* ── Split-Screen Workspace: Left Form + Right Live A4 Preview (md+) ── */}
       <div className="flex flex-col xl:flex-row gap-5 xl:gap-6 items-start">
         {/* ══════════════════════════════════════════════════════════════════
             LEFT COLUMN: 6-SECTION CLINICAL DATA ENTRY WORKSPACE
         ══════════════════════════════════════════════════════════════════ */}
-        <div ref={formSectionRef} className="w-full xl:w-[490px] space-y-4 no-print shrink-0">
+        <div className="w-full xl:w-[490px] space-y-4 no-print shrink-0">
           {/* ── SECTION 1: PATIENT ACCOUNT ───────────────────────────────── */}
           <div className="onco-rep-section">
             <button
@@ -1331,68 +1361,101 @@ export default function ReportCreatorPage() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            RIGHT COLUMN: LIVE SYNCHRONIZED 3-PAGE A4 REPORT PREVIEW
+            RIGHT COLUMN: LIVE SYNCHRONIZED 3-PAGE A4 REPORT PREVIEW (md+ ONLY)
+            Hidden on mobile (< 768px) to keep mobile data-entry distraction-free.
         ══════════════════════════════════════════════════════════════════ */}
-        <div ref={previewSectionRef} className="flex-1 w-full min-w-0 onco-preview-shell p-3 sm:p-6 flex flex-col">
-          <div className="w-full max-w-[794px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 no-print">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="text-xs font-bold text-ink-primary uppercase tracking-wider truncate">
-                Live A4 Diagnostic Preview (3-Page ICSR)
-              </span>
+        {isDesktopPreview && (
+          <div className="hidden md:flex flex-1 w-full min-w-0 onco-preview-shell p-4 sm:p-6 flex-col">
+            <div className="w-full max-w-[794px] mx-auto flex items-center justify-between gap-2.5 mb-3 no-print">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-xs font-bold text-ink-primary uppercase tracking-wider truncate">
+                  Live A4 Diagnostic Preview (3-Page ICSR)
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={triggerSystemPrint}
+                  className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-md bg-surface-card hover:bg-surface-hover border border-surface-border text-xs font-semibold text-ink-primary cursor-pointer shadow-2xs"
+                >
+                  <RiPrinterLine size={13} /> Print
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadPDF}
+                  className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-md bg-brand-blue text-white hover:bg-brand-blue-dark text-xs font-semibold cursor-pointer shadow-2xs"
+                >
+                  <RiDownload2Line size={13} /> Download PDF
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={triggerSystemPrint}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md bg-surface-card hover:bg-surface-hover border border-surface-border text-xs font-semibold text-ink-primary cursor-pointer shadow-2xs"
-              >
-                <RiPrinterLine size={13} /> Print
-              </button>
-              <button
-                type="button"
-                onClick={handleDownloadPDF}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md bg-brand-blue text-white hover:bg-brand-blue-dark text-xs font-semibold cursor-pointer shadow-2xs"
-              >
-                <RiDownload2Line size={13} /> Download PDF
-              </button>
+
+            <div className="w-full overflow-x-auto pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="w-fit mx-auto">
+                <OxidativeReportDocument
+                  ref={printAreaRef}
+                  instSettings={instSettings}
+                  signatureUrl={matchedSignatureUrl}
+                  reportNumber={reportNumber}
+                  version={version}
+                  reportStatus={reportStatus}
+                  patientName={patientDetails.name}
+                  patientCode={patientDetails.patient_code || patientDetails.uhid}
+                  patientAge={patientDetails.age}
+                  patientGender={patientDetails.gender}
+                  referenceBy={referenceBy}
+                  doctorName={doctorName}
+                  reportDate={reportDate}
+                  collectionDate={collectionDate}
+                  sampleType={sampleType}
+                  labNumber={labNumber}
+                  damageParams={damageParams}
+                  defenceParams={defenceParams}
+                  damageScore={damageScore}
+                  defenceScore={defenceScore}
+                  ratioScore={ratioScore}
+                  overallSummary={overallSummary}
+                  disclaimerText={disclaimerText}
+                />
+              </div>
             </div>
           </div>
+        )}
 
-          <p className="md:hidden text-[11px] text-ink-secondary font-medium mb-2 text-center no-print">
-            Swipe left or right to inspect full A4 report layout
-          </p>
-
-          <div className="w-full overflow-x-auto pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <div className="w-fit mx-auto">
-              <OxidativeReportDocument
-                ref={printAreaRef}
-                instSettings={instSettings}
-                signatureUrl={matchedSignatureUrl}
-                reportNumber={reportNumber}
-                version={version}
-                reportStatus={reportStatus}
-                patientName={patientDetails.name}
-                patientCode={patientDetails.patient_code || patientDetails.uhid}
-                patientAge={patientDetails.age}
-                patientGender={patientDetails.gender}
-                referenceBy={referenceBy}
-                doctorName={doctorName}
-                reportDate={reportDate}
-                collectionDate={collectionDate}
-                sampleType={sampleType}
-                labNumber={labNumber}
-                damageParams={damageParams}
-                defenceParams={defenceParams}
-                damageScore={damageScore}
-                defenceScore={defenceScore}
-                ratioScore={ratioScore}
-                overallSummary={overallSummary}
-                disclaimerText={disclaimerText}
-              />
-            </div>
+        {/* On-Demand Offscreen A4 Document Mount for Mobile (< 768px) PDF Download / Print */}
+        {!isDesktopPreview && mobileExportRender && (
+          <div
+            aria-hidden="true"
+            className="fixed -left-[99999px] top-0 pointer-events-none print:static print:left-0 print:pointer-events-auto"
+          >
+            <OxidativeReportDocument
+              ref={printAreaRef}
+              instSettings={instSettings}
+              signatureUrl={matchedSignatureUrl}
+              reportNumber={reportNumber}
+              version={version}
+              reportStatus={reportStatus}
+              patientName={patientDetails.name}
+              patientCode={patientDetails.patient_code || patientDetails.uhid}
+              patientAge={patientDetails.age}
+              patientGender={patientDetails.gender}
+              referenceBy={referenceBy}
+              doctorName={doctorName}
+              reportDate={reportDate}
+              collectionDate={collectionDate}
+              sampleType={sampleType}
+              labNumber={labNumber}
+              damageParams={damageParams}
+              defenceParams={defenceParams}
+              damageScore={damageScore}
+              defenceScore={defenceScore}
+              ratioScore={ratioScore}
+              overallSummary={overallSummary}
+              disclaimerText={disclaimerText}
+            />
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
