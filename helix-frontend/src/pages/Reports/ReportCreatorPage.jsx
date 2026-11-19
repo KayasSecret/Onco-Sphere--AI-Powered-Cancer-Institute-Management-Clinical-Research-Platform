@@ -712,8 +712,8 @@ export default function ReportCreatorPage() {
             </p>
           </div>
 
-          {/* Action Toolbar */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
+          {/* Action Toolbar — Desktop & Tablet (768px+) only */}
+          <div className="hidden md:flex md:flex-wrap items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => navigate('/reports')}
@@ -1343,20 +1343,30 @@ export default function ReportCreatorPage() {
                     className="h-8 text-xs"
                   />
                 </FormField>
-
-                <div className="pt-2 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleSaveReport}
-                    disabled={loading}
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-sm transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    <RiSaveLine size={16} />
-                    <span>{loading ? 'Saving Document…' : 'Save Clinical Report'}</span>
-                  </button>
-                </div>
               </div>
             )}
+          </div>
+
+          {/* Primary Form Submit Action — Always accessible at the bottom of the clinical form */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleSaveReport}
+              disabled={loading}
+              className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#1D3888] via-brand-blue to-indigo-600 hover:brightness-105 border border-sky-300/35 shadow-md transition-all cursor-pointer disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Saving Clinical Report…</span>
+                </>
+              ) : (
+                <>
+                  <RiSaveLine size={17} />
+                  <span>Save Clinical Report</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
