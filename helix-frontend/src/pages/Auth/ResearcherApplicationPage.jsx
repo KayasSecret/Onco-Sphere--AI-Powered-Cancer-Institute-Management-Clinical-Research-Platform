@@ -455,25 +455,28 @@ export default function ResearcherApplicationPage() {
 
   // ── Manual / auto save ────────────────────────────────────────────────────
   const autoSave = useCallback(async () => {
-    if (!draftId) return
+    if (!draftId || submitted) return
     const email = getValues('email')
     if (!email) return
     try {
       await researcherService.updateDraft(draftId, step, collectPayload())
       setLastSaved(new Date())
     } catch {}
-  }, [draftId, step, collectPayload, getValues])
+  }, [draftId, submitted, step, collectPayload, getValues])
 
   // ── Auto-save every 60 seconds ────────────────────────────────────────────
   useEffect(() => {
-    if (!draftId) return
+    if (!draftId || submitted) return
     const interval = setInterval(() => { autoSave() }, AUTO_SAVE_MS)
     return () => clearInterval(interval)
-  }, [draftId, autoSave])
+  }, [draftId, submitted, autoSave])
 
   const handleManualSave = async () => {
-    const email = getValues('email')
-    if (!email) { alert('Please enter your email first.'); return }
+    const email = getValues('email')?.trim()
+    if (!email) {
+      setStepErrors(prev => ({ ...prev, email: 'Please enter your email address before saving a draft.' }))
+      return
+    }
     setSaveLoading(true)
     try {
       if (draftId) {
@@ -486,7 +489,14 @@ export default function ResearcherApplicationPage() {
         localStorage.setItem(DRAFT_ID_KEY, String(res.data.id))
         setLastSaved(new Date())
       }
-    } catch {} finally { setSaveLoading(false) }
+    } catch (err) {
+      if (err?.response?.status === 409) {
+        setStepErrors(prev => ({
+          ...prev,
+          email: err.response?.data?.detail || 'An account with this email already exists.',
+        }))
+      }
+    } finally { setSaveLoading(false) }
   }
 
   // ── OTP flow ───────────────────────────────────────────────────────────────
@@ -573,7 +583,7 @@ export default function ResearcherApplicationPage() {
         }
         setCompleted(prev => new Set([...prev, step]))
         // Save draft on step advance
-        const email = getValues('email')
+        const email = getValues('email')?.trim()
         if (email) {
           try {
             if (draftId) {
@@ -586,7 +596,15 @@ export default function ResearcherApplicationPage() {
               localStorage.setItem(DRAFT_ID_KEY, String(res.data.id))
               setLastSaved(new Date())
             }
-          } catch {}
+          } catch (err) {
+            if (err?.response?.status === 409) {
+              setStepErrors({
+                email: err.response?.data?.detail || 'An account with this email already exists.',
+              })
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+              return
+            }
+          }
         }
         setStep(s => s + 1)
         window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -661,7 +679,8 @@ export default function ResearcherApplicationPage() {
 
     const result = await dispatch(registerThunk(payload))
     if (registerThunk.fulfilled.match(result)) {
-      // Clear draft from localStorage
+      // Clear draft state & localStorage so auto-save stops immediately
+      setDraftId(null)
       localStorage.removeItem(DRAFT_EMAIL_KEY)
       localStorage.removeItem(DRAFT_ID_KEY)
       setSubmitted(true)
@@ -700,10 +719,11 @@ export default function ResearcherApplicationPage() {
               ))}
             </div>
           </div>
-          <Link to="/login" className="inline-block w-full">
-            <button className="w-full h-11 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-medium transition-all shadow-lg shadow-blue-600/20">
-              Return to Sign In
-            </button>
+          <Link
+            to="/login"
+            className="flex items-center justify-center w-full h-11 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-medium transition-all shadow-lg shadow-blue-600/20"
+          >
+            Return to Sign In
           </Link>
         </div>
       </div>

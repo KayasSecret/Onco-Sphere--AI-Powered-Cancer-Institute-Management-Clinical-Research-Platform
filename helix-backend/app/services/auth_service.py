@@ -123,7 +123,7 @@ def register_user(payload: RegisterRequest, db: Session) -> RegisterResponse:
         db.add(profile)
 
     # ── 3. Mark associated draft as 'submitted' ───────────────────────────────
-    draft = db.query(ResearcherDraft).filter(ResearcherDraft.email == payload.email).first()
+    draft = db.query(ResearcherDraft).filter(ResearcherDraft.email.ilike(clean_email)).first()
     if draft:
         draft.status = "submitted"
 
@@ -181,7 +181,8 @@ def forgot_password_service(payload: ForgotPasswordRequest, background_tasks: Ba
     Generate 6-digit OTP for password reset, save to DB with 10-min expiration,
     and trigger email via BackgroundTasks.
     """
-    user = db.query(User).filter(User.email == payload.email).first()
+    clean_email = payload.email.strip().lower()
+    user = db.query(User).filter(User.email.ilike(clean_email)).first()
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -214,7 +215,8 @@ def verify_reset_otp_service(payload: VerifyResetOTPRequest, db: Session) -> dic
     Verify the 6-digit OTP code against the user's recorded reset_otp.
     Invalidates the OTP upon successful verification and generates a temporary reset JWT token.
     """
-    user = db.query(User).filter(User.email == payload.email).first()
+    clean_email = payload.email.strip().lower()
+    user = db.query(User).filter(User.email.ilike(clean_email)).first()
 
     if not user or not user.reset_otp:
         raise HTTPException(

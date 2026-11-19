@@ -16,6 +16,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
+from app.models.user import User
 from app.models.researcher_draft import ResearcherDraft
 from app.schemas.researcher import (
     DraftSaveRequest,
@@ -57,10 +58,19 @@ def _serialize_draft(draft: ResearcherDraft) -> DraftResponse:
 def save_draft(payload: DraftSaveRequest, db: Session = Depends(get_db)):
     """
     Create or upsert a draft by email.
-    If a draft already exists for this email, updates it.
+    Rejects immediately if an account with this email already exists or if a draft was already submitted.
     Returns the draft record so frontend can store the draft ID.
     """
-    existing = db.query(ResearcherDraft).filter(ResearcherDraft.email == payload.email).first()
+    clean_email = payload.email.strip().lower()
+
+    existing_user = db.query(User).filter(User.email.ilike(clean_email)).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists. Please sign in or use a different email.",
+        )
+
+    existing = db.query(ResearcherDraft).filter(ResearcherDraft.email.ilike(clean_email)).first()
 
     if existing:
         # Upsert — update existing draft
@@ -69,6 +79,7 @@ def save_draft(payload: DraftSaveRequest, db: Session = Depends(get_db)):
                 status_code=status.HTTP_409_CONFLICT,
                 detail="An application for this email has already been submitted. Please log in or contact support.",
             )
+        existing.email = clean_email
         existing.current_step = payload.current_step
         existing.form_data = json.dumps(payload.form_data)
         db.commit()
@@ -77,7 +88,7 @@ def save_draft(payload: DraftSaveRequest, db: Session = Depends(get_db)):
 
     # New draft
     draft = ResearcherDraft(
-        email=payload.email,
+        email=clean_email,
         current_step=payload.current_step,
         form_data=json.dumps(payload.form_data),
         status="draft",
@@ -130,7 +141,8 @@ def request_otp(
     for email delivery to respond.
     Only sends OTP if a 'draft' (not submitted) exists for this email.
     """
-    draft = db.query(ResearcherDraft).filter(ResearcherDraft.email == payload.email).first()
+    clean_email = payload.email.strip().lower()
+    draft = db.query(ResearcherDraft).filter(ResearcherDraft.email.ilike(clean_email)).first()
 
     if not draft:
         # Neutral response -- don't reveal whether email has a draft (security)
@@ -166,7 +178,8 @@ def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(get_db)):
     Verify an OTP and return the full draft data if valid.
     Clears the OTP after successful verification.
     """
-    draft = db.query(ResearcherDraft).filter(ResearcherDraft.email == payload.email).first()
+    clean_email = payload.email.strip().lower()
+    draft = db.query(ResearcherDraft).filter(ResearcherDraft.email.ilike(clean_email)).first()
 
     if not draft or not draft.otp_code:
         raise HTTPException(

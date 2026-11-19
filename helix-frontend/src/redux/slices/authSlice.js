@@ -153,10 +153,12 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(registerThunk.fulfilled, (state, action) => {
-        const { access_token, refresh_token, user } = action.payload
-        persistTokens(access_token, refresh_token, user)
-        state.user = user
-        state.isAuthenticated = true
+        const { pending, access_token, refresh_token, user } = action.payload || {}
+        if (!pending && access_token && refresh_token) {
+          persistTokens(access_token, refresh_token, user)
+          state.user = user
+          state.isAuthenticated = true
+        }
         state.status = 'succeeded'
         state.error = null
       })
