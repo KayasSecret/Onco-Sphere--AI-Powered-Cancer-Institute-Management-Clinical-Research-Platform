@@ -588,3 +588,89 @@
   box-shadow: 0 8px 22px -10px rgba(37, 99, 235, 0.14);
 }
 
+/* ── 7. Onco Receipt Mobile Optimization (320px – 767px) ────────────────── */
+@media (max-width: 767px) {
+  .onco-receipt-page {
+    gap: 0.95rem;
+  }
+
+  .onco-receipt-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .onco-receipt-kpi-card {
+    padding: 0.8rem 0.85rem;
+    border-radius: 14px;
+    gap: 0.5rem;
+  }
+
+  .onco-receipt-toolbar {
+    padding: 0.85rem;
+    border-radius: 15px;
+    gap: 0.7rem;
+  }
+
+  .onco-receipt-search-box {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .onco-filter-pill-group {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .onco-filter-pill-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .onco-filter-pill {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 0.42rem 0.78rem;
+  }
+}
+
+/* Mobile Report Registry Card */
+.onco-mobile-report-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  padding: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  box-shadow: 0 6px 20px -10px rgba(15, 23, 42, 0.08);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.onco-mobile-report-card:active {
+  transform: scale(0.992);
+  border-color: rgba(61, 107, 197, 0.45);
+}
+
+.onco-mobile-action-primary {
+  flex: 1;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease, background-color 140ms ease;
+}
+
+.onco-mobile-action-primary:active {
+  transform: scale(0.97);
+}
+
+

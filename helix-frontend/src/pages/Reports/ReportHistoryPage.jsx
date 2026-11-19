@@ -33,6 +33,8 @@ import {
   RiCalendarCheckLine,
   RiFlaskLine,
   RiShieldCheckLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
 } from 'react-icons/ri'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import './ReportsModule.css'
@@ -431,20 +433,20 @@ export default function ReportHistoryPage() {
           </div>
 
           {/* Primary Header CTAs */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => navigate('/reports/settings')}
-              className="onco-hero-btn-glass"
+              className="onco-hero-btn-glass w-full sm:w-auto"
             >
               <RiSettings4Line size={16} className="text-cyan-300" />
-              <span>Branding & Parameters</span>
+              <span>Branding &amp; Parameters</span>
             </button>
 
             <button
               type="button"
               onClick={() => navigate('/reports/new')}
-              className="onco-hero-btn-primary"
+              className="onco-hero-btn-primary w-full sm:w-auto"
             >
               <RiAddLine size={17} />
               <span>New Pathology Report</span>
@@ -456,70 +458,70 @@ export default function ReportHistoryPage() {
       {/* ── 2. Telemetry Summary KPI Cards ────────────────────────────────── */}
       <div className="onco-receipt-kpi-grid">
         <div className="onco-receipt-kpi-card">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-secondary">
-              Total Diagnostic Reports
+          <div className="min-w-0">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-secondary truncate">
+              Total Reports
             </p>
-            <p className="text-2xl font-extrabold text-ink-primary mt-0.5">
+            <p className="text-xl sm:text-2xl font-extrabold text-ink-primary mt-0.5">
               {kpiMetrics.totalReports}
             </p>
-            <p className="text-[11px] text-ink-secondary mt-0.5">
+            <p className="hidden sm:block text-[11px] text-ink-secondary mt-0.5">
               Version-controlled clinical archive
             </p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-brand-blue/12 text-brand-blue border border-brand-blue/20 flex items-center justify-center shrink-0">
-            <RiFileTextLine size={21} />
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-brand-blue/12 text-brand-blue border border-brand-blue/20 flex items-center justify-center shrink-0">
+            <RiFileTextLine size={18} className="sm:w-[21px] sm:h-[21px]" />
           </div>
         </div>
 
         <div className="onco-receipt-kpi-card">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-secondary">
-              Verified & Completed
+          <div className="min-w-0">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-secondary truncate">
+              Verified &amp; Done
             </p>
-            <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
+            <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
               {kpiMetrics.finalizedCount}
             </p>
-            <p className="text-[11px] text-ink-secondary mt-0.5">
+            <p className="hidden sm:block text-[11px] text-ink-secondary mt-0.5">
               Ready for clinical PDF export
             </p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
-            <RiCheckboxCircleLine size={21} />
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+            <RiCheckboxCircleLine size={18} className="sm:w-[21px] sm:h-[21px]" />
           </div>
         </div>
 
         <div className="onco-receipt-kpi-card">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-secondary">
-              Drafts In Progress
+          <div className="min-w-0">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-secondary truncate">
+              Drafts Pending
             </p>
-            <p className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">
+            <p className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">
               {kpiMetrics.draftCount}
             </p>
-            <p className="text-[11px] text-ink-secondary mt-0.5">
+            <p className="hidden sm:block text-[11px] text-ink-secondary mt-0.5">
               Pending final signatory review
             </p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/12 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
-            <RiDraftLine size={21} />
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-amber-500/12 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
+            <RiDraftLine size={18} className="sm:w-[21px] sm:h-[21px]" />
           </div>
         </div>
 
         <div className="onco-receipt-kpi-card">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-secondary">
-              Patients Evaluated
+          <div className="min-w-0">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-secondary truncate">
+              Patients Tested
             </p>
-            <p className="text-2xl font-extrabold text-cyan-600 dark:text-cyan-400 mt-0.5">
+            <p className="text-xl sm:text-2xl font-extrabold text-cyan-600 dark:text-cyan-400 mt-0.5">
               {kpiMetrics.uniquePatients}
             </p>
-            <p className="text-[11px] text-ink-secondary mt-0.5">
+            <p className="hidden sm:block text-[11px] text-ink-secondary mt-0.5">
               Distinct patient profiles linked
             </p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-cyan-500/12 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 flex items-center justify-center shrink-0">
-            <RiUserHeartLine size={21} />
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-cyan-500/12 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 flex items-center justify-center shrink-0">
+            <RiUserHeartLine size={18} className="sm:w-[21px] sm:h-[21px]" />
           </div>
         </div>
       </div>
@@ -535,7 +537,7 @@ export default function ReportHistoryPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by patient name, patient code (ICSR-...), or report number..."
+            placeholder="Search patient, code, or report #..."
             className="onco-receipt-search-input"
           />
           {search && (
@@ -550,7 +552,7 @@ export default function ReportHistoryPage() {
           )}
         </form>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
           {/* Status Filter Pills */}
           <div className="onco-filter-pill-group">
             {STATUS_FILTERS.map((st) => (
@@ -565,53 +567,262 @@ export default function ReportHistoryPage() {
             ))}
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="relative flex items-center">
-            <RiSortDesc
-              size={14}
-              className="absolute left-3 text-ink-secondary pointer-events-none"
-            />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              aria-label="Sort reports"
-              className="h-9 pl-8 pr-3 rounded-xl border border-surface-border bg-surface-base text-xs font-bold text-ink-primary focus:outline-none focus:border-brand-blue cursor-pointer"
-            >
-              <option value="newest">Sort: Newest First</option>
-              <option value="oldest">Sort: Oldest First</option>
-              <option value="patient">Sort: Patient Name (A–Z)</option>
-              <option value="report_no">Sort: Report Number</option>
-            </select>
-          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Sort Dropdown */}
+            <div className="relative flex items-center flex-1 sm:flex-initial">
+              <RiSortDesc
+                size={14}
+                className="absolute left-3 text-ink-secondary pointer-events-none"
+              />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                aria-label="Sort reports"
+                className="w-full sm:w-auto h-9 pl-8 pr-3 rounded-xl border border-surface-border bg-surface-base text-xs font-bold text-ink-primary focus:outline-none focus:border-brand-blue cursor-pointer"
+              >
+                <option value="newest">Sort: Newest First</option>
+                <option value="oldest">Sort: Oldest First</option>
+                <option value="patient">Sort: Patient Name (A–Z)</option>
+                <option value="report_no">Sort: Report Number</option>
+              </select>
+            </div>
 
-          {/* Refresh Button */}
-          <button
-            type="button"
-            onClick={fetchReports}
-            disabled={loading}
-            className="onco-action-btn !w-9 !h-9"
-            title="Refresh report registry"
-          >
-            <RiRefreshLine size={16} className={loading ? 'animate-spin text-brand-blue' : ''} />
-          </button>
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={fetchReports}
+              disabled={loading}
+              className="onco-action-btn !w-9 !h-9 shrink-0"
+              title="Refresh report registry"
+              aria-label="Refresh report registry"
+            >
+              <RiRefreshLine size={16} className={loading ? 'animate-spin text-brand-blue' : ''} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── 4. Main Report Registry Table ─────────────────────────────────── */}
+      {/* ── 4. Report Registry: Desktop Table + Mobile Diagnostic Cards ───── */}
       {loading && reports.length === 0 ? (
-        <SkeletonTable rows={5} columns={6} />
+        <>
+          <div className="hidden md:block">
+            <SkeletonTable rows={5} columns={6} />
+          </div>
+          <div className="md:hidden space-y-3">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="onco-mobile-report-card animate-pulse space-y-3"
+              >
+                <div className="flex justify-between">
+                  <div className="h-5 w-36 bg-surface-border rounded-lg" />
+                  <div className="h-5 w-20 bg-surface-border rounded-full" />
+                </div>
+                <div className="h-12 w-full bg-surface-base rounded-xl" />
+                <div className="h-9 w-full bg-surface-base rounded-xl" />
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="onco-receipt-table-card">
-          <DataTable
-            items={processedReports}
-            columns={columns}
-            page={page}
-            total={total}
-            limit={limit}
-            onPageChange={setPage}
-            emptyMessage="No pathology reports match the active filter criteria."
-          />
-        </div>
+        <>
+          {/* Desktop Table (Unchanged) */}
+          <div className="hidden md:block onco-receipt-table-card">
+            <DataTable
+              items={processedReports}
+              columns={columns}
+              page={page}
+              total={total}
+              limit={limit}
+              onPageChange={setPage}
+              emptyMessage="No pathology reports match the active filter criteria."
+            />
+          </div>
+
+          {/* Mobile Responsive Cards (< 768px) */}
+          <div className="md:hidden space-y-3">
+            {processedReports.length === 0 ? (
+              <div className="onco-mobile-report-card text-center py-8 items-center">
+                <div className="w-11 h-11 rounded-2xl bg-brand-blue/10 text-brand-blue flex items-center justify-center">
+                  <RiFileTextLine size={22} />
+                </div>
+                <p className="text-xs font-bold text-ink-primary">No Pathology Reports Found</p>
+                <p className="text-[11px] text-ink-secondary max-w-[240px]">
+                  No reports match your active search or status filter.
+                </p>
+              </div>
+            ) : (
+              processedReports.map((row) => {
+                const badge = getStatusBadge(row.status)
+                const initials = (row.patient?.full_name || 'P')
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .slice(0, 2)
+                  .toUpperCase()
+
+                return (
+                  <article key={row.id} className="onco-mobile-report-card">
+                    {/* Card Header: Report Code + Version + Status */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="onco-report-code-pill truncate">
+                          <RiFileTextLine size={12} className="shrink-0" />
+                          <span className="truncate">{row.report_number}</span>
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold bg-surface-base text-ink-secondary border border-surface-border shrink-0">
+                          v{row.version || 1}
+                        </span>
+                      </div>
+
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 border text-[10px] font-extrabold rounded-full uppercase tracking-wider shrink-0 ${badge.cls}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                        {row.status || 'Completed'}
+                      </span>
+                    </div>
+
+                    {/* Patient Identity Block */}
+                    <div className="flex items-center gap-3 p-2.5 rounded-xl bg-surface-base/70 border border-surface-border/80">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-navy to-brand-blue text-white text-xs font-extrabold flex items-center justify-center shrink-0 shadow-sm">
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-extrabold text-ink-primary truncate leading-tight">
+                          {row.patient?.full_name || 'Unknown Patient'}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          <span className="font-mono text-[10px] font-bold text-brand-blue bg-brand-blue/10 px-1.5 py-0.2 rounded">
+                            {row.patient?.patient_code}
+                          </span>
+                          <span className="text-[11px] text-ink-secondary truncate">
+                            {row.patient?.gender} · DOB {row.patient?.date_of_birth}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Clinical Metadata 2-Column Strip */}
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div className="p-2 rounded-lg bg-surface-base/40 border border-surface-border/60 min-w-0">
+                        <p className="text-[9.5px] font-bold uppercase tracking-wider text-ink-secondary">
+                          Date &amp; Sample
+                        </p>
+                        <p className="font-bold text-ink-primary truncate mt-0.5">
+                          {row.report_date}
+                        </p>
+                        <p className="text-[10px] text-ink-secondary truncate">
+                          {row.sample_type || 'Serum'} · Lab #{row.lab_number || 'N/A'}
+                        </p>
+                      </div>
+
+                      <div className="p-2 rounded-lg bg-surface-base/40 border border-surface-border/60 min-w-0">
+                        <p className="text-[9.5px] font-bold uppercase tracking-wider text-ink-secondary">
+                          Authorizing Doctor
+                        </p>
+                        <p className="font-bold text-ink-primary truncate mt-0.5">
+                          {row.doctor_name || 'Dr. S. Somani'}
+                        </p>
+                        <p className="text-[10px] text-ink-secondary truncate">
+                          Ref: {row.reference_by || 'Self'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Touch-Friendly Action Controls */}
+                    <div className="pt-2 border-t border-surface-border/70 flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/reports/print/${row.id}`)}
+                          className="onco-mobile-action-primary bg-brand-blue hover:bg-brand-blue-dark text-white"
+                        >
+                          <RiEyeLine size={15} />
+                          <span>View PDF</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/reports/edit/${row.id}`)}
+                          className="onco-mobile-action-primary bg-surface-base hover:bg-surface-hover text-ink-primary border border-surface-border"
+                        >
+                          <RiEditLine size={15} className="text-brand-blue" />
+                          <span>Edit</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleViewDetails(row)}
+                          className="flex-1 h-8 rounded-lg border border-surface-border bg-surface-card hover:border-brand-blue text-[11px] font-bold text-ink-secondary hover:text-brand-blue inline-flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <RiFlaskLine size={13} />
+                          <span>Markers</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleViewVersions(row.report_number)}
+                          className="flex-1 h-8 rounded-lg border border-surface-border bg-surface-card hover:border-brand-blue text-[11px] font-bold text-ink-secondary hover:text-brand-blue inline-flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <RiHistoryLine size={13} />
+                          <span>Versions</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleViewAuditHistory(row.report_number)}
+                          className="flex-1 h-8 rounded-lg border border-surface-border bg-surface-card hover:border-brand-blue text-[11px] font-bold text-ink-secondary hover:text-brand-blue inline-flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <RiFileList2Line size={13} />
+                          <span>Audit</span>
+                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTrigger(row.id, row.report_number)}
+                            className="w-8 h-8 rounded-lg border border-rose-500/25 bg-rose-500/10 text-rose-500 inline-flex items-center justify-center shrink-0 cursor-pointer"
+                            title="Delete Report"
+                            aria-label={`Delete report ${row.report_number}`}
+                          >
+                            <RiDeleteBin7Line size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                )
+              })
+            )}
+
+            {/* Mobile Pagination Footer */}
+            {Math.ceil(total / limit) > 1 && (
+              <div className="flex items-center justify-between gap-2 p-3 rounded-xl bg-surface-card border border-surface-border text-xs">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage(page - 1)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-border bg-surface-base font-bold text-ink-primary disabled:opacity-45 cursor-pointer"
+                >
+                  <RiArrowLeftSLine size={15} />
+                  <span>Prev</span>
+                </button>
+                <span className="font-mono text-[11px] font-bold text-ink-secondary">
+                  Page <span className="text-ink-primary">{page}</span> /{' '}
+                  {Math.ceil(total / limit)}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= Math.ceil(total / limit)}
+                  onClick={() => setPage(page + 1)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-border bg-surface-base font-bold text-ink-primary disabled:opacity-45 cursor-pointer"
+                >
+                  <span>Next</span>
+                  <RiArrowRightSLine size={15} />
+                </button>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* ── MODAL 1: Document Biomarker Details Inspection ────────────────── */}
