@@ -11,7 +11,6 @@ import {
   RiBallPenLine,
   RiUploadCloud2Line,
   RiSaveLine,
-  RiSparklingLine,
   RiArrowLeftLine,
   RiAddLine,
   RiEditLine,
@@ -340,24 +339,19 @@ export default function ReportSettingsPage() {
   return (
     <div className="onco-receipt-page">
       {/* ── Top Clinical Hero Header ──────────────────────────────────────── */}
-      <section className="onco-receipt-hero">
+      <section className="onco-receipt-hero !py-5 sm:!py-6">
         <div className="onco-receipt-hero-inner">
           <div className="min-w-0 flex-1">
-            <div className="onco-receipt-breadcrumb">
+            <div className="onco-receipt-breadcrumb !mb-1.5">
               <Link to="/dashboard">Dashboard</Link>
               <span>/</span>
               <Link to="/reports">Onco Receipt</Link>
               <span>/</span>
               <span className="text-white">Branding &amp; Parameters</span>
             </div>
-            <div className="onco-receipt-eyebrow">
-              <RiSparklingLine size={12} />
-              <span>Diagnostic Report Configuration & Calibration</span>
-            </div>
             <h1 className="onco-receipt-title">Onco Receipt Settings</h1>
-            <p className="onco-receipt-subtitle">
-              Configure institutional letterhead branding, official logos and stamps, digitized
-              clinician signatures, and master oxidative biomarker reference parameters.
+            <p className="onco-receipt-subtitle !mt-1.5">
+              Manage institute branding, clinician signatures and diagnostic reference parameters.
             </p>
           </div>
 
