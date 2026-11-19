@@ -361,11 +361,11 @@ export default function ReportSettingsPage() {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
             <button
               type="button"
               onClick={() => navigate('/reports')}
-              className="onco-hero-btn-glass w-full sm:w-auto"
+              className="onco-hero-btn-glass w-full md:w-auto"
             >
               <RiArrowLeftLine size={16} />
               <span>Back to Receipt History</span>
@@ -374,7 +374,7 @@ export default function ReportSettingsPage() {
             <button
               type="button"
               onClick={() => navigate('/reports/new')}
-              className="onco-hero-btn-primary w-full sm:w-auto"
+              className="!hidden md:!inline-flex onco-hero-btn-primary"
             >
               <RiAddLine size={17} />
               <span>New Pathology Report</span>
@@ -386,12 +386,12 @@ export default function ReportSettingsPage() {
       {/* ── Main Split Settings Workspace ─────────────────────────────────── */}
       <div className="onco-rep-settings-shell">
         {/* Left Navigation Dock */}
-        <aside className="onco-rep-settings-nav lg:space-y-2">
-          <div className="hidden lg:block px-3 py-2 border-b border-surface-border mb-2">
+        <aside className="onco-rep-settings-nav space-y-2">
+          <div className="px-2.5 py-1.5 lg:px-3 lg:py-2 border-b border-surface-border mb-1.5 lg:mb-2">
             <p className="text-[10px] font-extrabold uppercase tracking-widest text-brand-blue">
               Configuration Modules
             </p>
-            <p className="text-xs font-bold text-ink-primary mt-0.5">
+            <p className="text-xs font-bold text-ink-primary mt-0.5 hidden lg:block">
               Pathology Report Engine
             </p>
           </div>
@@ -405,31 +405,36 @@ export default function ReportSettingsPage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveSubTab(tab.id)}
-                  className={`flex items-center gap-2 lg:gap-3 px-3 py-2 lg:px-3.5 lg:py-3 rounded-xl text-left transition-all cursor-pointer shrink-0 lg:w-full whitespace-nowrap ${
+                  className={`w-full md:w-auto lg:w-full flex items-center justify-between gap-3 px-3.5 py-2.5 lg:py-3 rounded-xl text-left transition-all active:scale-[0.99] cursor-pointer shrink-0 border ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#152458] to-brand-blue text-white shadow-md'
-                      : 'text-ink-secondary hover:bg-surface-hover hover:text-ink-primary'
+                      ? 'bg-gradient-to-r from-[#152458] to-brand-blue text-white border-sky-400/35 shadow-md'
+                      : 'bg-surface-base/40 md:bg-transparent border-surface-border/70 md:border-transparent text-ink-secondary hover:bg-surface-hover hover:text-ink-primary'
                   }`}
                 >
-                  <div
-                    className={`w-7 h-7 lg:w-8 lg:h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isActive
-                        ? 'bg-white/15 text-white'
-                        : 'bg-surface-base text-brand-blue'
-                    }`}
-                  >
-                    <Icon size={16} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-extrabold leading-tight">{tab.label}</p>
-                    <p
-                      className={`text-[10px] mt-0.5 hidden lg:block ${
-                        isActive ? 'text-sky-200' : 'text-ink-secondary'
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        isActive
+                          ? 'bg-white/15 text-white'
+                          : 'bg-surface-card md:bg-surface-base text-brand-blue'
                       }`}
                     >
-                      {tab.desc}
-                    </p>
+                      <Icon size={17} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-extrabold leading-tight truncate">{tab.label}</p>
+                      <p
+                        className={`text-[10px] mt-0.5 block md:hidden lg:block truncate ${
+                          isActive ? 'text-sky-200' : 'text-ink-secondary'
+                        }`}
+                      >
+                        {tab.desc}
+                      </p>
+                    </div>
                   </div>
+                  {isActive && (
+                    <span className="w-2 h-2 rounded-full bg-cyan-300 shrink-0 md:hidden" />
+                  )}
                 </button>
               )
             })}
