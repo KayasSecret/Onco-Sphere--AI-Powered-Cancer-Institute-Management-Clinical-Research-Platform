@@ -20,7 +20,6 @@ import {
   RiDeleteBin7Line,
   RiSettings4Line,
   RiEyeLine,
-  RiSparklingLine,
   RiFileTextLine,
   RiCheckboxCircleLine,
   RiDraftLine,
@@ -413,22 +412,18 @@ export default function ReportHistoryPage() {
   return (
     <div className="onco-receipt-page">
       {/* ── 1. Clinical Hero Header Banner ────────────────────────────────── */}
-      <section className="onco-receipt-hero">
+      <section className="onco-receipt-hero !py-5 sm:!py-6">
         <div className="onco-receipt-hero-inner">
-          <div>
-            <div className="onco-receipt-breadcrumb">
+          <div className="min-w-0">
+            <div className="onco-receipt-breadcrumb !mb-1.5">
               <Link to="/dashboard">Dashboard</Link>
               <span>/</span>
               <span className="text-white">Onco Receipt History</span>
             </div>
-            <div className="onco-receipt-eyebrow">
-              <RiSparklingLine size={12} />
-              <span>Clinical Pathology & Oxidative Biomarker Registry</span>
-            </div>
-            <h1 className="onco-receipt-title">Onco Receipt & Diagnostic Reports</h1>
-            <p className="onco-receipt-subtitle">
-              Centralized clinical document repository for 3-page ICSR Oxidative Stress Panels,
-              version-controlled diagnostic revisions, and HIPAA-aware print audit trails.
+            <h1 className="onco-receipt-title">Onco Receipt &amp; Diagnostic Reports</h1>
+            <p className="onco-receipt-subtitle !mt-1.5">
+              Centralized repository for clinical pathology reports, diagnostic records and verified
+              PDF documents.
             </p>
           </div>
 
