@@ -9,7 +9,7 @@ import {
   RiLogoutBoxLine,
   RiMenuLine,
   RiMenuFoldLine,
-  RiMenuUnfoldLine,
+  RiCloseLine,
   RiFileTextLine,
   RiSunLine,
   RiMoonLine,
@@ -66,7 +66,7 @@ const NAV_ITEMS = [
 const NAV_ITEM_PITCH = 52 // 46px height + 6px gap
 
 // ── Sidebar Brand Header ─────────────────────────────────────────────────────
-function SidebarBrand({ collapsed, onClose }) {
+function SidebarBrand({ collapsed, isMobileDrawer, onClose }) {
   return (
     <div
       className="onco-sidebar-header"
@@ -119,11 +119,11 @@ function SidebarBrand({ collapsed, onClose }) {
         <button
           type="button"
           onClick={onClose}
-          aria-label="Collapse sidebar"
-          title="Collapse sidebar"
+          aria-label={isMobileDrawer ? 'Close navigation menu' : 'Collapse sidebar'}
+          title={isMobileDrawer ? 'Close navigation menu' : 'Collapse sidebar'}
           className="onco-sidebar-collapse-btn"
         >
-          <RiMenuFoldLine size={16} />
+          {isMobileDrawer ? <RiCloseLine size={17} /> : <RiMenuFoldLine size={16} />}
         </button>
       )}
     </div>
@@ -133,6 +133,7 @@ function SidebarBrand({ collapsed, onClose }) {
 // ── Sidebar Content (Shared between Desktop & Mobile Drawer) ─────────────────
 function SidebarContent({
   collapsed,
+  isMobileDrawer = false,
   onClose,
   user,
   filteredNav,
@@ -166,7 +167,7 @@ function SidebarContent({
       style={{ width: collapsed ? 74 : 252 }}
     >
       {/* Brand Header */}
-      <SidebarBrand collapsed={collapsed} onClose={onClose} />
+      <SidebarBrand collapsed={collapsed} isMobileDrawer={isMobileDrawer} onClose={onClose} />
 
       <div className="mx-3.5 h-px bg-surface-border/80 shrink-0" />
 
@@ -327,12 +328,26 @@ export default function AppLayout() {
   const user = useSelector(selectUser)
 
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : true
+  )
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [isDark, setIsDark] = useState(() =>
     typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
   )
 
   const profileMenuRef = useRef(null)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const handleResize = (e) => {
+      setIsDesktop(e.matches)
+      if (e.matches) setMobileOpen(false)
+    }
+    setIsDesktop(mq.matches)
+    mq.addEventListener('change', handleResize)
+    return () => mq.removeEventListener('change', handleResize)
+  }, [])
 
   useEffect(() => {
     if (!localStorage.getItem('helix_access_token')) {
@@ -410,6 +425,16 @@ export default function AppLayout() {
   const closeSidebar = () => dispatch(setSidebarOpen(false))
   const openSidebar = () => dispatch(setSidebarOpen(true))
 
+  // Single unified sidebar-open state across desktop and mobile/tablet
+  const isNavOpen = isDesktop ? sidebarOpen : mobileOpen
+  const handleOpenNav = () => {
+    if (isDesktop) {
+      openSidebar()
+    } else {
+      setMobileOpen(true)
+    }
+  }
+
   return (
     <div className="flex h-screen bg-surface-base overflow-hidden">
       {/* ── Desktop Futuristic Left Sidebar ──────────────────────────────── */}
@@ -429,6 +454,7 @@ export default function AppLayout() {
         <SheetContent side="left" className="p-0 w-[252px] border-0" hideClose>
           <SidebarContent
             collapsed={false}
+            isMobileDrawer
             onClose={() => setMobileOpen(false)}
             onNavigate={() => setMobileOpen(false)}
             user={user}
@@ -444,28 +470,19 @@ export default function AppLayout() {
         {/* Floating Glassmorphic Top Navigation Bar */}
         <div className="onco-topbar-wrap no-print">
           <header className="onco-topbar">
-            {/* Left: Sidebar Toggle + Brand / Active Module Context */}
+            {/* Left: Single Unified Hamburger Trigger (only when closed) + Brand / Context */}
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              {!sidebarOpen && (
+              {!isNavOpen && (
                 <button
                   type="button"
-                  onClick={openSidebar}
-                  aria-label="Expand sidebar"
-                  title="Expand sidebar"
-                  className="hidden lg:inline-flex onco-topbar-icon-btn shrink-0"
+                  onClick={handleOpenNav}
+                  aria-label="Open navigation menu"
+                  title="Open navigation menu"
+                  className="inline-flex onco-topbar-icon-btn shrink-0"
                 >
-                  <RiMenuUnfoldLine size={18} />
+                  <RiMenuLine size={19} />
                 </button>
               )}
-
-              <button
-                type="button"
-                onClick={() => setMobileOpen(true)}
-                aria-label="Open navigation menu"
-                className="lg:hidden onco-topbar-icon-btn shrink-0"
-              >
-                <RiMenuLine size={19} />
-              </button>
 
               {/* Mobile / Tablet Brand Mark */}
               <Link to="/dashboard" className="flex lg:hidden items-center gap-2.5 min-w-0">
@@ -521,7 +538,7 @@ export default function AppLayout() {
                 onClick={handleToggleTheme}
                 aria-label={isDark ? 'Switch to Classic Light theme' : 'Switch to Sleek Dark theme'}
                 title={isDark ? 'Switch to Classic Light' : 'Switch to Sleek Dark'}
-                className="onco-topbar-icon-btn"
+                className="inline-flex onco-topbar-icon-btn"
               >
                 {isDark ? (
                   <RiSunLine size={17} className="text-amber-400" />

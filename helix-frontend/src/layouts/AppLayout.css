@@ -345,7 +345,6 @@
   border: 1px solid var(--surface-border);
   background: var(--surface-card);
   color: var(--ink-secondary);
-  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
