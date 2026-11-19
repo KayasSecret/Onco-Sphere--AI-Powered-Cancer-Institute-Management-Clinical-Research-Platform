@@ -710,6 +710,18 @@ export default function ReportCreatorPage() {
             <p className="text-xs sm:text-sm text-ink-secondary max-w-2xl">
               Configure patient account, oxidative damage &amp; antioxidant defence biomarkers, and diagnostic interpretation with real-time 3-page ICSR PDF preview.
             </p>
+
+            {/* Mobile-only compact Back to History button */}
+            <div className="pt-2 md:hidden">
+              <button
+                type="button"
+                onClick={() => navigate('/reports')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-ink-primary bg-surface-card hover:bg-surface-hover border border-surface-border shadow-2xs transition-colors cursor-pointer"
+              >
+                <RiArrowLeftLine size={15} className="text-brand-blue" />
+                <span>History</span>
+              </button>
+            </div>
           </div>
 
           {/* Action Toolbar — Desktop & Tablet (768px+) only */}
