@@ -1,6 +1,6 @@
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   RiDashboardLine,
   RiUserHeartLine,
@@ -8,163 +8,142 @@ import {
   RiSettings4Line,
   RiLogoutBoxLine,
   RiMenuLine,
-  RiCloseLine,
+  RiMenuFoldLine,
+  RiMenuUnfoldLine,
   RiFileTextLine,
+  RiSunLine,
+  RiMoonLine,
+  RiArrowDownSLine,
+  RiUserLine,
+  RiShieldCheckLine,
 } from 'react-icons/ri'
 import ICSRLogo from '../assets/ICSR-LOGO.png'
 import { selectSidebarOpen, setSidebarOpen } from '../redux/slices/uiSlice'
 import { selectUser, logoutThunk, getMeThunk } from '../redux/slices/authSlice'
 import { Sheet, SheetContent } from '../components/ui/sheet'
+import { toast } from 'sonner'
+import './AppLayout.css'
 
-// ── Nav items — role-aware filtering happens in the component ────────────────
+// ── Navigation items — role-aware filtering happens in the component ─────────
 const NAV_ITEMS = [
   {
     label: 'Onco Dashboard',
     icon: RiDashboardLine,
     to: '/dashboard',
+    matchPrefixes: ['/dashboard'],
     roles: ['SUPER_ADMIN', 'ADMIN', 'STUDENT'],
   },
   {
     label: 'Onco Register',
     icon: RiUserHeartLine,
     to: '/patients',
+    matchPrefixes: ['/patients', '/visits'],
     roles: ['SUPER_ADMIN', 'ADMIN', 'STUDENT'],
   },
   {
     label: 'Onco Receipt',
     icon: RiFileTextLine,
     to: '/reports',
+    matchPrefixes: ['/reports'],
     roles: ['SUPER_ADMIN', 'ADMIN'],
   },
   {
     label: 'Onco Access',
     icon: RiUserSettingsLine,
     to: '/admin-management',
+    matchPrefixes: ['/admin-management'],
     roles: ['SUPER_ADMIN', 'ADMIN'],
   },
   {
     label: 'Settings',
     icon: RiSettings4Line,
     to: '/settings',
+    matchPrefixes: ['/settings'],
     roles: ['SUPER_ADMIN', 'ADMIN', 'STUDENT'],
   },
 ]
 
-// ── Sidebar Logo — ONCO SPHERE · CLINICAL INTELLIGENCE ───────────────────
-function HelixLogo({ collapsed }) {
+const NAV_ITEM_PITCH = 52 // 46px height + 6px gap
+
+// ── Sidebar Brand Header ─────────────────────────────────────────────────────
+function SidebarBrand({ collapsed, onClose }) {
   return (
     <div
-      className="flex items-center shrink-0 overflow-hidden"
-      style={{
-        height: '64px',
-        paddingLeft: collapsed ? '14px' : '16px',
-        paddingRight: collapsed ? '14px' : '16px',
-        gap: collapsed ? 0 : '12px',
-        transition: 'padding 200ms cubic-bezier(0.4,0,0.2,1)',
-      }}
+      className="onco-sidebar-header"
+      style={{ justifyContent: collapsed ? 'center' : 'space-between' }}
     >
-      <img
-        src={ICSRLogo}
-        alt="Onco Sphere"
-        style={{
-          width: '34px',
-          height: '34px',
-          objectFit: 'contain',
-          flexShrink: 0,
-          background: 'transparent',
-        }}
-      />
+      <Link to="/dashboard" className="onco-sidebar-brand">
+        <img
+          src={ICSRLogo}
+          alt="Onco Sphere"
+          style={{
+            width: '34px',
+            height: '34px',
+            objectFit: 'contain',
+            flexShrink: 0,
+            background: 'transparent',
+          }}
+        />
+        {!collapsed && (
+          <div className="flex flex-col justify-center leading-none overflow-hidden">
+            <span
+              style={{
+                fontSize: '1.05rem',
+                fontWeight: 800,
+                color: 'var(--ink-primary)',
+                letterSpacing: '-0.025em',
+                lineHeight: '1.15',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Onco Sphere
+            </span>
+            <span
+              style={{
+                fontSize: '0.53rem',
+                fontWeight: 700,
+                color: 'var(--color-blue)',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                marginTop: '3px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Clinical Intelligence
+            </span>
+          </div>
+        )}
+      </Link>
 
-      {/* Brand name — hidden when collapsed */}
-      <div
-        className="label-transition flex flex-col justify-center leading-none overflow-hidden"
-        style={{
-          opacity: collapsed ? 0 : 1,
-          width: collapsed ? 0 : 'auto',
-          visibility: collapsed ? 'hidden' : 'visible',
-        }}
-      >
-        <span
-          style={{
-            fontSize: '1.05rem',
-            fontWeight: 800,
-            color: 'var(--ink-primary)',
-            letterSpacing: '-0.02em',
-            lineHeight: '1.15',
-            whiteSpace: 'nowrap',
-          }}
+      {!collapsed && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Collapse sidebar"
+          title="Collapse sidebar"
+          className="onco-sidebar-collapse-btn"
         >
-          Onco Sphere
-        </span>
-        <span
-          style={{
-            fontSize: '0.52rem',
-            fontWeight: 600,
-            color: 'var(--color-blue)',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            marginTop: '2px',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Clinical Intelligence
-        </span>
-      </div>
+          <RiMenuFoldLine size={16} />
+        </button>
+      )}
     </div>
   )
 }
 
-// ── Single nav item ────────────────────────────────────────────────────────
-function NavItem({ item, collapsed, onNavigate }) {
-  const Icon = item.icon
-
-  return (
-    <NavLink
-      to={item.to}
-      onClick={onNavigate}
-      title={collapsed ? item.label : undefined}
-      className={({ isActive }) =>
-        [
-          'flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-300 ease-out group relative select-none',
-          isActive
-            ? 'bg-brand-blue !text-white font-bold shadow-md shadow-brand-blue/25 hover:bg-brand-blue-dark hover:!text-white focus:!text-white'
-            : 'text-ink-secondary hover:bg-surface-hover hover:text-ink-primary font-medium',
-        ].join(' ')
-      }
-    >
-      {/* Icon with smooth scale micro-animation on hover */}
-      <div className="shrink-0 w-5 h-5 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-        <Icon size={20} className="shrink-0" />
-      </div>
-
-      {/* Label — with 5% text scale micro-animation on hover */}
-      <span
-        className="label-transition overflow-hidden whitespace-nowrap text-sm font-semibold tracking-tight transition-transform duration-300 origin-left group-hover:scale-[1.05]"
-        style={{
-          opacity: collapsed ? 0 : 1,
-          width: collapsed ? 0 : 'auto',
-          visibility: collapsed ? 'hidden' : 'visible',
-        }}
-      >
-        {item.label}
-      </span>
-
-      {/* Tooltip when collapsed */}
-      {collapsed && (
-        <div className="absolute left-full ml-2 px-2.5 py-1 bg-surface-card border border-surface-border text-ink-primary text-xs font-semibold rounded-md shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-          {item.label}
-        </div>
-      )}
-    </NavLink>
-  )
-}
-
-// ── Sidebar content (shared between desktop + mobile Sheet) ───────────────
-function SidebarContent({ collapsed, onClose, user, filteredNav, onLogout, onNavigate }) {
+// ── Sidebar Content (Shared between Desktop & Mobile Drawer) ─────────────────
+function SidebarContent({
+  collapsed,
+  onClose,
+  user,
+  filteredNav,
+  activeIndex,
+  onLogout,
+  onNavigate,
+}) {
   const [avatarPopoverOpen, setAvatarPopoverOpen] = useState(false)
   const popoverRef = useRef(null)
+  const navigate = useNavigate()
 
-  // Close popover when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (popoverRef.current && !popoverRef.current.contains(e.target)) {
@@ -177,54 +156,77 @@ function SidebarContent({ collapsed, onClose, user, filteredNav, onLogout, onNav
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [avatarPopoverOpen])
 
-  // Reset popover when sidebar expands
   useEffect(() => {
-    if (!collapsed) {
-      setAvatarPopoverOpen(false)
-    }
+    if (!collapsed) setAvatarPopoverOpen(false)
   }, [collapsed])
 
   return (
     <aside
-      className="sidebar-transition flex flex-col h-full bg-surface-card border-r border-surface-border text-ink-primary"
-      style={{ width: collapsed ? 64 : 240 }}
+      className="onco-sidebar"
+      style={{ width: collapsed ? 74 : 252 }}
     >
-      {/* Header — logo + collapse button */}
-      <div className="flex items-center justify-between shrink-0">
-        <HelixLogo collapsed={collapsed} />
+      {/* Brand Header */}
+      <SidebarBrand collapsed={collapsed} onClose={onClose} />
+
+      <div className="mx-3.5 h-px bg-surface-border/80 shrink-0" />
+
+      {/* Navigation Track with Gliding Active Highlight */}
+      <nav className="onco-nav-container" aria-label="Main Clinical Navigation">
         {!collapsed && (
-          <button
-            onClick={onClose}
-            aria-label="Collapse sidebar"
-            className="mr-3 p-1.5 rounded-md text-ink-secondary hover:text-ink-primary hover:bg-surface-hover transition-colors duration-fast"
-          >
-            <RiCloseLine size={18} />
-          </button>
+          <div className="onco-nav-section-label">Clinical Modules</div>
         )}
-      </div>
 
-      {/* Divider */}
-      <div className="mx-4 h-px bg-surface-border shrink-0" />
+        <div className="onco-nav-list">
+          {/* Gliding Animated Active Indicator */}
+          {activeIndex >= 0 && (
+            <div
+              className="onco-nav-glider"
+              aria-hidden="true"
+              style={{
+                transform: `translateY(${activeIndex * NAV_ITEM_PITCH}px)`,
+              }}
+            />
+          )}
 
-      {/* Navigation */}
-      <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden space-y-0.5">
-        {filteredNav.map((item) => (
-          <NavItem key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
-        ))}
+          {filteredNav.map((item, idx) => {
+            const Icon = item.icon
+            const isActive = idx === activeIndex
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onNavigate}
+                aria-current={isActive ? 'page' : undefined}
+                className={`onco-nav-link ${isActive ? 'is-active' : ''} ${
+                  collapsed ? 'is-collapsed' : ''
+                }`}
+              >
+                <div className="onco-nav-icon-box">
+                  <Icon size={19} />
+                </div>
+
+                {!collapsed && (
+                  <span className="onco-nav-label">{item.label}</span>
+                )}
+
+                {collapsed && (
+                  <span className="onco-nav-tooltip">{item.label}</span>
+                )}
+              </NavLink>
+            )
+          })}
+        </div>
       </nav>
 
-      {/* Divider */}
-      <div className="mx-4 h-px bg-surface-border shrink-0" />
-
-      {/* User footer */}
-      <div className="p-3 shrink-0 relative" ref={popoverRef}>
+      {/* Operator Footer */}
+      <div className="onco-sidebar-footer" ref={popoverRef}>
         {collapsed ? (
-          /* Collapsed Mode: Only Avatar picture displayed, clicking opens popover */
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center">
             <button
               type="button"
               onClick={() => setAvatarPopoverOpen((prev) => !prev)}
-              className="relative shrink-0 w-9 h-9 rounded-full bg-brand-blue border border-surface-border overflow-hidden flex items-center justify-center text-ink-inverse text-xs font-bold uppercase hover:ring-2 hover:ring-brand-blue/50 focus:outline-none transition-all cursor-pointer"
+              className="onco-avatar-ring cursor-pointer hover:scale-105 transition-transform"
               title={user?.full_name || 'User Profile'}
               aria-label="User profile options"
             >
@@ -235,62 +237,77 @@ function SidebarContent({ collapsed, onClose, user, filteredNav, onLogout, onNav
               )}
             </button>
 
-            {/* Redesigned Popover Dropdown with Red Logout action */}
             {avatarPopoverOpen && (
-              <div className="absolute left-full bottom-3 ml-3 z-50 w-48 bg-surface-card border border-surface-border rounded-xl shadow-2xl p-2 animate-in fade-in-50 zoom-in-95 backdrop-blur-xl">
-                {/* User Info Header Snippet */}
-                <div className="px-2 py-1.5 border-b border-surface-border mb-1">
-                  <p className="text-xs font-semibold text-ink-primary truncate">
-                    {user?.full_name || 'User'}
+              <div
+                className="onco-profile-dropdown"
+                style={{ left: 'calc(100% + 12px)', right: 'auto', top: 'auto', bottom: '10px' }}
+              >
+                <div className="onco-dropdown-hero">
+                  <p className="text-xs font-extrabold !text-white truncate">
+                    {user?.full_name || 'Clinical Operator'}
                   </p>
-                  <p className="text-[10px] text-ink-secondary truncate">
+                  <p className="text-[11px] text-sky-200/85 truncate mt-0.5">
                     {user?.email || user?.role?.replace('_', ' ')}
                   </p>
                 </div>
-
-                {/* Single Red Logout Action */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAvatarPopoverOpen(false)
-                    onLogout()
-                  }}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
-                >
-                  <RiLogoutBoxLine size={16} className="shrink-0 text-red-500" />
-                  <span>Logout</span>
-                </button>
+                <div className="p-2 space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvatarPopoverOpen(false)
+                      navigate('/settings')
+                    }}
+                    className="onco-dropdown-item"
+                  >
+                    <RiSettings4Line size={16} className="text-brand-blue" />
+                    <span>Account &amp; Settings</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvatarPopoverOpen(false)
+                      onLogout()
+                    }}
+                    className="onco-dropdown-item danger"
+                  >
+                    <RiLogoutBoxLine size={16} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
         ) : (
-          /* Expanded Mode: Avatar + Name/Role + Logout Button */
-          <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-surface-hover/30 border border-surface-border/50">
-            {/* Avatar */}
-            <div className="shrink-0 w-8 h-8 rounded-full bg-brand-blue border border-surface-border overflow-hidden flex items-center justify-center text-ink-inverse text-xs font-bold uppercase">
-              {user?.photo_url ? (
-                <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                user?.full_name?.charAt(0) || 'U'
-              )}
+          <div className="onco-sidebar-user-card">
+            <div className="relative shrink-0">
+              <div className="onco-avatar-ring">
+                {user?.photo_url ? (
+                  <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  user?.full_name?.charAt(0) || 'U'
+                )}
+              </div>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-surface-card"
+                title="Active session"
+              />
             </div>
 
-            {/* Name + role */}
-            <div className="label-transition overflow-hidden flex-1 min-w-0">
-              <p className="text-ink-primary text-xs font-bold truncate">
-                {user?.full_name || 'User'}
+            <div className="overflow-hidden flex-1 min-w-0">
+              <p className="text-ink-primary text-xs font-extrabold truncate leading-tight">
+                {user?.full_name || 'Clinical Operator'}
               </p>
-              <p className="text-ink-secondary text-[10px] font-medium truncate">
+              <p className="text-brand-blue text-[10px] font-bold uppercase tracking-wider truncate mt-0.5">
                 {user?.role?.replace('_', ' ')}
               </p>
             </div>
 
-            {/* Logout */}
             <button
+              type="button"
               onClick={onLogout}
-              aria-label="Log out"
-              title="Log out"
-              className="shrink-0 p-1.5 rounded-md text-ink-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors duration-fast"
+              aria-label="Sign out"
+              title="Sign out"
+              className="shrink-0 p-1.5 rounded-lg text-ink-secondary hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
             >
               <RiLogoutBoxLine size={16} />
             </button>
@@ -301,14 +318,21 @@ function SidebarContent({ collapsed, onClose, user, filteredNav, onLogout, onNav
   )
 }
 
-// ── App Layout ────────────────────────────────────────────────────────────
+// ── Main Application Layout ──────────────────────────────────────────────────
 export default function AppLayout() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
   const sidebarOpen = useSelector(selectSidebarOpen)
   const user = useSelector(selectUser)
+
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  )
+
+  const profileMenuRef = useRef(null)
 
   useEffect(() => {
     if (!localStorage.getItem('helix_access_token')) {
@@ -318,13 +342,69 @@ export default function AppLayout() {
     dispatch(getMeThunk())
   }, [dispatch, navigate, location])
 
-  const filteredNav = NAV_ITEMS.filter(
-    (item) => item.roles.includes(user?.role)
+  // Keep quick-toggle icon synced if theme changes from Settings page
+  useEffect(() => {
+    const root = document.documentElement
+    const syncTheme = () => setIsDark(root.classList.contains('dark'))
+    syncTheme()
+    const observer = new MutationObserver(syncTheme)
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  // Close topbar profile dropdown on outside click or Escape key
+  useEffect(() => {
+    function handleOutside(e) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    function handleEscape(e) {
+      if (e.key === 'Escape') setProfileMenuOpen(false)
+    }
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleOutside)
+      document.addEventListener('keydown', handleEscape)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [profileMenuOpen])
+
+  const filteredNav = useMemo(
+    () => NAV_ITEMS.filter((item) => item.roles.includes(user?.role)),
+    [user?.role]
   )
 
+  // Determine exact active nav index (supports nested routes like /patients/:id or /reports/new)
+  const activeIndex = useMemo(() => {
+    const path = location.pathname
+    return filteredNav.findIndex((item) =>
+      item.matchPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+    )
+  }, [filteredNav, location.pathname])
+
+  const activeNavItem = activeIndex >= 0 ? filteredNav[activeIndex] : null
+  const ActiveNavIcon = activeNavItem?.icon || RiDashboardLine
+
   const handleLogout = async () => {
+    setProfileMenuOpen(false)
     await dispatch(logoutThunk())
     navigate('/login', { replace: true })
+  }
+
+  const handleToggleTheme = () => {
+    const nextDark = !isDark
+    const mode = nextDark ? 'dark' : 'light'
+    localStorage.setItem('theme', mode)
+    if (nextDark) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    setIsDark(nextDark)
+    toast.success(`Switched to ${nextDark ? 'Sleek Dark' : 'Classic Light'} interface.`)
   }
 
   const closeSidebar = () => dispatch(setSidebarOpen(false))
@@ -332,112 +412,241 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-screen bg-surface-base overflow-hidden">
-      {/* ── Desktop Sidebar ──────────────────────────────────────────── */}
+      {/* ── Desktop Futuristic Left Sidebar ──────────────────────────────── */}
       <div className="hidden lg:flex shrink-0 h-full">
         <SidebarContent
           collapsed={!sidebarOpen}
           onClose={closeSidebar}
           user={user}
           filteredNav={filteredNav}
+          activeIndex={activeIndex}
           onLogout={handleLogout}
         />
       </div>
 
-      {/* ── Mobile Sidebar (Sheet) ───────────────────────────────────── */}
+      {/* ── Mobile Slide-Out Navigation Drawer ───────────────────────────── */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0 w-60 border-0" hideClose>
+        <SheetContent side="left" className="p-0 w-[252px] border-0" hideClose>
           <SidebarContent
             collapsed={false}
             onClose={() => setMobileOpen(false)}
             onNavigate={() => setMobileOpen(false)}
             user={user}
             filteredNav={filteredNav}
+            activeIndex={activeIndex}
             onLogout={handleLogout}
           />
         </SheetContent>
       </Sheet>
 
-      {/* ── Main content area ────────────────────────────────────────── */}
+      {/* ── Right Main Workspace Column ──────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Bar */}
-        <header className="h-[60px] bg-surface-card border-b border-surface-border flex items-center justify-between gap-3 px-4 shrink-0">
-          {/* Left: Hamburger + Platform Title */}
-          <div className="flex items-center gap-3 min-w-0">
-            {!sidebarOpen ? (
+        {/* Floating Glassmorphic Top Navigation Bar */}
+        <div className="onco-topbar-wrap no-print">
+          <header className="onco-topbar">
+            {/* Left: Sidebar Toggle + Brand / Active Module Context */}
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              {!sidebarOpen && (
+                <button
+                  type="button"
+                  onClick={openSidebar}
+                  aria-label="Expand sidebar"
+                  title="Expand sidebar"
+                  className="hidden lg:inline-flex onco-topbar-icon-btn shrink-0"
+                >
+                  <RiMenuUnfoldLine size={18} />
+                </button>
+              )}
+
               <button
-                onClick={openSidebar}
-                aria-label="Expand sidebar"
-                className="hidden lg:flex p-2 rounded-md text-ink-secondary hover:text-ink-primary hover:bg-surface-hover transition-colors duration-fast shrink-0"
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open navigation menu"
+                className="lg:hidden onco-topbar-icon-btn shrink-0"
               >
-                <RiMenuLine size={20} />
+                <RiMenuLine size={19} />
               </button>
-            ) : null}
 
-            <button
-              onClick={() => setMobileOpen(true)}
-              aria-label="Open menu"
-              className="lg:hidden p-2 rounded-md text-ink-secondary hover:text-ink-primary hover:bg-surface-hover transition-colors duration-fast shrink-0"
-            >
-              <RiMenuLine size={20} />
-            </button>
-
-            {/* Platform Identity — ONCO SPHERE · CLINICAL INTELLIGENCE */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <img
-                src={ICSRLogo}
-                alt="Onco Sphere"
-                className="lg:hidden"
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  objectFit: 'contain',
-                  flexShrink: 0,
-                  background: 'transparent',
-                }}
-              />
-              <div className="flex flex-col justify-center leading-none min-w-0">
-                <span
-                  className="text-ink-primary font-extrabold truncate"
-                  style={{ fontSize: '0.95rem', letterSpacing: '-0.015em', lineHeight: '1.15' }}
-                >
-                  Onco Sphere
-                </span>
-                <span
-                  className="hidden sm:block"
+              {/* Mobile / Tablet Brand Mark */}
+              <Link to="/dashboard" className="flex lg:hidden items-center gap-2.5 min-w-0">
+                <img
+                  src={ICSRLogo}
+                  alt="Onco Sphere"
                   style={{
-                    fontSize: '0.5rem',
-                    fontWeight: 600,
-                    color: 'var(--color-blue)',
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    marginTop: '1px',
+                    width: '28px',
+                    height: '28px',
+                    objectFit: 'contain',
+                    flexShrink: 0,
+                    background: 'transparent',
                   }}
-                >
-                  Clinical Intelligence
-                </span>
+                />
+                <div className="flex flex-col justify-center leading-none min-w-0">
+                  <span className="text-ink-primary font-extrabold text-sm tracking-tight truncate">
+                    Onco Sphere
+                  </span>
+                  <span
+                    className="hidden xs:block"
+                    style={{
+                      fontSize: '0.5rem',
+                      fontWeight: 700,
+                      color: 'var(--color-blue)',
+                      letterSpacing: '0.16em',
+                      textTransform: 'uppercase',
+                      marginTop: '2px',
+                    }}
+                  >
+                    Clinical Intelligence
+                  </span>
+                </div>
+              </Link>
+
+              {/* Desktop Active Workspace Indicator Pill */}
+              <div className="hidden lg:flex items-center gap-3 min-w-0">
+                {activeNavItem && (
+                  <div className="onco-topbar-module-pill">
+                    <ActiveNavIcon size={15} className="text-brand-blue shrink-0" />
+                    <span className="text-xs font-extrabold text-ink-primary tracking-tight">
+                      {activeNavItem.label}
+                    </span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
-          <div className="flex-1" />
+            {/* Right: Theme Quick-Switch & Interactive Operator Profile Dropdown */}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleToggleTheme}
+                aria-label={isDark ? 'Switch to Classic Light theme' : 'Switch to Sleek Dark theme'}
+                title={isDark ? 'Switch to Classic Light' : 'Switch to Sleek Dark'}
+                className="onco-topbar-icon-btn"
+              >
+                {isDark ? (
+                  <RiSunLine size={17} className="text-amber-400" />
+                ) : (
+                  <RiMoonLine size={17} className="text-brand-navy" />
+                )}
+              </button>
 
-          {/* Right: user badge */}
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:block text-xs text-ink-secondary font-medium">
-              {user?.full_name}
-            </span>
-            <div className="w-8 h-8 rounded-full bg-brand-navy border border-surface-border overflow-hidden flex items-center justify-center text-ink-inverse text-xs font-bold uppercase">
-              {user?.photo_url ? (
-                <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                user?.full_name?.charAt(0) || 'U'
-              )}
+              {/* Profile Trigger + Dropdown */}
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setProfileMenuOpen((prev) => !prev)}
+                  aria-expanded={profileMenuOpen}
+                  aria-haspopup="menu"
+                  className="onco-profile-trigger"
+                >
+                  <div className="relative">
+                    <div className="onco-avatar-ring">
+                      {user?.photo_url ? (
+                        <img
+                          src={user.photo_url}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        user?.full_name?.charAt(0) || 'U'
+                      )}
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-surface-card" />
+                  </div>
+
+                  <div className="hidden sm:flex flex-col items-start text-left leading-tight pr-1">
+                    <span className="text-xs font-extrabold text-ink-primary max-w-[130px] truncate">
+                      {user?.full_name || 'Operator'}
+                    </span>
+                    <span className="text-[9.5px] font-bold uppercase tracking-wider text-brand-blue">
+                      {user?.role?.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  <RiArrowDownSLine
+                    size={16}
+                    className={`hidden sm:block text-ink-secondary transition-transform duration-200 ${
+                      profileMenuOpen ? 'rotate-180 text-brand-blue' : ''
+                    }`}
+                  />
+                </button>
+
+                {profileMenuOpen && (
+                  <div className="onco-profile-dropdown" role="menu">
+                    <div className="onco-dropdown-hero">
+                      <div className="flex items-center gap-2.5">
+                        <div className="onco-avatar-ring !w-10 !h-10 !text-sm">
+                          {user?.photo_url ? (
+                            <img
+                              src={user.photo_url}
+                              alt="Profile"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            user?.full_name?.charAt(0) || 'U'
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-extrabold !text-white truncate">
+                            {user?.full_name || 'Clinical Operator'}
+                          </p>
+                          <p className="text-[11px] text-sky-200/85 truncate">{user?.email}</p>
+                        </div>
+                      </div>
+                      <div className="mt-2.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/12 border border-white/15 text-[10px] font-bold uppercase tracking-wider text-cyan-200">
+                        <RiShieldCheckLine size={12} />
+                        <span>{user?.role?.replace('_', ' ')} · Audited</span>
+                      </div>
+                    </div>
+
+                    <div className="p-2 space-y-1">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setProfileMenuOpen(false)
+                          navigate('/settings')
+                        }}
+                        className="onco-dropdown-item"
+                      >
+                        <RiUserLine size={16} className="text-brand-blue" />
+                        <span>Account Profile Overview</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setProfileMenuOpen(false)
+                          navigate('/settings')
+                        }}
+                        className="onco-dropdown-item"
+                      >
+                        <RiSettings4Line size={16} className="text-brand-blue" />
+                        <span>System Preferences &amp; Theme</span>
+                      </button>
+
+                      <div className="my-1 h-px bg-surface-border" />
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={handleLogout}
+                        className="onco-dropdown-item danger"
+                      >
+                        <RiLogoutBoxLine size={16} />
+                        <span>Sign Out of Onco Sphere</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
+        </div>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+        {/* Page Content Viewport */}
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-5">
           <Outlet />
         </main>
       </div>

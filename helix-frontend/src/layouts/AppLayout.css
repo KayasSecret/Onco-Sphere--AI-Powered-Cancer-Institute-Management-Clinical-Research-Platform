@@ -1,0 +1,471 @@
+/* ============================================================================
+   ONCO SPHERE — GLOBAL TOP NAVIGATION BAR & FUTURISTIC LEFT SIDEBAR
+   Deep Midnight Navy, Royal Blue, Cyan Illumination, Glassmorphism & Fluid Motion
+   ============================================================================ */
+
+/* ── 1. Futuristic Left Sidebar Shell ─────────────────────────────────────── */
+.onco-sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 65%, #f1f6fe 100%);
+  border-right: 1px solid rgba(61, 107, 197, 0.14);
+  box-shadow: 4px 0 24px -12px rgba(15, 23, 42, 0.08);
+  transition: width 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: visible;
+  z-index: 30;
+}
+
+.dark .onco-sidebar {
+  background: linear-gradient(180deg, #0a1226 0%, #0d1630 58%, #0f172a 100%);
+  border-right-color: rgba(56, 189, 248, 0.14);
+  box-shadow: 4px 0 32px -10px rgba(0, 0, 0, 0.55);
+}
+
+/* Subtle top-left laboratory ambient glow inside sidebar */
+.onco-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.09) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+.dark .onco-sidebar::before {
+  background: radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.14) 0%, transparent 72%);
+}
+
+/* ── 2. Sidebar Brand Header ─────────────────────────────────────────────── */
+.onco-sidebar-header {
+  position: relative;
+  z-index: 2;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  flex-shrink: 0;
+}
+
+.onco-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.onco-sidebar-collapse-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.onco-sidebar-collapse-btn:hover {
+  color: var(--color-blue);
+  border-color: rgba(61, 107, 197, 0.4);
+  background: var(--surface-hover);
+  transform: scale(1.04);
+}
+
+/* ── 3. Navigation Track & Gliding Active Highlight ──────────────────────── */
+.onco-nav-container {
+  position: relative;
+  flex: 1;
+  padding: 12px 10px;
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+.onco-nav-section-label {
+  padding: 0 12px 8px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-disabled);
+  user-select: none;
+  white-space: nowrap;
+  transition: opacity 180ms ease;
+}
+
+.onco-nav-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Smooth GPU-accelerated sliding highlight behind active item */
+.onco-nav-glider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #152458 0%, var(--color-blue) 62%, #0284c7 100%);
+  border: 1px solid rgba(125, 211, 252, 0.38);
+  box-shadow:
+    0 10px 24px -6px rgba(37, 99, 235, 0.44),
+    0 0 16px -4px rgba(56, 189, 248, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  pointer-events: none;
+  z-index: 0;
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms ease;
+  will-change: transform;
+}
+
+/* Subtle cyan laser illumination bar on the left edge of the active glider */
+.onco-nav-glider::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 50%, #22d3ee 100%);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
+}
+
+.onco-nav-link {
+  position: relative;
+  z-index: 1;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 11px;
+  border-radius: 13px;
+  text-decoration: none !important;
+  color: var(--ink-secondary);
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  user-select: none;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease;
+}
+
+.onco-nav-link.is-collapsed {
+  justify-content: center;
+  padding: 0;
+}
+
+.onco-nav-link:not(.is-active):hover {
+  color: var(--ink-primary) !important;
+  background: rgba(61, 107, 197, 0.075);
+}
+
+.dark .onco-nav-link:not(.is-active):hover {
+  background: rgba(56, 189, 248, 0.08);
+  color: #f8fafc !important;
+}
+
+.onco-nav-link.is-active,
+.onco-nav-link.is-active:hover,
+.onco-nav-link.is-active:focus {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+/* Icon Container inside Nav Item */
+.onco-nav-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ink-secondary);
+  background: transparent;
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 200ms ease,
+    color 180ms ease;
+}
+
+.onco-nav-link:not(.is-active):hover .onco-nav-icon-box {
+  color: var(--color-blue);
+  background: rgba(61, 107, 197, 0.1);
+  transform: translateX(2px) scale(1.05);
+}
+
+.onco-nav-link.is-collapsed:not(.is-active):hover .onco-nav-icon-box {
+  transform: scale(1.08);
+}
+
+.onco-nav-link.is-active .onco-nav-icon-box {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.onco-nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 160ms ease, transform 200ms ease;
+}
+
+.onco-nav-link:not(.is-active):hover .onco-nav-label {
+  transform: translateX(2px);
+}
+
+/* Collapsed Floating Tooltip */
+.onco-nav-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 10px 24px -6px rgba(2, 6, 23, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 60;
+  transition: opacity 160ms ease, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.onco-nav-link:hover .onco-nav-tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ── 4. Sidebar Operator Footer Card ─────────────────────────────────────── */
+.onco-sidebar-footer {
+  position: relative;
+  z-index: 2;
+  padding: 12px 10px 14px;
+  border-top: 1px solid var(--surface-border);
+  flex-shrink: 0;
+}
+
+.onco-sidebar-user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 13px;
+  background: var(--surface-base);
+  border: 1px solid var(--surface-border);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.dark .onco-sidebar-user-card {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(51, 65, 85, 0.85);
+}
+
+.onco-sidebar-user-card:hover {
+  border-color: rgba(61, 107, 197, 0.38);
+}
+
+/* ── 5. Floating Glassmorphic Top Navigation Bar ─────────────────────────── */
+.onco-topbar-wrap {
+  padding: 10px 14px 0;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+@media (max-width: 640px) {
+  .onco-topbar-wrap {
+    padding: 8px 10px 0;
+  }
+}
+
+.onco-topbar {
+  height: 60px;
+  border-radius: 16px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(61, 107, 197, 0.16);
+  box-shadow:
+    0 8px 24px -10px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transition: box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.dark .onco-topbar {
+  background: rgba(15, 23, 42, 0.82);
+  border-color: rgba(56, 189, 248, 0.18);
+  box-shadow:
+    0 10px 28px -10px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.onco-topbar-module-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(37, 45, 126, 0.06) 0%, rgba(6, 182, 212, 0.08) 100%);
+  border: 1px solid rgba(61, 107, 197, 0.2);
+}
+
+.dark .onco-topbar-module-pill {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.35) 0%, rgba(8, 145, 178, 0.22) 100%);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.onco-topbar-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.onco-topbar-icon-btn:hover {
+  color: var(--color-blue);
+  border-color: rgba(61, 107, 197, 0.4);
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+}
+
+/* Interactive Profile Trigger Button */
+.onco-profile-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px 4px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.onco-profile-trigger:hover,
+.onco-profile-trigger[aria-expanded='true'] {
+  border-color: rgba(61, 107, 197, 0.45);
+  box-shadow: 0 6px 18px -6px rgba(37, 99, 235, 0.24);
+  transform: translateY(-1px);
+}
+
+.onco-avatar-ring {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #152458 0%, var(--color-blue) 100%);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
+}
+
+/* Animated Profile Dropdown Menu */
+@keyframes oncoDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.onco-profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 268px;
+  border-radius: 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  box-shadow:
+    0 20px 48px -12px rgba(15, 23, 42, 0.24),
+    0 0 0 1px rgba(61, 107, 197, 0.08);
+  overflow: hidden;
+  z-index: 60;
+  animation: oncoDropdownIn 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.dark .onco-profile-dropdown {
+  background: #131e36;
+  border-color: rgba(56, 189, 248, 0.22);
+  box-shadow: 0 24px 56px -12px rgba(0, 0, 0, 0.7);
+}
+
+.onco-dropdown-hero {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #0b1536 0%, #152458 60%, #1d3888 100%);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.onco-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--ink-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.onco-dropdown-item:hover {
+  background: var(--surface-hover);
+  color: var(--color-blue);
+  transform: translateX(2px);
+}
+
+.onco-dropdown-item.danger {
+  color: #ef4444;
+}
+
+.onco-dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
