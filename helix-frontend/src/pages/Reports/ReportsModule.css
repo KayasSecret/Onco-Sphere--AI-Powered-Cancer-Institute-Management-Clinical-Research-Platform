@@ -249,24 +249,6 @@
   color: #ffffff !important;
 }
 
-.onco-receipt-eyebrow {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.42rem;
-  padding: 0.24rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid rgba(56, 189, 248, 0.34);
-  color: #7dd3fc;
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  margin-bottom: 0.45rem;
-  max-width: 100%;
-}
-
 .onco-receipt-title {
   font-size: 1.58rem;
   font-weight: 800;

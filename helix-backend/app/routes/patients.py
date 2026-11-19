@@ -463,15 +463,42 @@ def rename_patient_cancer_image(
 
 
 # ── File Delivery & Streaming Proxy (Permanent Fix for View & Download) ───────
-def _get_streaming_generator(target_url: str):
-    """Streams remote or local file chunks."""
-    req = urllib.request.Request(target_url, headers={"User-Agent": "Mozilla/5.0 (HELIX Service)"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        while True:
-            chunk = resp.read(64 * 1024)
-            if not chunk:
-                break
-            yield chunk
+def _serve_asset_file(
+    fetch_url: str,
+    mime_type: str,
+    disposition: str,
+    filename: str,
+    error_label: str,
+) -> Response:
+    """Serves a local static file or proxies a remote (Cloudinary) asset with proper headers."""
+    headers = {
+        "Content-Disposition": f'{disposition}; filename="{filename}"',
+        "Cache-Control": "private, max-age=3600",
+    }
+
+    if fetch_url.startswith("http://localhost:8000/static/") or fetch_url.startswith("/static/"):
+        rel_path = fetch_url.split("/static/")[-1]
+        local_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static", rel_path)
+        if os.path.isfile(local_path):
+            with open(local_path, "rb") as f:
+                content = f.read()
+            return Response(
+                content=content,
+                media_type=mime_type,
+                headers={**headers, "Content-Length": str(len(content))},
+            )
+
+    try:
+        req = urllib.request.Request(fetch_url, headers={"User-Agent": "Mozilla/5.0 (HELIX Service)"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            content = resp.read()
+        return Response(
+            content=content,
+            media_type=mime_type,
+            headers={**headers, "Content-Length": str(len(content))},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to retrieve {error_label}: {str(e)}")
 
 
 def _resolve_asset_fetch_url(file_url: str, default_ext: str = "") -> str:
@@ -550,39 +577,7 @@ def download_patient_report(
         filename = safe_title
 
     fetch_url = _resolve_asset_fetch_url(report.file_url, default_ext=ext)
-
-    # Local file fallback check
-    if fetch_url.startswith("http://localhost:8000/static/") or fetch_url.startswith("/static/"):
-        rel_path = fetch_url.split("/static/")[-1]
-        local_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static", rel_path)
-        if os.path.isfile(local_path):
-            with open(local_path, "rb") as f:
-                content = f.read()
-            return Response(
-                content=content,
-                media_type=mime_type,
-                headers={
-                    "Content-Disposition": f'{disposition}; filename="{filename}"',
-                    "Content-Length": str(len(content)),
-                    "Cache-Control": "private, max-age=3600",
-                },
-            )
-
-    try:
-        req = urllib.request.Request(fetch_url, headers={"User-Agent": "Mozilla/5.0 (HELIX Service)"})
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            content = resp.read()
-        return Response(
-            content=content,
-            media_type=mime_type,
-            headers={
-                "Content-Disposition": f'{disposition}; filename="{filename}"',
-                "Content-Length": str(len(content)),
-                "Cache-Control": "private, max-age=3600",
-            },
-        )
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to retrieve report file: {str(e)}")
+    return _serve_asset_file(fetch_url, mime_type, disposition, filename, "report file")
 
 
 @router.get("/{patient_id}/cancer-images/{image_id}/download")
@@ -618,37 +613,5 @@ def download_patient_cancer_image(
         filename = safe_title
 
     fetch_url = _resolve_asset_fetch_url(img.image_url, default_ext=ext)
-
-    # Local file fallback check
-    if fetch_url.startswith("http://localhost:8000/static/") or fetch_url.startswith("/static/"):
-        rel_path = fetch_url.split("/static/")[-1]
-        local_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static", rel_path)
-        if os.path.isfile(local_path):
-            with open(local_path, "rb") as f:
-                content = f.read()
-            return Response(
-                content=content,
-                media_type=mime_type,
-                headers={
-                    "Content-Disposition": f'{disposition}; filename="{filename}"',
-                    "Content-Length": str(len(content)),
-                    "Cache-Control": "private, max-age=3600",
-                },
-            )
-
-    try:
-        req = urllib.request.Request(fetch_url, headers={"User-Agent": "Mozilla/5.0 (HELIX Service)"})
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            content = resp.read()
-        return Response(
-            content=content,
-            media_type=mime_type,
-            headers={
-                "Content-Disposition": f'{disposition}; filename="{filename}"',
-                "Content-Length": str(len(content)),
-                "Cache-Control": "private, max-age=3600",
-            },
-        )
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to retrieve cancer image: {str(e)}")
+    return _serve_asset_file(fetch_url, mime_type, disposition, filename, "cancer image")
 
