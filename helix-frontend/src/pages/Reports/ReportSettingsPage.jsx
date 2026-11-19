@@ -342,13 +342,13 @@ export default function ReportSettingsPage() {
       {/* ── Top Clinical Hero Header ──────────────────────────────────────── */}
       <section className="onco-receipt-hero">
         <div className="onco-receipt-hero-inner">
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="onco-receipt-breadcrumb">
               <Link to="/dashboard">Dashboard</Link>
               <span>/</span>
               <Link to="/reports">Onco Receipt</Link>
               <span>/</span>
-              <span className="text-white">Branding & Parameters</span>
+              <span className="text-white">Branding &amp; Parameters</span>
             </div>
             <div className="onco-receipt-eyebrow">
               <RiSparklingLine size={12} />
@@ -386,8 +386,8 @@ export default function ReportSettingsPage() {
       {/* ── Main Split Settings Workspace ─────────────────────────────────── */}
       <div className="onco-rep-settings-shell">
         {/* Left Navigation Dock */}
-        <aside className="onco-rep-settings-nav space-y-2">
-          <div className="px-3 py-2 border-b border-surface-border mb-2">
+        <aside className="onco-rep-settings-nav lg:space-y-2">
+          <div className="hidden lg:block px-3 py-2 border-b border-surface-border mb-2">
             <p className="text-[10px] font-extrabold uppercase tracking-widest text-brand-blue">
               Configuration Modules
             </p>
@@ -396,7 +396,7 @@ export default function ReportSettingsPage() {
             </p>
           </div>
 
-          <div className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible">
+          <div className="onco-rep-settings-tabs-strip">
             {navItems.map((tab) => {
               const Icon = tab.icon
               const isActive = activeSubTab === tab.id
@@ -405,20 +405,20 @@ export default function ReportSettingsPage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveSubTab(tab.id)}
-                  className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all cursor-pointer shrink-0 lg:w-full ${
+                  className={`flex items-center gap-2 lg:gap-3 px-3 py-2 lg:px-3.5 lg:py-3 rounded-xl text-left transition-all cursor-pointer shrink-0 lg:w-full whitespace-nowrap ${
                     isActive
                       ? 'bg-gradient-to-r from-[#152458] to-brand-blue text-white shadow-md'
                       : 'text-ink-secondary hover:bg-surface-hover hover:text-ink-primary'
                   }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    className={`w-7 h-7 lg:w-8 lg:h-8 rounded-lg flex items-center justify-center shrink-0 ${
                       isActive
                         ? 'bg-white/15 text-white'
                         : 'bg-surface-base text-brand-blue'
                     }`}
                   >
-                    <Icon size={17} />
+                    <Icon size={16} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-extrabold leading-tight">{tab.label}</p>
@@ -459,13 +459,13 @@ export default function ReportSettingsPage() {
               </div>
 
               {/* Live PDF Letterhead Preview Banner */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-[#152458] to-[#1D3888] text-white border border-cyan-400/25 shadow-md">
-                <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-white/10">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-[#152458] to-[#1D3888] text-white border border-cyan-400/25 shadow-md overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2.5 pb-2 border-b border-white/10">
                   <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-300">
                     Live Report Letterhead Preview
                   </span>
                   <span className="text-[10px] font-semibold text-sky-200">
-                    Synchronized with PDF Generator
+                    Synced with PDF
                   </span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -587,27 +587,27 @@ export default function ReportSettingsPage() {
                 </div>
 
                 {/* Upload Logo & Official Stamp Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 pt-2">
                   {/* Card 1: Institute Logo */}
                   <div className="onco-upload-showcase-card">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-extrabold uppercase tracking-wider text-ink-primary">
                           Institute Emblem / Logo
                         </p>
-                        <p className="text-[11px] text-ink-secondary">
+                        <p className="text-[11px] text-ink-secondary mt-0.5">
                           Displayed in the top header of pathology reports (PNG/JPG)
                         </p>
                       </div>
                       {instLogo && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
                           Configured
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3.5">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-surface-border bg-white flex items-center justify-center overflow-hidden shrink-0 p-2 shadow-inner">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-3.5">
+                      <div className="w-20 h-20 rounded-xl border border-surface-border bg-white flex items-center justify-center overflow-hidden shrink-0 p-2 shadow-inner">
                         {instLogo ? (
                           <img
                             src={instLogo}
@@ -621,13 +621,13 @@ export default function ReportSettingsPage() {
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto flex-1">
                         <label
-                          className={
+                          className={`w-full sm:w-auto ${
                             uploadingType
                               ? 'cursor-not-allowed opacity-60'
                               : 'cursor-pointer'
-                          }
+                          }`}
                         >
                           <input
                             type="file"
@@ -636,7 +636,7 @@ export default function ReportSettingsPage() {
                             className="hidden"
                             onChange={(e) => handleImageUpload(e, 'logo')}
                           />
-                          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-surface-border bg-surface-card hover:border-brand-blue text-xs font-bold text-ink-primary transition-colors">
+                          <span className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-xl border border-surface-border bg-surface-card hover:border-brand-blue text-xs font-bold text-ink-primary transition-colors">
                             {uploadingType === 'logo' ? (
                               <>
                                 <span className="w-3.5 h-3.5 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
@@ -655,7 +655,7 @@ export default function ReportSettingsPage() {
                           <button
                             type="button"
                             onClick={() => setInstLogo('')}
-                            className="px-2.5 py-2 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                            className="w-full sm:w-auto px-3 py-2 rounded-xl text-xs font-bold text-rose-500 bg-rose-500/8 sm:bg-transparent hover:bg-rose-500/12 transition-colors cursor-pointer"
                           >
                             Clear
                           </button>
@@ -666,24 +666,24 @@ export default function ReportSettingsPage() {
 
                   {/* Card 2: Institute Official Stamp */}
                   <div className="onco-upload-showcase-card">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-extrabold uppercase tracking-wider text-ink-primary">
                           Official Verification Stamp
                         </p>
-                        <p className="text-[11px] text-ink-secondary">
+                        <p className="text-[11px] text-ink-secondary mt-0.5">
                           Printed near the authorization footer block
                         </p>
                       </div>
                       {instStamp && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
                           Configured
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3.5">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-surface-border bg-white flex items-center justify-center overflow-hidden shrink-0 p-2 shadow-inner">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-3.5">
+                      <div className="w-20 h-20 rounded-xl border border-surface-border bg-white flex items-center justify-center overflow-hidden shrink-0 p-2 shadow-inner">
                         {instStamp ? (
                           <img
                             src={instStamp}
@@ -697,13 +697,13 @@ export default function ReportSettingsPage() {
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto flex-1">
                         <label
-                          className={
+                          className={`w-full sm:w-auto ${
                             uploadingType
                               ? 'cursor-not-allowed opacity-60'
                               : 'cursor-pointer'
-                          }
+                          }`}
                         >
                           <input
                             type="file"
@@ -712,7 +712,7 @@ export default function ReportSettingsPage() {
                             className="hidden"
                             onChange={(e) => handleImageUpload(e, 'stamp')}
                           />
-                          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-surface-border bg-surface-card hover:border-brand-blue text-xs font-bold text-ink-primary transition-colors">
+                          <span className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-xl border border-surface-border bg-surface-card hover:border-brand-blue text-xs font-bold text-ink-primary transition-colors">
                             {uploadingType === 'stamp' ? (
                               <>
                                 <span className="w-3.5 h-3.5 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
@@ -731,7 +731,7 @@ export default function ReportSettingsPage() {
                           <button
                             type="button"
                             onClick={() => setInstStamp('')}
-                            className="px-2.5 py-2 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                            className="w-full sm:w-auto px-3 py-2 rounded-xl text-xs font-bold text-rose-500 bg-rose-500/8 sm:bg-transparent hover:bg-rose-500/12 transition-colors cursor-pointer"
                           >
                             Clear
                           </button>
