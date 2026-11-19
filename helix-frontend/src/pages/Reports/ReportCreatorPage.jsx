@@ -130,6 +130,8 @@ export default function ReportCreatorPage() {
   const isPrintTriggered = searchParams.get('print') === 'true'
 
   const printAreaRef = useRef(null)
+  const previewSectionRef = useRef(null)
+  const formSectionRef = useRef(null)
 
   // 1. Loading & System Configuration
   const [loading, setLoading] = useState(false)
@@ -645,8 +647,8 @@ export default function ReportCreatorPage() {
               </span>
             </nav>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-primary tracking-tight">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-3xl font-extrabold text-ink-primary tracking-tight break-words">
                 {id ? `Report Creator (${reportNumber} · v${version})` : 'New Oxidative Stress Report'}
               </h1>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.14em] bg-brand-blue/10 dark:bg-sky-500/15 text-brand-navy dark:text-sky-300 border border-brand-blue/20">
@@ -656,16 +658,16 @@ export default function ReportCreatorPage() {
             </div>
 
             <p className="text-xs sm:text-sm text-ink-secondary max-w-2xl">
-              Configure patient account, oxidative damage &amp; antioxidant defence biomarkers, and diagnostic interpretation with real-time single-page PDF preview.
+              Configure patient account, oxidative damage &amp; antioxidant defence biomarkers, and diagnostic interpretation with real-time 3-page ICSR PDF preview.
             </p>
           </div>
 
           {/* Action Toolbar */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
             <button
               type="button"
               onClick={() => navigate('/reports')}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-ink-primary bg-surface-card hover:bg-surface-hover border border-surface-border transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-ink-primary bg-surface-card hover:bg-surface-hover border border-surface-border transition-colors cursor-pointer"
             >
               <RiArrowLeftLine size={15} />
               <span>History</span>
@@ -674,7 +676,7 @@ export default function ReportCreatorPage() {
             <button
               type="button"
               onClick={handleFillSampleValues}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 transition-colors cursor-pointer"
               title="Prefill realistic clinical values to test live report"
             >
               <RiMagicLine size={15} />
@@ -684,7 +686,7 @@ export default function ReportCreatorPage() {
             <button
               type="button"
               onClick={triggerSystemPrint}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-ink-primary bg-surface-card hover:bg-surface-hover border border-surface-border transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-ink-primary bg-surface-card hover:bg-surface-hover border border-surface-border transition-colors cursor-pointer"
             >
               <RiPrinterLine size={15} />
               <span>Print</span>
@@ -693,7 +695,7 @@ export default function ReportCreatorPage() {
             <button
               type="button"
               onClick={handleDownloadPDF}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-brand-blue dark:text-sky-300 bg-brand-blue/10 hover:bg-brand-blue/20 border border-brand-blue/25 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-brand-blue dark:text-sky-300 bg-brand-blue/10 hover:bg-brand-blue/20 border border-brand-blue/25 transition-colors cursor-pointer"
             >
               <RiDownload2Line size={15} />
               <span>Download PDF</span>
@@ -703,7 +705,7 @@ export default function ReportCreatorPage() {
               type="button"
               onClick={handleSaveReport}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border border-sky-300/35 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border border-sky-300/35 shadow-sm transition-all cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -721,12 +723,32 @@ export default function ReportCreatorPage() {
         </div>
       </div>
 
+      {/* ── Mobile Quick-Jump Bar (Visible below xl) ─────────────────────── */}
+      <div className="xl:hidden flex items-center gap-2 p-1.5 rounded-xl bg-surface-card border border-surface-border shadow-2xs no-print">
+        <button
+          type="button"
+          onClick={() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          className="flex-1 py-2 px-3 rounded-lg bg-brand-blue/10 text-brand-blue text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <RiFlaskLine size={14} />
+          <span>Clinical Form (6)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => previewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          className="flex-1 py-2 px-3 rounded-lg bg-surface-base hover:bg-surface-hover text-ink-primary border border-surface-border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <RiFileTextLine size={14} className="text-brand-blue" />
+          <span>Live A4 Preview</span>
+        </button>
+      </div>
+
       {/* ── Split-Screen Workspace: Left Form + Right Live A4 Preview ───── */}
-      <div className="flex flex-col xl:flex-row gap-6 items-start">
+      <div className="flex flex-col xl:flex-row gap-5 xl:gap-6 items-start">
         {/* ══════════════════════════════════════════════════════════════════
             LEFT COLUMN: 6-SECTION CLINICAL DATA ENTRY WORKSPACE
         ══════════════════════════════════════════════════════════════════ */}
-        <div className="w-full xl:w-[490px] space-y-4 no-print shrink-0">
+        <div ref={formSectionRef} className="w-full xl:w-[490px] space-y-4 no-print shrink-0">
           {/* ── SECTION 1: PATIENT ACCOUNT ───────────────────────────────── */}
           <div className="onco-rep-section">
             <button
@@ -1161,7 +1183,7 @@ export default function ReportCreatorPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <FormField label="Damage Index">
                     <Input
                       type="number"
@@ -1309,35 +1331,39 @@ export default function ReportCreatorPage() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            RIGHT COLUMN: LIVE SYNCHRONIZED SINGLE-PAGE A4 REPORT PREVIEW
+            RIGHT COLUMN: LIVE SYNCHRONIZED 3-PAGE A4 REPORT PREVIEW
         ══════════════════════════════════════════════════════════════════ */}
-        <div className="flex-1 w-full min-w-0 onco-preview-shell p-3 sm:p-6 flex flex-col">
-          <div className="w-full max-w-[794px] mx-auto flex flex-wrap items-center justify-between gap-2 mb-3 no-print">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-bold text-ink-primary uppercase tracking-wider">
-                Live A4 Diagnostic Preview (3-Page ICSR Standard)
+        <div ref={previewSectionRef} className="flex-1 w-full min-w-0 onco-preview-shell p-3 sm:p-6 flex flex-col">
+          <div className="w-full max-w-[794px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 no-print">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-xs font-bold text-ink-primary uppercase tracking-wider truncate">
+                Live A4 Diagnostic Preview (3-Page ICSR)
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={triggerSystemPrint}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-card hover:bg-surface-hover border border-surface-border text-xs font-semibold text-ink-primary cursor-pointer shadow-2xs"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md bg-surface-card hover:bg-surface-hover border border-surface-border text-xs font-semibold text-ink-primary cursor-pointer shadow-2xs"
               >
                 <RiPrinterLine size={13} /> Print
               </button>
               <button
                 type="button"
                 onClick={handleDownloadPDF}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-brand-blue text-white hover:bg-brand-blue-dark text-xs font-semibold cursor-pointer shadow-2xs"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md bg-brand-blue text-white hover:bg-brand-blue-dark text-xs font-semibold cursor-pointer shadow-2xs"
               >
                 <RiDownload2Line size={13} /> Download PDF
               </button>
             </div>
           </div>
 
-          <div className="w-full overflow-x-auto pb-2">
+          <p className="md:hidden text-[11px] text-ink-secondary font-medium mb-2 text-center no-print">
+            Swipe left or right to inspect full A4 report layout
+          </p>
+
+          <div className="w-full overflow-x-auto pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
             <div className="w-fit mx-auto">
               <OxidativeReportDocument
                 ref={printAreaRef}

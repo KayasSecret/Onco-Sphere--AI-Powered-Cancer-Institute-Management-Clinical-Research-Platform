@@ -361,11 +361,11 @@ export default function ReportSettingsPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => navigate('/reports')}
-              className="onco-hero-btn-glass"
+              className="onco-hero-btn-glass w-full sm:w-auto"
             >
               <RiArrowLeftLine size={16} />
               <span>Back to Receipt History</span>
@@ -374,7 +374,7 @@ export default function ReportSettingsPage() {
             <button
               type="button"
               onClick={() => navigate('/reports/new')}
-              className="onco-hero-btn-primary"
+              className="onco-hero-btn-primary w-full sm:w-auto"
             >
               <RiAddLine size={17} />
               <span>New Pathology Report</span>
@@ -469,8 +469,8 @@ export default function ReportSettingsPage() {
                   </span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-14 h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden shrink-0 p-1.5">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden shrink-0 p-1.5">
                       {instLogo ? (
                         <img
                           src={instLogo}
@@ -478,17 +478,17 @@ export default function ReportSettingsPage() {
                           className="w-full h-full object-contain"
                         />
                       ) : (
-                        <RiHotelLine size={24} className="text-cyan-300" />
+                        <RiHotelLine size={22} className="text-cyan-300" />
                       )}
                     </div>
-                    <div>
-                      <h4 className="text-sm font-extrabold !text-white tracking-wide uppercase">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs sm:text-sm font-extrabold !text-white tracking-wide uppercase break-words">
                         {instName || 'INSTITUTE OF CANCER AND STEM CELL RESEARCH'}
                       </h4>
-                      <p className="text-xs text-sky-100/85 mt-0.5">
+                      <p className="text-[11px] sm:text-xs text-sky-100/85 mt-0.5 break-words">
                         {instAddress || 'M4 Mishika Tower Sapna Sangeeta Indore M.P. 452001'}
                       </p>
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-cyan-200 mt-1">
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] sm:text-[11px] text-cyan-200 mt-1 break-all">
                         {instWebsite && <span>{instWebsite}</span>}
                         {instEmail && <span>· {instEmail}</span>}
                         {instContact && <span>· {instContact}</span>}
@@ -606,8 +606,8 @@ export default function ReportSettingsPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-xl border border-surface-border bg-white flex items-center justify-center overflow-hidden shrink-0 p-2 shadow-inner">
+                    <div className="flex flex-wrap items-center gap-3.5">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-surface-border bg-white flex items-center justify-center overflow-hidden shrink-0 p-2 shadow-inner">
                         {instLogo ? (
                           <img
                             src={instLogo}
@@ -682,8 +682,8 @@ export default function ReportSettingsPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-xl border border-surface-border bg-white flex items-center justify-center overflow-hidden shrink-0 p-2 shadow-inner">
+                    <div className="flex flex-wrap items-center gap-3.5">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-surface-border bg-white flex items-center justify-center overflow-hidden shrink-0 p-2 shadow-inner">
                         {instStamp ? (
                           <img
                             src={instStamp}
@@ -745,7 +745,7 @@ export default function ReportSettingsPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="onco-hero-btn-primary"
+                    className="onco-hero-btn-primary w-full sm:w-auto"
                   >
                     {loading ? (
                       <>
@@ -790,7 +790,7 @@ export default function ReportSettingsPage() {
               {/* Add New Signatory Card */}
               <form
                 onSubmit={handleAddSignature}
-                className="p-5 rounded-2xl border border-surface-border bg-surface-base/50 space-y-4"
+                className="p-4 sm:p-5 rounded-2xl border border-surface-border bg-surface-base/50 space-y-4"
               >
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-extrabold text-ink-primary uppercase tracking-wider flex items-center gap-2">
@@ -876,7 +876,7 @@ export default function ReportSettingsPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="onco-hero-btn-primary"
+                    className="onco-hero-btn-primary w-full sm:w-auto"
                   >
                     {loading ? (
                       <>
@@ -1032,7 +1032,7 @@ export default function ReportSettingsPage() {
                               </div>
 
                               {isDeleting && (
-                                <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30">
+                                <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30">
                                   <span className="text-[11px] font-bold text-rose-600 dark:text-rose-300">
                                     Remove this signature?
                                   </span>
@@ -1085,18 +1085,18 @@ export default function ReportSettingsPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                   {!confirmResetParams ? (
                     <button
                       type="button"
                       onClick={() => setConfirmResetParams(true)}
-                      className="px-3 py-2 rounded-xl border border-surface-border bg-surface-base hover:bg-surface-hover text-xs font-bold text-ink-primary flex items-center gap-1.5 cursor-pointer"
+                      className="flex-1 sm:flex-initial justify-center px-3 py-2 rounded-xl border border-surface-border bg-surface-base hover:bg-surface-hover text-xs font-bold text-ink-primary flex items-center gap-1.5 cursor-pointer"
                     >
                       <RiRefreshLine size={14} />
                       <span>Reset ICSR Defaults</span>
                     </button>
                   ) : (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-base border border-brand-blue/40">
+                    <div className="flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-base border border-brand-blue/40 w-full sm:w-auto">
                       <span className="text-xs font-bold text-ink-primary">
                         Restore ICSR defaults?
                       </span>
@@ -1121,7 +1121,7 @@ export default function ReportSettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowAddParamForm((prev) => !prev)}
-                    className="onco-hero-btn-primary"
+                    className="onco-hero-btn-primary flex-1 sm:flex-initial"
                   >
                     <RiAddLine size={16} />
                     <span>{showAddParamForm ? 'Close Form' : 'Add Parameter'}</span>
@@ -1465,7 +1465,7 @@ export default function ReportSettingsPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleStartEditParam(param)}
-                                  className="px-3 py-1.5 rounded-xl border border-surface-border bg-surface-base hover:border-brand-blue hover:text-brand-blue text-xs font-bold text-ink-primary flex items-center gap-1.5 self-end sm:self-center shrink-0 transition-colors cursor-pointer"
+                                  className="w-full sm:w-auto justify-center px-3 py-2 sm:py-1.5 rounded-xl border border-surface-border bg-surface-base hover:border-brand-blue hover:text-brand-blue text-xs font-bold text-ink-primary flex items-center gap-1.5 self-stretch sm:self-center shrink-0 transition-colors cursor-pointer"
                                 >
                                   <RiEditLine size={14} />
                                   <span>Edit Range</span>

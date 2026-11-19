@@ -514,6 +514,13 @@
 @media (max-width: 960px) {
   .onco-rep-settings-shell {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .onco-rep-settings-nav {
+    position: static !important;
+    padding: 0.75rem;
+    border-radius: 16px;
   }
 }
 
@@ -538,7 +545,25 @@
 
 @media (max-width: 640px) {
   .onco-rep-settings-main {
-    padding: 1.15rem;
+    padding: 1rem;
+    border-radius: 16px;
+    min-height: 0;
+  }
+
+  .onco-upload-showcase-card {
+    padding: 0.9rem;
+  }
+
+  .onco-master-param-card {
+    padding: 0.9rem;
+  }
+
+  .onco-rep-section-header {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .onco-param-card {
+    padding: 0.75rem;
   }
 }
 
